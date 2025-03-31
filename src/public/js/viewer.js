@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (level === 1) {
         titleText = child.value || 'Week';
       } else if (level === 2) {
-        // For Les level, try to get the value from properties first
+        // For Les level, try to get the value from properties first, then from the node value
         const lesProperty = child.properties?.find(prop => prop.columnName === 'Les');
         titleText = lesProperty?.value || child.value || 'Les';
       }

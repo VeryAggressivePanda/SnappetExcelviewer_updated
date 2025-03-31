@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= filename %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="container viewer-container">
+    <header>
+      <a href="/" class="back-link">Upload Another File</a>
+    </header>
+    
+    <main>
+      <div class="style-controls">
+        <div class="control-group">
+          <label for="font-size">Font Size:</label>
+          <select id="font-size">
+            <option value="12px">Small</option>
+            <option value="14px" selected>Medium</option>
+            <option value="16px">Large</option>
+            <option value="18px">Extra Large</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="theme">Theme:</label>
+          <select id="theme">
+            <option value="default" selected>Default</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="colorful">Colorful</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="cell-padding">Cell Padding:</label>
+          <select id="cell-padding">
+            <option value="2px">Compact</option>
+            <option value="5px" selected>Normal</option>
+            <option value="10px">Spacious</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="show-grid">Show Grid:</label>
+          <input type="checkbox" id="show-grid" checked>
+        </div>
+      </div>
+      
+      <div class="sheet-tabs">
+        <% sheets.forEach((sheet, index) => { %>
+          <button 
+            class="tab-button <%= index === 0 ? 'active' : '' %>" 
+            data-sheet-id="<%= sheet.id %>"
+          >
+            <%= sheet.name %>
+          </button>
+        <% }); %>
+      </div>
+      
+      <div class="sheet-content-container">
+        <!-- Create only the first sheet initially -->
+        <div class="sheet-content active" id="sheet-<%= sheets[0].id %>">
+          <div class="loading-indicator">
+            <p>Loading data...</p>
+          </div>
+        </div>
+        
+        <!-- Other sheets will be loaded via JavaScript -->
+        <% sheets.forEach((sheet, index) => { %>
+          <% if (index !== 0) { %>
+            <div class="sheet-content" id="sheet-<%= sheet.id %>">
+              <div class="loading-indicator">
+                <p>Loading sheet data...</p>
+              </div>
+            </div>
+          <% } %>
+        <% }); %>
+      </div>
+    </main>
+    
+    <footer>
+      <p>Excel Viewer &copy; <%= new Date().getFullYear() %></p>
+    </footer>
+  </div>
+  
+  <!-- Pass file data to JavaScript -->
+  <script>
+    window.excelData = {
+      fileId: "<%= fileId %>",
+      sheetsLoaded: {} // All sheets will be loaded via JS
+    };
+  </script>
+  <script src="/js/viewer.js"></script>
+</body>
+</html> 

@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Explanation
+
+- Import the excel from the project into a webpage, performance is important so convert when needed.
+- Use node.js
+- I want to be able to customize design styling of the content. 
+- Make tabs for every spreadsheet-tab in the excel file.
+- Don't use tables but use html5 flexbox.

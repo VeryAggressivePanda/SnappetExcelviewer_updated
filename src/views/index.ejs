@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><%= title %></h1>
+      <p>Upload an Excel file to view its contents</p>
+    </header>
+    
+    <main>
+      <% if (typeof error !== 'undefined') { %>
+        <div class="error-message">
+          <p><%= error %></p>
+        </div>
+      <% } %>
+      
+      <div class="upload-section">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <div class="file-input-container">
+            <label for="excelFile">Select Excel File</label>
+            <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls" required>
+          </div>
+          
+          <button type="submit" class="upload-button">Upload & View</button>
+        </form>
+      </div>
+      
+      <div class="instructions">
+        <h2>Instructions</h2>
+        <ul>
+          <li>Upload an Excel file (.xlsx or .xls)</li>
+          <li>Navigate between sheets using the tabs</li>
+          <li>Customize the view using the styling options</li>
+        </ul>
+      </div>
+    </main>
+    
+    <footer>
+      <p>Excel Viewer &copy; <%= new Date().getFullYear() %></p>
+    </footer>
+  </div>
+</body>
+</html> 
