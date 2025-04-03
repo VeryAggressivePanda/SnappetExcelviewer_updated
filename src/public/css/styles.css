@@ -516,7 +516,7 @@ footer {
   border-radius: 4px;
   min-height: fit-content;
   height: auto;
-  background-color: rgba(52, 163, 215, .05);
+  background-color: rgb(52 163 215 / 5%);
 }
 
 .excel-node-header {
@@ -616,6 +616,11 @@ footer {
   padding-left: 8px;
 }
 
+/* Remove top margin for the first excel-node within excel-node-children */
+.excel-node-children > .excel-node:first-child {
+  margin-top: 0;
+}
+
 .excel-node.collapsed .excel-node-children {
   display: none;
 }
@@ -707,13 +712,14 @@ footer {
   display: flex;
   gap: 0.5rem;
   width: 100%;
+  background-color: rgb(52 163 215 / 3%);
 }
 
 .excel-node-property {
   width: calc(20% - 0.4rem);
   min-width: 150px;
   padding: 1rem;
-  background-color: var(--bg-color-alt);
+  background-color: white;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
@@ -758,11 +764,11 @@ footer {
 
 /* PDF Export Styles */
 .pdf-container {
-  width: 210mm; /* A4 width */
+  width: 210mm;
   margin: 0 auto;
   font-family: 'AbeZeh', sans-serif;
   background: white;
-  padding: 30mm;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -775,11 +781,12 @@ footer {
 
 .pdf-title {
   font-size: 28px;
-  margin: 1.5rem;
   color: #34a3d7;
-  padding: 0;
   font-weight: bold;
   text-align: left;
+  text-indent: 0;
+  padding: 0.5rem;
+  margin: 0;
   text-indent: 0.5rem;
   display: block;
 }
@@ -803,14 +810,19 @@ footer {
 
 .pdf-section .excel-node {
   margin-bottom: 0;
-  background: white;
-  border: 1px solid #ddd;
+  background: rgb(52 163 215 / 5%);
+  border: none;
   border-radius: 4px;
   box-shadow: none;
 }
 
+/* Remove top margin for the first level 3 node */
+.pdf-section .excel-node.level-2:first-child {
+  margin-top: 0;
+}
+
 .pdf-section .excel-node-header {
-  background: #f8f9fa;
+  background: rgb(52 163 215 / 10%);
   padding: 0.25rem 0.5rem;
   border-bottom: none;
   text-align: left;
@@ -829,31 +841,41 @@ footer {
   flex-direction: row;
   width: 100%;
   gap: 0.25rem;
-  padding: 0.25rem;
-  background: #f8f9fa;
+  padding: 0.5rem;
+  background: rgb(52 163 215 / 3%);
   border-radius: 4px;
   margin-bottom: 0;
   box-sizing: border-box;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .pdf-section .excel-node-property {
   flex: 0 0 calc((100% - 2rem) / 5);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0;
   padding: 0.25rem;
-  background: #f8f9fa;
+  background: white;
   border-radius: 4px;
   box-sizing: border-box;
   min-width: 0;
+}
+
+.pdf-section .property-name {
+  font-weight: 500;
+  color: var(--secondary-color);
+  /* margin-bottom: 0.25rem; */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9em;
+  font-family: 'AbeZeh', sans-serif;
 }
 
 /* Print styles */
 @media print {
   @page {
     size: A4;
-    margin: 25mm 35mm;
   }
 
   body {
@@ -864,7 +886,7 @@ footer {
   }
 
   .pdf-container {
-    padding: 30mm;
+    padding: 0;
     margin: 0;
     width: 210mm;
     height: 297mm;
@@ -872,56 +894,54 @@ footer {
 
   .pdf-content {
     margin: 0;
+    padding: 0;
   }
 
-  /* Force page break before each week */
-  .pdf-section {
-    page-break-before: always;
-  }
-
-  /* First section shouldn't have a page break */
-  .pdf-section:first-of-type {
-    page-break-before: avoid;
-  }
-
-  /* Reduce vertical margins */
-  .pdf-title {
-    margin: 0.5rem 35mm;
-    font-size: 24px;
-    text-align: left;
-    text-indent: 0.5rem;
-    display: block;
-  }
-
+  /* Ensure blok-header appears at the top of each page */
   .blok-header {
-    margin: 0.5rem 0;
+    position: running(header);
+    margin: 0 0 0.5rem 0;
     font-size: 1.1em;
     text-align: left;
     text-indent: 0.5rem;
+    break-after: avoid;
     page-break-after: avoid;
+    background-color: rgb(52 163 215 / 10%) !important;
   }
 
-  .pdf-section .excel-node {
-    margin-bottom: 0.25rem;
+  /* Add the header to each page */
+  @page {
+    @top-center {
+      content: element(header);
+    }
   }
 
-  .pdf-section .excel-node-header {
-    padding: 0.25rem 0.5rem;
+  /* Ensure level-2 nodes stay together */
+  .excel-node.level-2 {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background-color: rgb(52 163 215 / 5%) !important;
+    border-radius: 4px;
   }
 
-  .pdf-section .property-row {
-    padding: 0.25rem;
-    gap: 0.25rem;
+  /* Ensure property rows have the correct background color */
+  .property-row {
+    background-color: rgb(52 163 215 / 3%) !important;
   }
 
-  .pdf-section .excel-node-property {
-    padding: 0.25rem;
+  /* Ensure excel node properties have white background in print */
+  .excel-node-property {
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  /* Allow content to flow naturally within weeks */
-  .excel-node,
-  .excel-node-children {
-    page-break-inside: auto;
+  /* Ensure all backgrounds print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
 
@@ -954,10 +974,11 @@ footer {
   color: #34a3d7;
   text-align: left;
   text-indent: 0.5rem;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 0;
   padding: 0.5rem;
-  background-color: #f8f9fa;
+  background-color: rgb(52 163 215 / 10%);
   border-radius: 4px;
+  page-break-after: avoid;
 }
 
 /* PDF Preview Modal */
@@ -1015,8 +1036,7 @@ footer {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 30mm;
+  padding: 0;
   box-sizing: border-box;
   transform-origin: top center;
-  transform: scale(calc((100% - 60px) / 210mm));
 } 

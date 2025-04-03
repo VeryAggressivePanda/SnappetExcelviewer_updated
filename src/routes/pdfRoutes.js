@@ -52,7 +52,6 @@ router.post('/generate', async (req, res) => {
             ${cssContent}
             @page {
               size: A4;
-              margin: 0;
             }
             body {
               margin: 0;
@@ -64,6 +63,29 @@ router.post('/generate', async (req, res) => {
             .pdf-container {
               transform-origin: top left;
               transform: scale(1);
+            }
+            .excel-node.level-2 {
+              break-inside: avoid;
+              page-break-inside: avoid;
+              margin: 0.5rem 0;
+              padding: 0.5rem;
+              background-color: rgb(52 163 215 / 5%);
+              border-radius: 4px;
+              border: none;
+            }
+            .blok-header {
+              break-after: avoid;
+              page-break-after: avoid;
+              background-color: rgb(52 163 215 / 10%);
+              border: none;
+            }
+            .property-row {
+              background-color: rgb(52 163 215 / 3%);
+              border: none;
+            }
+            .excel-node-property {
+              background-color: white;
+              border: none;
             }
           </style>
         </head>
@@ -84,10 +106,10 @@ router.post('/generate', async (req, res) => {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '25mm',
-        right: '25mm',
-        bottom: '25mm',
-        left: '25mm'
+        top: '15mm',
+        right: '20mm',
+        bottom: '15mm',
+        left: '20mm'
       },
       preferCSSPageSize: true
     });
