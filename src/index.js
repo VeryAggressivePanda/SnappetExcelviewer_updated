@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const excelRouter = require('./routes/excelRoutes');
+const pdfRouter = require('./routes/pdfRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -54,6 +55,7 @@ const upload = multer({
 
 // Routes
 app.use('/', excelRouter);
+app.use('/pdf', pdfRouter);
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');

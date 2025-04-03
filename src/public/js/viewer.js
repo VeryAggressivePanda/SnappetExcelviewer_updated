@@ -67,8 +67,14 @@ document.addEventListener('DOMContentLoaded', function() {
       // Set up expand/collapse functionality
       setupNodeInteractions(sheetContent);
       
-      // Mark as loaded
-      window.excelData.sheetsLoaded[sheetId] = true;
+      // Mark as loaded and store the data
+      window.excelData.sheetsLoaded[sheetId] = result.data;
+      
+      // Populate the export column select
+      populateColumnSelects(result.data);
+      
+      // Update export controls with preview button
+      updateExportControls(result.data);
       
       // Apply current style settings
       applyStyles();
@@ -429,6 +435,323 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     }
+  }
+  
+  // Add event listeners for PDF export
+  document.getElementById('export-column').addEventListener('change', updateExportButton);
+  document.getElementById('export-pdf').addEventListener('click', exportToPDF);
+
+  function updateExportButton() {
+    const exportColumn = document.getElementById('export-column').value;
+    const exportButton = document.getElementById('export-pdf');
+    exportButton.disabled = !exportColumn;
+  }
+
+  function populateColumnSelects(sheetData) {
+    // Populate export column select with top-level elements
+    const exportColumnSelect = document.getElementById('export-column');
+    exportColumnSelect.innerHTML = '<option value="">Select a section...</option>';
+    
+    // Get all top-level elements (children of root)
+    if (sheetData.root && sheetData.root.children) {
+      sheetData.root.children.forEach(child => {
+        const option = document.createElement('option');
+        option.value = child.value;
+        option.textContent = child.value;
+        exportColumnSelect.appendChild(option);
+      });
+    }
+  }
+
+  function renderProperties(node) {
+    if (!node.properties || node.properties.length === 0) {
+      return '';
+    }
+
+    return `
+      <div class="property-row">
+        ${node.properties.map(prop => `
+          <div class="excel-node-property">
+            <div class="property-name">${prop.columnName}</div>
+            <div class="property-value">${prop.value || ''}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderNodeForPDF(node) {
+    let html = '';
+    
+    // Skip rendering for level 0 (Blok) nodes
+    if (node.level === 0) {
+      return '';
+    }
+    
+    // For week nodes (level 1), render header and children
+    if (node.level === 1) {
+      html += `<div class="excel-node level-${node.level}">`;
+      html += `<div class="excel-node-header">`;
+      html += `<div class="node-title">${node.value}</div>`;
+      html += `</div>`;
+      
+      // Render children if they exist
+      if (node.children && node.children.length > 0) {
+        html += '<div class="excel-node-children">';
+        node.children.forEach(child => {
+          html += renderNodeForPDF(child);
+        });
+        html += '</div>';
+      }
+      
+      html += `</div>`;
+    } else {
+      // For Les nodes (level 2), render header, properties, and children
+      html += `<div class="excel-node level-${node.level}">`;
+      html += `<div class="excel-node-header">`;
+      html += `<div class="node-title">${node.value}</div>`;
+      html += `</div>`;
+      
+      // Add properties for Les nodes
+      if (node.properties && node.properties.length > 0) {
+        html += `<div class="excel-node-properties">`;
+        html += `<div class="property-row">`;
+        node.properties.forEach(prop => {
+          html += `
+            <div class="excel-node-property">
+              <div class="property-name">${prop.columnName}</div>
+              <div class="property-value">${prop.value || ''}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+        html += `</div>`;
+      }
+      
+      // Render children if they exist
+      if (node.children && node.children.length > 0) {
+        html += '<div class="excel-node-children">';
+        node.children.forEach(child => {
+          html += renderNodeForPDF(child);
+        });
+        html += '</div>';
+      }
+      
+      html += `</div>`;
+    }
+    
+    return html;
+  }
+
+  async function exportToPDF() {
+    const selectedValue = document.getElementById('export-column').value;
+    if (!selectedValue) {
+      alert('Please select a section to export');
+      return;
+    }
+
+    try {
+      const exportButton = document.getElementById('export-pdf');
+      exportButton.disabled = true;
+      exportButton.textContent = 'Generating PDF...';
+
+      // Get the active sheet ID
+      const activeSheet = document.querySelector('.sheet-content.active');
+      const sheetId = activeSheet.id.replace('sheet-', '');
+      const sheetData = window.excelData.sheetsLoaded[sheetId];
+
+      if (!sheetData) {
+        throw new Error('No sheet data available');
+      }
+
+      // Find the selected top-level element
+      const selectedNode = sheetData.root.children.find(node => node.value === selectedValue);
+      if (!selectedNode) {
+        throw new Error('Selected section not found');
+      }
+
+      // Create a temporary container for PDF content
+      const tempContainer = document.createElement('div');
+      tempContainer.className = 'pdf-container';
+
+      // Add title
+      const title = document.createElement('h1');
+      title.className = 'pdf-title';
+      title.textContent = `Materialenlijst - ${selectedValue}`;
+      tempContainer.appendChild(title);
+
+      // Create a section for the selected node
+      const section = document.createElement('div');
+      section.className = 'pdf-section';
+
+      // Render all children recursively
+      if (selectedNode.children) {
+        selectedNode.children.forEach(child => {
+          const childSection = document.createElement('div');
+          childSection.className = 'pdf-section';
+          // Add the Blok header to each section
+          const blokHeader = document.createElement('div');
+          blokHeader.className = 'blok-header';
+          blokHeader.textContent = selectedValue;
+          childSection.appendChild(blokHeader);
+          childSection.innerHTML += renderNodeForPDF(child);
+          section.appendChild(childSection);
+        });
+      }
+
+      tempContainer.appendChild(section);
+
+      // Generate PDF
+      const response = await fetch('/pdf/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          html: tempContainer.innerHTML,
+          filename: `${selectedValue.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      // Create a blob from the response
+      const blob = await response.blob();
+      
+      // Create a download link and trigger it
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedValue.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert(`Failed to generate PDF: ${error.message}`);
+    } finally {
+      const exportButton = document.getElementById('export-pdf');
+      exportButton.disabled = false;
+      exportButton.textContent = 'Export to PDF';
+    }
+  }
+  
+  // Add this function to show the preview
+  function showPDFPreview(selectedValue, sheetData) {
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.className = 'pdf-preview-modal';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'pdf-preview-content';
+    
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.className = 'pdf-preview-close';
+    closeButton.innerHTML = '&times;';
+    closeButton.onclick = () => modal.remove();
+    
+    // Create preview container
+    const previewContainer = document.createElement('div');
+    previewContainer.className = 'pdf-container';
+    
+    // Create content wrapper
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'pdf-content';
+    
+    // Add title
+    const title = document.createElement('h1');
+    title.className = 'pdf-title';
+    title.textContent = `Materialenlijst - ${selectedValue}`;
+    contentWrapper.appendChild(title);
+    
+    // Find the selected top-level element
+    const selectedNode = sheetData.root.children.find(node => node.value === selectedValue);
+    if (!selectedNode) {
+      throw new Error('Selected section not found');
+    }
+
+    // Create a section for the selected node
+    const section = document.createElement('div');
+    section.className = 'pdf-section';
+
+    // Render all children recursively
+    if (selectedNode.children) {
+      selectedNode.children.forEach(child => {
+        const childSection = document.createElement('div');
+        childSection.className = 'pdf-section';
+        // Add the Blok header to each section
+        const blokHeader = document.createElement('div');
+        blokHeader.className = 'blok-header';
+        blokHeader.textContent = selectedValue;
+        childSection.appendChild(blokHeader);
+        childSection.innerHTML += renderNodeForPDF(child);
+        section.appendChild(childSection);
+      });
+    }
+
+    contentWrapper.appendChild(section);
+    previewContainer.appendChild(contentWrapper);
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(previewContainer);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+  }
+
+  // Update the export controls HTML to include a preview button
+  function updateExportControls(sheetData) {
+    const exportControls = document.querySelector('.export-controls');
+    if (!exportControls) return;
+
+    // Clear existing controls
+    exportControls.innerHTML = '';
+
+    // Create select element
+    const select = document.createElement('select');
+    select.id = 'export-column';
+    select.innerHTML = '<option value="">Select a section to export</option>';
+    
+    // Add options for each top-level node
+    if (sheetData.root && sheetData.root.children) {
+      sheetData.root.children.forEach(node => {
+        const option = document.createElement('option');
+        option.value = node.value;
+        option.textContent = node.value;
+        select.appendChild(option);
+      });
+    }
+
+    // Create preview button
+    const previewButton = document.createElement('button');
+    previewButton.id = 'preview-pdf';
+    previewButton.className = 'control-button';
+    previewButton.textContent = 'Preview PDF';
+    previewButton.onclick = () => {
+      const selectedValue = select.value;
+      if (!selectedValue) {
+        alert('Please select a section to preview');
+        return;
+      }
+      showPDFPreview(selectedValue, sheetData);
+    };
+
+    // Create export button
+    const exportButton = document.createElement('button');
+    exportButton.id = 'export-pdf';
+    exportButton.className = 'control-button';
+    exportButton.textContent = 'Export to PDF';
+    exportButton.onclick = exportToPDF;
+
+    // Add elements to controls
+    exportControls.appendChild(select);
+    exportControls.appendChild(previewButton);
+    exportControls.appendChild(exportButton);
   }
   
   initialize();

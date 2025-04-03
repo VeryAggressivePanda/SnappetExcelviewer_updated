@@ -1,4 +1,4 @@
-# Node.js
+# Dependencies
 node_modules/
 npm-debug.log
 yarn-debug.log
@@ -7,16 +7,27 @@ yarn-error.log
 # Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+
+# Temporary files
+src/temp/
+*.tmp
+*.temp
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # Uploaded files
 src/uploads/
 
 # Editor directories and files
-.idea/
-.vscode/
 *.suo
 *.ntvs*
 *.njsproj
@@ -24,7 +35,6 @@ src/uploads/
 *.sw?
 
 # OS generated files
-.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100

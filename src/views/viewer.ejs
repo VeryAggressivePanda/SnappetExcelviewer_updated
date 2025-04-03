@@ -9,7 +9,15 @@
 <body>
   <div class="container viewer-container">
     <header>
-      <a href="/" class="back-link">Upload Another File</a>
+      <div class="header-controls">
+        <a href="/" class="back-link">Upload Another File</a>
+        <div class="export-controls">
+          <select id="export-column">
+            <option value="">Select a column...</option>
+          </select>
+          <button id="export-pdf" class="control-button">Export to PDF</button>
+        </div>
+      </div>
     </header>
     
     <main>
