@@ -397,7 +397,7 @@ body.colorful-theme .excel-node.collapsed .excel-node-children {
 }
 
 body.colorful-theme .excel-node:not(.collapsed) .excel-node-children {
-  display: block;
+  display: flex;
   padding: 0;
 }
 
@@ -413,10 +413,6 @@ body.colorful-theme .level-0 > .excel-node-header {
 body.colorful-theme .level-1 > .excel-node-header {
   background-color: white;
   box-shadow: 0 3px 7px rgba(51, 51, 51, .2);
-}
-
-body.colorful-theme .level-2 > .excel-node-header {
-  background-color: rgba(74, 111, 165, 0.05);
 }
 
 .level-2 > .excel-node-header {
@@ -624,13 +620,13 @@ footer {
 
 /* Node children visibility */
 .excel-node-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
   padding: 0;
   margin-left: 1rem;
-}
-
-/* Remove top margin for the first excel-node within excel-node-children */
-.excel-node-children > .excel-node:first-child {
-  margin-top: 0;
+  gap: 1rem;
 }
 
 .excel-node.collapsed .excel-node-children {
@@ -638,8 +634,91 @@ footer {
 }
 
 .excel-node:not(.collapsed) .excel-node-children {
-  display: block;
-  padding: 0;
+  display: flex;
+}
+
+.excel-node-children > .excel-node {
+  flex: 1 1 200px;
+  margin: 0.5rem 0;
+}
+
+/* Level 1 children (weeks) always use column layout */
+.excel-node.level-1 > .excel-node-children {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  gap: 1rem;
+}
+
+/* Make level-2 (lessons) full width of parent */
+.excel-node.level-1 > .excel-node-children > .excel-node.level-2 {
+  width: 100%;
+  min-width: 100%;
+  flex: 1 1 100%;
+}
+
+/* Override for level-specific nodes */
+.excel-node.level-0 > .excel-node-children > .excel-node.level-1 {
+  width: 100%;
+  flex: 1 1 100%;
+}
+
+/* Level 2 nodes (Les) should be arranged horizontally when possible */
+.excel-node.level-1 > .excel-node-children > .excel-node.level-2 {
+  flex: 1 1 calc(50% - 1rem);
+  min-width: 200px;
+}
+
+/* Property row layout */
+.property-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+  background-color: rgba(52, 163, 215, 0.03);
+  padding: 0.5rem;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* Property styling */
+.excel-node-property {
+  background-color: white;
+  border-radius: 4px;
+  padding: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex: 1 1 200px;
+  min-width: 150px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.excel-node-property:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* When there are few properties, make them share space equally */
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(2)),
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(3)),
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(4)) {
+  justify-content: space-between;
+}
+
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(2)) .excel-node-property {
+  flex-basis: calc(50% - 0.5rem);
+  max-width: calc(50% - 0.5rem);
+}
+
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(3)) .excel-node-property {
+  flex-basis: calc(33.33% - 0.67rem);
+  max-width: calc(33.33% - 0.67rem);
+}
+
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(4)) .excel-node-property {
+  flex-basis: calc(25% - 0.75rem);
+  max-width: calc(25% - 0.75rem);
 }
 
 /* Levels styling */
@@ -757,30 +836,10 @@ footer {
   box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
 }
 
-/* Properties Styling */
+/* Property styling for hierarchical view */
 .excel-node-properties {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  width: 100%;
-  padding: 1rem;
-}
-
-.property-row {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-  background-color: rgb(52 163 215 / 3%);
-}
-
-.excel-node-property {
-  width: calc(20% - 0.4rem);
-  min-width: 150px;
-  padding: 1rem;
-  background-color: white;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
+  margin-top: 0.5rem;
+  margin-left: 1rem;
 }
 
 .property-name {
@@ -791,15 +850,12 @@ footer {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 0.9em;
-  font-family: 'AbeZeh', sans-serif;
 }
 
 .property-value {
   color: var(--text-color);
   word-break: break-word;
-  flex: 1;
   font-size: 0.9em;
-  font-family: 'AbeZeh', sans-serif;
 }
 
 /* Empty state */
@@ -1084,4 +1140,563 @@ footer {
   padding: 0;
   box-sizing: border-box;
   transform-origin: top center;
+}
+
+/* Adjust nodes inside flex layout - updated version */
+.excel-node-children > .excel-node {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+/* Layout classes for excel-node-children */
+.excel-node-children.vertical-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.excel-node-children.grid-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments based on child count */
+.excel-node-children.child-count-1 > .excel-node {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
+.excel-node-children.child-count-2 > .excel-node {
+  flex-basis: calc(50% - 0.5rem);
+  max-width: calc(50% - 0.5rem);
+}
+
+.excel-node-children.child-count-3 > .excel-node {
+  flex-basis: calc(33.33% - 0.67rem);
+  max-width: calc(33.33% - 0.67rem);
+}
+
+.excel-node-children.child-count-4 > .excel-node,
+.excel-node-children.many-children > .excel-node {
+  flex-basis: calc(25% - 0.75rem);
+}
+
+/* Media queries for responsive behavior */
+@media (max-width: 992px) {
+  .excel-node-children.child-count-3 > .excel-node,
+  .excel-node-children.child-count-4 > .excel-node,
+  .excel-node-children.many-children > .excel-node {
+    flex-basis: calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+  }
+}
+
+@media (max-width: 576px) {
+  .excel-node-children.grid-layout > .excel-node {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Column-specific styles - moved to level-based approach */
+
+/* Level-specific node styles */
+
+/* Level 0 node styles */
+.level-0-node {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 3px 7px rgba(51, 51, 51, 0.2);
+  margin: .5rem 0;
+}
+
+.level-0-header {
+  background-color: white;
+  border: none;
+  padding: 1rem;
+}
+
+.level-0-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #34a3d7;
+}
+
+.level-0-content {
+  padding: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* Set padding to 0 when level-0-node is collapsed */
+.level-0-collapsed .level-0-content {
+  padding: 0;
+}
+
+.level-0-children {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  margin-left: 0.25rem;
+  gap: 1rem;
+}
+
+/* Level 1 node styles */
+.level-1-node {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.2);
+  padding-bottom: 1rem;
+  margin-top: 0;
+  width: 100%;
+}
+
+.level-1-header {
+  background-color: transparent !important;
+  padding: 0;
+}
+
+.level-1-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.level-1-content {
+  padding: 0;
+  color: #333;
+}
+
+.level-1-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+  margin-left: 0;
+  gap: 0.5rem;
+}
+
+/* Level 2 node styles */
+.level-2-node {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(52 163 215 / 5%);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.level-2-header {
+  background-color: rgba(74, 111, 165, 0.05);
+  border-radius: 4px 4px 0 0;
+  padding: 0.75rem;
+}
+
+.level-2-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.level-2-content {
+  padding: 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.level-2-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* Level 3 node styles */
+.level-3-node {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  flex: 1 1 calc(20% - 0.5rem);
+  min-width: 120px;
+  max-width: calc(20% - 0.5rem);
+}
+
+.level-3-header {
+  background-color: rgba(52, 163, 215, 0.1);
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.1);
+}
+
+.level-3-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #166d9e;
+}
+
+.level-3-content {
+  padding: 0.5rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+/* Properties styling */
+.level-0-properties,
+.level-1-properties,
+.level-2-properties {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Expand/collapse functionality */
+.level-0-expand-button,
+.level-1-expand-button {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  cursor: pointer;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.level-0-expand-button::before,
+.level-0-expand-button::after,
+.level-1-expand-button::before,
+.level-1-expand-button::after {
+  content: '';
+  position: absolute;
+  background-color: #333;
+  transition: transform 0.2s ease;
+}
+
+.level-0-expand-button::before,
+.level-1-expand-button::before {
+  width: 2px;
+  height: 12px;
+  top: 4px;
+  left: 9px;
+}
+
+.level-0-expand-button::after,
+.level-1-expand-button::after {
+  width: 12px;
+  height: 2px;
+  top: 9px;
+  left: 4px;
+}
+
+.level-0-collapsed .level-0-children,
+.level-1-collapsed .level-1-children {
+  display: none;
+}
+
+.level-0-node:not(.level-0-collapsed) .level-0-expand-button::before,
+.level-1-node:not(.level-1-collapsed) .level-1-expand-button::before {
+  transform: rotate(90deg);
+}
+
+/* Empty node styling */
+.level-0-empty,
+.level-1-empty,
+.level-2-empty,
+.level-3-empty {
+  border: 1px dashed rgba(52, 163, 215, 0.3);
+  background-color: rgba(249, 249, 249, 0.7) !important;
+}
+
+.level-0-empty-header,
+.level-1-empty-header,
+.level-2-empty-header,
+.level-3-empty-header {
+  color: #999;
+  background-color: rgba(249, 249, 249, 0.9) !important;
+}
+
+.level-0-empty-content,
+.level-1-empty-content,
+.level-2-empty-content,
+.level-3-empty-content {
+  color: #999;
+  font-style: italic;
+}
+
+/* Common styles for all level nodes */
+[class*="level-"] {
+  box-sizing: border-box;
+}
+
+/* Level node base styles */
+[class*="-node"] {
+  display: flex;
+  flex-direction: column;
+  margin: 0.25rem 0;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Level headers base styles */
+[class*="-header"] {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: rgba(52, 163, 215, 0.05);
+  width: 100%;
+}
+
+/* Level content base styles */
+[class*="-content"] {
+  padding: 0.5rem;
+  word-break: break-word;
+}
+
+/* Level titles base styles */
+[class*="-title"] {
+  font-weight: 500;
+  flex: 1;
+}
+
+/* Level 0 styles */
+.level-0-node {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 3px 7px rgba(51, 51, 51, 0.2);
+  margin: .5rem 0;
+}
+
+.level-0-header {
+  background-color: white;
+  border: none;
+  padding: 1rem;
+}
+
+.level-0-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #34a3d7;
+}
+
+.level-0-content {
+  padding: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+.level-0-children {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  margin-left: 0.25rem;
+  gap: 1rem;
+}
+
+/* Level 1 styles */
+.level-1-node {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.2);
+  padding-bottom: 1rem;
+  margin-top: 0;
+  width: 100%;
+}
+
+.level-1-header {
+  background-color: transparent !important;
+  padding: 0;
+}
+
+.level-1-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.level-1-content {
+  padding: 0;
+  color: #333;
+}
+
+.level-1-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+  margin-left: 0;
+  gap: 0.5rem;
+}
+
+/* Level 2 styles */
+.level-2-node {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(52 163 215 / 5%);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.level-2-header {
+  background-color: rgba(74, 111, 165, 0.05);
+  border-radius: 4px 4px 0 0;
+  padding: 0.75rem;
+}
+
+.level-2-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.level-2-content {
+  padding: 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.level-2-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* Level 3 styles */
+.level-3-node {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  flex: 1 1 calc(20% - 0.5rem);
+  min-width: 120px;
+  max-width: calc(20% - 0.5rem);
+}
+
+.level-3-header {
+  background-color: rgba(52, 163, 215, 0.1);
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.1);
+}
+
+.level-3-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #166d9e;
+}
+
+.level-3-content {
+  padding: 0.5rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+/* Properties styling */
+.level-0-properties,
+.level-1-properties,
+.level-2-properties {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Expand/collapse functionality */
+.level-0-expand-button,
+.level-1-expand-button {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  cursor: pointer;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.level-0-expand-button::before,
+.level-0-expand-button::after,
+.level-1-expand-button::before,
+.level-1-expand-button::after {
+  content: '';
+  position: absolute;
+  background-color: #333;
+  transition: transform 0.2s ease;
+}
+
+.level-0-expand-button::before,
+.level-1-expand-button::before {
+  width: 2px;
+  height: 12px;
+  top: 4px;
+  left: 9px;
+}
+
+.level-0-expand-button::after,
+.level-1-expand-button::after {
+  width: 12px;
+  height: 2px;
+  top: 9px;
+  left: 4px;
+}
+
+.level-0-collapsed .level-0-children,
+.level-1-collapsed .level-1-children {
+  display: none;
+}
+
+.level-0-node:not(.level-0-collapsed) .level-0-expand-button::before,
+.level-1-node:not(.level-1-collapsed) .level-1-expand-button::before {
+  transform: rotate(90deg);
+}
+
+/* Empty node styling */
+.level-0-empty,
+.level-1-empty,
+.level-2-empty,
+.level-3-empty {
+  border: 1px dashed rgba(52, 163, 215, 0.3);
+  background-color: rgba(249, 249, 249, 0.7) !important;
+}
+
+.level-0-empty-header,
+.level-1-empty-header,
+.level-2-empty-header,
+.level-3-empty-header {
+  color: #999;
+  background-color: rgba(249, 249, 249, 0.9) !important;
+}
+
+.level-0-empty-content,
+.level-1-empty-content,
+.level-2-empty-content,
+.level-3-empty-content {
+  color: #999;
+  font-style: italic;
+}
+
+/* Styles for column name and cell value spans in titles */
+.column-name {
+  font-weight: 600;
+  color: #166d9e;
+  margin-right: 0.25em;
+}
+
+.cell-value {
+  font-weight: 500;
+  color: #333;
 } 

@@ -71,8 +71,9 @@ router.post('/upload', upload.single('excelFile'), async (req, res) => {
     }
 
     const filePath = req.file.path;
-    const fileId = path.basename(filePath);
+    const fileId = req.file.filename; // Use the stored filename directly
     console.log('Processing file:', filePath);
+    console.log('File ID for cache and reference:', fileId);
     
     // Process the Excel file
     const workbook = new ExcelJS.Workbook();
@@ -166,17 +167,9 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
     }
     
     const fileData = excelCache.get(fileId);
+    console.log(`File found in cache, loaded data for ${fileData.originalName}`);
     
-    // Check if sheet is already processed
-    if (fileData.processedSheets[sheetIdNum]) {
-      console.log(`Sheet ${sheetIdNum} already processed, returning from cache`);
-      const processedData = removeCircularReferences(fileData.processedSheets[sheetIdNum]);
-      console.log(`Processed data headers: ${processedData.headers ? processedData.headers.length : 'none'}`);
-      console.log(`Processed data root: ${processedData.root ? (processedData.root.children ? processedData.root.children.length : 0) + ' children' : 'no root'}`);
-      return res.json({ data: processedData });
-    }
-    
-    // Get the worksheet and process it
+    // Get the worksheet
     const worksheet = fileData.workbook.getWorksheet(sheetIdNum);
     if (!worksheet) {
       console.log(`Worksheet ${sheetIdNum} not found in workbook`);
@@ -205,36 +198,80 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
           headers: [],
           root: { type: 'root', children: [], level: -1 }
         }
-      }); // Return empty but valid structure
+      });
     }
     
-    // Process the worksheet
-    const sheetData = processWorksheet(worksheet);
+    // Extract raw data for column configuration
+    const rawData = [];
+    let maxColumns = 0;
     
-    // Validate the structure of the processed data
-    if (!sheetData || !sheetData.headers || !sheetData.root) {
-      console.log('Invalid sheet data structure:', JSON.stringify(sheetData).substring(0, 100) + '...');
-      return res.status(500).json({ error: 'Failed to process sheet data' });
-    }
-    
-    // Save to cache
-    fileData.processedSheets[sheetIdNum] = sheetData;
-    
-    console.log(`Successfully processed sheet ${sheetIdNum}, returning data`);
-    const processedData = removeCircularReferences(sheetData);
-    console.log(`Processed data headers: ${processedData.headers ? processedData.headers.length : 'none'}`);
-    console.log(`Processed data root: ${processedData.root ? (processedData.root.children ? processedData.root.children.length : 0) + ' children' : 'no root'}`);
-    
-    // Ensure the structure is consistent
-    if (processedData && processedData.headers && processedData.root) {
-      res.json({ data: processedData });
+    // Determine column count
+    if (worksheet.actualRowCount && worksheet.actualColumnCount) {
+      maxColumns = worksheet.actualColumnCount;
+      console.log(`Using actual column count: ${maxColumns}`);
     } else {
-      console.error('Data structure is invalid after processing:', processedData);
-      res.status(500).json({ error: 'Invalid data structure' });
+      worksheet.eachRow((row) => {
+        maxColumns = Math.max(maxColumns, row.cellCount);
+      });
+      console.log(`Calculated max column count: ${maxColumns}`);
     }
+    
+    maxColumns = Math.max(maxColumns, 10);
+    console.log(`Final column count: ${maxColumns}`);
+    
+    // Extract data
+    worksheet.eachRow({ includeEmpty: true }, (row, rowIndex) => {
+      const rowData = [];
+      
+      for (let i = 1; i <= maxColumns; i++) {
+        const cell = row.getCell(i);
+        let value = '';
+        
+        if (cell && cell.value !== null && cell.value !== undefined) {
+          if (typeof cell.value === 'object') {
+            if (cell.value instanceof Date) {
+              value = cell.value.toLocaleDateString();
+            } else if (cell.value.formula) {
+              value = cell.value.result || '';
+            } else if (cell.value.text) {
+              value = cell.value.text;
+            } else if (cell.value.richText) {
+              value = cell.value.richText.map(rt => rt.text).join('');
+            }
+          } else {
+            value = String(cell.value);
+          }
+        }
+        
+        rowData.push(value.trim());
+      }
+      
+      rawData.push(rowData);
+      if (rowIndex <= 2) {
+        console.log(`Row ${rowIndex} data:`, rowData.slice(0, 5));
+      }
+    });
+    
+    console.log(`Extracted ${rawData.length} rows of raw data`);
+    
+    // Create response with headers and data
+    const response = {
+      headers: rawData.length > 0 ? rawData[0] : [],
+      data: rawData,
+      needsConfiguration: true
+    };
+    
+    // Store in cache
+    console.log(`Storing processed data for sheet ${sheetIdNum} in cache`);
+    fileData.processedSheets[sheetIdNum] = response;
+    
+    // Return the data
+    console.log(`Sending response for sheet ${sheetIdNum}`);
+    return res.json({ data: response });
+    
   } catch (error) {
-    console.error('Error loading sheet:', error);
-    res.status(500).json({ error: 'Failed to load sheet data: ' + error.message });
+    console.error('Error loading sheet data:', error);
+    res.status(500).json({ error: 'Error loading sheet data: ' + error.message });
   }
 });
 

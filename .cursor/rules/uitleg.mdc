@@ -11,3 +11,12 @@ alwaysApply: true
 - I want to be able to customize design styling of the content. 
 - Make tabs for every spreadsheet-tab in the excel file.
 - Don't use tables but use html5 flexbox.
+- Don't skip columns when reading in data. Empty cells should also be displayed.
+- Every column in the excel is a separate class. Column 1 is class level-1, column 2 is class level-2 etcetera.
+- Every level class consists of 2 children: a header div and a content div. These are called the name of the class + header, or + content. For example level-1-header and level-1-content. The header title of the excel goes in the header, and the data of the specific cell goes in the content. 
+- Important: even if the cell is empty, it still is participating, just empty in the final result.
+- Every column except the first can be a child of the one left of it. If one column has multiple children, they are shown in row in the full width of the parent div. 
+- Important! if the level-x class is a parent of another, the data from the cells go into the level-x header, and the content has the designated children. 
+- The pdf-export should only have level-1 options to choose from. 
+- THe pdf layout should strive to look the same as the webpage. It should have the same structure, flex column and row layout. 
+- If the content doesnt fit inside the pdf, the content must responsively adjust so that it will fit. Flexbox will make sure of it.

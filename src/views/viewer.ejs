@@ -6,7 +6,7 @@
   <title><%= title %> - <%= filename %></title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
+<body data-file-id="<%= fileId %>">
   <div class="container viewer-container">
     <header>
       <div class="header-controls">
@@ -15,6 +15,7 @@
           <select id="export-column">
             <option value="">Select a column...</option>
           </select>
+          <button id="preview-pdf" class="control-button">Preview PDF</button>
           <button id="export-pdf" class="control-button">Export to PDF</button>
         </div>
       </div>
