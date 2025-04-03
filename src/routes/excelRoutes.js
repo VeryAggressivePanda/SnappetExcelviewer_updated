@@ -459,13 +459,16 @@ function buildHierarchy(rows, headers) {
       const blokValue = row[hierarchyColumns.blok.index].trim();
       if (blokValue) {
         const parentNode = currentNodes.course || root;
-        let blokNode = parentNode.children.find(child => child.value === blokValue);
+        let blokNode = parentNode.children.find(child => 
+          child.value === blokValue && 
+          child.columnName === hierarchyColumns.blok.name
+        );
         if (!blokNode) {
           blokNode = {
             type: 'item',
             value: blokValue,
-            columnName: hierarchyColumns.blok.name,
-            level: 1,
+            columnName: hierarchyColumns.blok.name, // Always keep this as "Blok"
+            level: 1, // Always level 1, regardless of parent
             children: [],
             properties: []
           };
@@ -480,7 +483,10 @@ function buildHierarchy(rows, headers) {
       const weekValue = row[hierarchyColumns.week.index].trim();
       if (weekValue) {
         const parentNode = currentNodes.blok || currentNodes.course || root;
-        let weekNode = parentNode.children.find(child => child.value === weekValue);
+        let weekNode = parentNode.children.find(child => 
+          child.value === weekValue && 
+          child.columnName === hierarchyColumns.week.name
+        );
         if (!weekNode) {
           weekNode = {
             type: 'item',
@@ -501,7 +507,10 @@ function buildHierarchy(rows, headers) {
       const lesValue = row[hierarchyColumns.les.index].trim();
       if (lesValue) {
         const parentNode = currentNodes.week || currentNodes.blok || currentNodes.course || root;
-        let lesNode = parentNode.children.find(child => child.value === lesValue);
+        let lesNode = parentNode.children.find(child => 
+          child.value === lesValue && 
+          child.columnName === hierarchyColumns.les.name
+        );
         if (!lesNode) {
           lesNode = {
             type: 'item',

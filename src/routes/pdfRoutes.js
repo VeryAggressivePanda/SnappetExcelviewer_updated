@@ -178,11 +178,13 @@ function generatePdfContent(data, title) {
         flex: 1;
       }
       
-      /* Level 0 styles */
+      /* Level-0 (Course) styling */
       .level-0-node {
         background-color: #ffffff;
         border-radius: 8px;
         page-break-inside: avoid;
+        box-shadow: 0 3px 7px rgba(51, 51, 51, 0.2);
+        margin: .5rem 0;
       }
       
       .level-0-header {
@@ -203,12 +205,17 @@ function generatePdfContent(data, title) {
         font-size: 1rem;
       }
       
+      /* Set padding to 0 when level-0-node is collapsed */
+      .level-0-collapsed .level-0-content {
+        padding: 0;
+      }
+      
       .level-0-children {
         display: flex;
         flex-direction: column;
         width: 100%;
         padding: 0;
-        margin-left: 0;
+        margin-left: 0.25rem;
         gap: 1rem;
       }
       
