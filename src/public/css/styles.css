@@ -398,7 +398,7 @@ body.colorful-theme .excel-node.collapsed .excel-node-children {
 
 body.colorful-theme .excel-node:not(.collapsed) .excel-node-children {
   display: block;
-  padding: 1rem;
+  padding: 0;
 }
 
 body.colorful-theme .level-0 {
@@ -417,6 +417,14 @@ body.colorful-theme .level-1 > .excel-node-header {
 
 body.colorful-theme .level-2 > .excel-node-header {
   background-color: rgba(74, 111, 165, 0.05);
+}
+
+.level-2 > .excel-node-header {
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+.excel-node.level-2 {
+  background-color: rgb(52 163 215 / 5%);
 }
 
 /* Footer Styles */
@@ -530,9 +538,12 @@ footer {
   min-width: 0;
 }
 
+/* Remove hover effect */
+/*
 .excel-node-header:hover {
   background-color: var(--hover-color);
 }
+*/
 
 /* Node expand/collapse button */
 .node-expand-button {
@@ -613,7 +624,8 @@ footer {
 
 /* Node children visibility */
 .excel-node-children {
-  padding-left: 8px;
+  padding: 0;
+  margin-left: 1rem;
 }
 
 /* Remove top margin for the first excel-node within excel-node-children */
@@ -627,26 +639,72 @@ footer {
 
 .excel-node:not(.collapsed) .excel-node-children {
   display: block;
-  padding: 1rem;
+  padding: 0;
 }
 
 /* Levels styling */
 .level-0 {
   box-shadow: 0 3px 7px rgba(51,51,51,0.2);
+  margin: 1rem;
 }
 
 .level-0 > .excel-node-header {
-  background-color: white;
+  /* background-color: rgb(52 163 215 / 10%); */
   border: none;
 }
 
+/* Explicit overrides to ensure no background on level-1 */
+.excel-node.level-1 {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.2);
+  padding-bottom: 1rem;
+  margin-top: 0;
+}
+
 .level-1 > .excel-node-header {
-  background-color: white;
-  box-shadow: 0 3px 7px rgba(51, 51, 51, .2);
+  /* background-color: transparent; */
+  /* box-shadow: 0 3px 7px rgba(51, 51, 51, .2); */
+  background-color: transparent !important;
 }
 
 .level-2 > .excel-node-header {
   background-color: rgba(74, 111, 165, 0.05);
+}
+
+/* PDF specific styles - should match the web view */
+.pdf-section .excel-node {
+  margin-bottom: 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+/* Add margin between level-2 nodes */
+.pdf-section .excel-node.level-2:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.pdf-section .excel-node-header {
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  border-bottom: none;
+  text-align: left;
+  margin-bottom: 0;
+  text-indent: .5rem;
+}
+
+.blok-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #34a3d7;
+  text-align: left;
+  text-indent: 0.5rem;
+  margin: 0 0 1rem 0;
+  padding: 0.5rem;
+  background-color: transparent;
+  border-radius: 4px;
+  page-break-after: avoid;
 }
 
 /* Controls */
@@ -795,10 +853,6 @@ footer {
   margin: 0;
 }
 
-.excel-node {
-  margin-bottom: 0;
-}
-
 .excel-node-children {
   padding-left: 0;
   border-left: none;
@@ -808,21 +862,13 @@ footer {
   margin-bottom: 0;
 }
 
-.pdf-section .excel-node {
-  margin-bottom: 0;
-  background: rgb(52 163 215 / 5%);
-  border: none;
-  border-radius: 4px;
-  box-shadow: none;
-}
-
 /* Remove top margin for the first level 3 node */
 .pdf-section .excel-node.level-2:first-child {
   margin-top: 0;
 }
 
 .pdf-section .excel-node-header {
-  background: rgb(52 163 215 / 10%);
+  background: transparent;
   padding: 0.25rem 0.5rem;
   border-bottom: none;
   text-align: left;
@@ -897,8 +943,8 @@ footer {
     padding: 0;
   }
 
-  /* Ensure blok-header appears at the top of each page */
-  .blok-header {
+  /* Ensure pdf-title appears at the top of each page */
+  .pdf-title {
     position: running(header);
     margin: 0 0 0.5rem 0;
     font-size: 1.1em;
@@ -906,7 +952,7 @@ footer {
     text-indent: 0.5rem;
     break-after: avoid;
     page-break-after: avoid;
-    background-color: rgb(52 163 215 / 10%) !important;
+    background-color: transparent !important;
   }
 
   /* Add the header to each page */
@@ -924,6 +970,13 @@ footer {
     padding: 0.5rem;
     background-color: rgb(52 163 215 / 5%) !important;
     border-radius: 4px;
+  }
+
+  /* Ensure level-2 headers have correct background */
+  .level-2 > .excel-node-header {
+    background-color: rgba(74, 111, 165, 0.05) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* Ensure property rows have the correct background color */
@@ -961,24 +1014,16 @@ footer {
   flex: 1;
 }
 
-.level-0 .node-title,
-.level-1 .node-title {
-  font-size: 1.4em;
+.level-0 .node-title {
+  font-size: 1.2rem;
   font-weight: bold;
   color: #34a3d7;
 }
 
-.blok-header {
-  font-size: 1.2em;
+.level-1 .node-title {
+  font-size: 1rem;
   font-weight: bold;
-  color: #34a3d7;
-  text-align: left;
-  text-indent: 0.5rem;
-  margin: 0 0 1rem 0;
-  padding: 0.5rem;
-  background-color: rgb(52 163 215 / 10%);
-  border-radius: 4px;
-  page-break-after: avoid;
+  color: #333;
 }
 
 /* PDF Preview Modal */

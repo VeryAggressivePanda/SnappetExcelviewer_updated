@@ -50,42 +50,116 @@ router.post('/generate', async (req, res) => {
           <meta charset="UTF-8">
           <style>
             ${cssContent}
+            
+            /* EXTREMELY SPECIFIC OVERRIDES */
+            /* First, clear ALL backgrounds */
+            div, header, section, body, html, * {
+              background-color: transparent !important;
+            }
+            
+            /* Then ONLY add background to level-2 node headers using a very specific selector */
+            div.excel-node.level-2 > div.excel-node-header {
+              background-color: rgba(74, 111, 165, 0.05) !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            /* Ensuring level-1 has absolutely no background */
+            div.excel-node.level-1, 
+            div.excel-node.level-1 > div.excel-node-header {
+              background-color: transparent !important;
+              background: none !important;
+            }
+            
             @page {
               size: A4;
             }
             body {
+              font-family: 'AbeZeh', sans-serif;
               margin: 0;
               padding: 0;
               background: white;
               width: 210mm;
               height: 297mm;
+              font-size: 10pt;
+              line-height: 1.5;
+              color: #333;
             }
-            .pdf-container {
-              transform-origin: top left;
-              transform: scale(1);
+            
+            /* Blok styling (level-0) */
+            .level-0 {
+              box-shadow: 0 3px 7px rgba(51,51,51,0.2);
+              margin: 1rem;
+              background-color: transparent !important;
             }
+            .level-0 > .excel-node-header {
+              border: none;
+              background-color: transparent !important;
+            }
+            .level-0 .node-title {
+              font-size: 1.2rem;
+              font-weight: bold;
+              color: #34a3d7;
+            }
+            
+            /* Week (level-1) - NO BACKGROUND */
+            .excel-node.level-1 {
+              background-color: transparent !important;
+              border-bottom: 1px solid rgba(52, 163, 215, 0.2);
+              padding-bottom: 1rem;
+              margin-top: 0;
+            }
+            .excel-node.level-1 > .excel-node-header {
+              background-color: transparent !important;
+              box-shadow: none;
+            }
+            .level-1 .node-title {
+              font-size: 1rem;
+              font-weight: bold;
+              color: #333;
+            }
+            
+            /* Les (level-2) - WITH BACKGROUND */
             .excel-node.level-2 {
               break-inside: avoid;
               page-break-inside: avoid;
               margin: 0.5rem 0;
               padding: 0.5rem;
-              background-color: rgb(52 163 215 / 5%);
+              background-color: transparent !important;
               border-radius: 4px;
               border: none;
             }
-            .blok-header {
+            
+            /* PDF specific elements */
+            .pdf-title {
+              font-size: 1.2rem;
+              font-weight: bold;
+              color: #34a3d7;
               break-after: avoid;
               page-break-after: avoid;
-              background-color: rgb(52 163 215 / 10%);
-              border: none;
+              background-color: transparent !important;
             }
+            
+            /* Child elements */
+            .excel-node-children {
+              padding: 0;
+              margin-left: 1rem;
+            }
+            
+            /* Property styling */
             .property-row {
-              background-color: rgb(52 163 215 / 3%);
+              background-color: rgb(52 163 215 / 3%) !important;
               border: none;
             }
             .excel-node-property {
-              background-color: white;
+              background-color: white !important;
               border: none;
+            }
+            
+            /* Container styling */
+            .pdf-container {
+              transform-origin: top left;
+              transform: scale(1);
             }
           </style>
         </head>

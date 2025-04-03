@@ -490,14 +490,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // For week nodes (level 1), render header and children
     if (node.level === 1) {
-      html += `<div class="excel-node level-${node.level}">`;
-      html += `<div class="excel-node-header">`;
-      html += `<div class="node-title">${node.value}</div>`;
+      html += `<div class="excel-node level-1" style="background-color: transparent !important;">`;
+      html += `<div class="excel-node-header" style="background-color: transparent !important;">`;
+      html += `<div class="node-title" style="font-size: 1rem; font-weight: bold; color: #333;">${node.value}</div>`;
       html += `</div>`;
       
       // Render children if they exist
       if (node.children && node.children.length > 0) {
-        html += '<div class="excel-node-children">';
+        html += '<div class="excel-node-children" style="padding: 0; margin-left: 1rem;">';
         node.children.forEach(child => {
           html += renderNodeForPDF(child);
         });
@@ -507,18 +507,18 @@ document.addEventListener('DOMContentLoaded', function() {
       html += `</div>`;
     } else {
       // For Les nodes (level 2), render header, properties, and children
-      html += `<div class="excel-node level-${node.level}">`;
-      html += `<div class="excel-node-header">`;
+      html += `<div class="excel-node level-2" style="margin: 0.5rem 0; padding: 0.5rem; background-color: transparent !important;">`;
+      html += `<div class="excel-node-header" style="background-color: rgba(74, 111, 165, 0.05) !important;">`;
       html += `<div class="node-title">${node.value}</div>`;
       html += `</div>`;
       
       // Add properties for Les nodes
       if (node.properties && node.properties.length > 0) {
         html += `<div class="excel-node-properties">`;
-        html += `<div class="property-row">`;
+        html += `<div class="property-row" style="background-color: rgb(52 163 215 / 3%) !important;">`;
         node.properties.forEach(prop => {
           html += `
-            <div class="excel-node-property">
+            <div class="excel-node-property" style="background-color: white !important;">
               <div class="property-name">${prop.columnName}</div>
               <div class="property-value">${prop.value || ''}</div>
             </div>
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Render children if they exist
       if (node.children && node.children.length > 0) {
-        html += '<div class="excel-node-children">';
+        html += '<div class="excel-node-children" style="padding: 0; margin-left: 1rem;">';
         node.children.forEach(child => {
           html += renderNodeForPDF(child);
         });
@@ -589,11 +589,11 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedNode.children.forEach(child => {
           const childSection = document.createElement('div');
           childSection.className = 'pdf-section';
-          // Add the Blok header to each section
-          const blokHeader = document.createElement('div');
-          blokHeader.className = 'blok-header';
-          blokHeader.textContent = selectedValue;
-          childSection.appendChild(blokHeader);
+          // Add the PDF title to each section instead of blok-header
+          const pdfTitle = document.createElement('div');
+          pdfTitle.className = 'pdf-title';
+          pdfTitle.textContent = selectedValue;
+          childSection.appendChild(pdfTitle);
           childSection.innerHTML += renderNodeForPDF(child);
           section.appendChild(childSection);
         });
@@ -660,6 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create preview container
     const previewContainer = document.createElement('div');
     previewContainer.className = 'pdf-container';
+    previewContainer.style.cssText = 'transform-origin: top left; transform: scale(1);';
     
     // Create content wrapper
     const contentWrapper = document.createElement('div');
@@ -668,6 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add title
     const title = document.createElement('h1');
     title.className = 'pdf-title';
+    title.style.cssText = 'font-size: 1.2rem; font-weight: bold; color: #34a3d7; background-color: transparent !important;';
     title.textContent = `Materialenlijst - ${selectedValue}`;
     contentWrapper.appendChild(title);
     
@@ -686,11 +688,12 @@ document.addEventListener('DOMContentLoaded', function() {
       selectedNode.children.forEach(child => {
         const childSection = document.createElement('div');
         childSection.className = 'pdf-section';
-        // Add the Blok header to each section
-        const blokHeader = document.createElement('div');
-        blokHeader.className = 'blok-header';
-        blokHeader.textContent = selectedValue;
-        childSection.appendChild(blokHeader);
+        // Add the PDF title to each section instead of blok-header
+        const pdfTitle = document.createElement('div');
+        pdfTitle.className = 'pdf-title';
+        pdfTitle.style.cssText = 'font-size: 1.2rem; font-weight: bold; color: #34a3d7; background-color: transparent !important;';
+        pdfTitle.textContent = selectedValue;
+        childSection.appendChild(pdfTitle);
         childSection.innerHTML += renderNodeForPDF(child);
         section.appendChild(childSection);
       });
