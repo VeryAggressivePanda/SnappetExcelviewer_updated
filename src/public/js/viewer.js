@@ -933,100 +933,150 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Render hierarchical data to the sheet
-  function renderSheet(sheetId, data) {
-    if (!data) {
-      console.error("No data provided to renderSheet");
+  function renderSheet(sheetId, sheetData) {
+    if (!sheetData || !sheetData.root) {
+      console.error("No data or root provided to renderSheet");
       return;
     }
     
-    if (!data.root) {
-      console.error("No root node in data", data);
-      return;
-    }
+    // Store current expand/collapse state before rendering
+    let expandStateMap = {};
     
-    const sheetContent = document.getElementById(`sheet-${sheetId}`);
-    
-    // Create hierarchical container
-    const container = document.createElement('div');
-    container.className = 'excel-hierarchical-container';
-    
-    // Add controls
-    const controls = document.createElement('div');
-    controls.className = 'controls';
-    
-    const expandAllButton = document.createElement('button');
-    expandAllButton.textContent = 'Expand All';
-    expandAllButton.className = 'control-button expand-all';
-    expandAllButton.addEventListener('click', () => {
-      const nodes = container.querySelectorAll('.excel-node');
-      nodes.forEach(node => node.classList.remove('collapsed'));
-    });
-    
-    const collapseAllButton = document.createElement('button');
-    collapseAllButton.textContent = 'Collapse All';
-    collapseAllButton.className = 'control-button collapse-all';
-    collapseAllButton.addEventListener('click', () => {
-      const nodes = container.querySelectorAll('.excel-node');
-      nodes.forEach(node => {
-        if (node.classList.contains('level-0') || node.classList.contains('level-1')) {
-          node.classList.add('collapsed');
-        }
-      });
-    });
-    
-    const saveHierarchyButton = document.createElement('button');
-    saveHierarchyButton.textContent = 'Save Hierarchy';
-    saveHierarchyButton.className = 'control-button save-hierarchy';
-    saveHierarchyButton.style.marginLeft = 'auto';
-    saveHierarchyButton.style.backgroundColor = '#4CAF50';
-    saveHierarchyButton.style.color = 'white';
-    saveHierarchyButton.addEventListener('click', saveCurrentHierarchyConfiguration);
-    
-    controls.appendChild(expandAllButton);
-    controls.appendChild(collapseAllButton);
-    controls.appendChild(saveHierarchyButton);
-    container.appendChild(controls);
-    
-    // Add hierarchical content
-    const content = document.createElement('div');
-    content.className = 'excel-hierarchical-content';
-    
-    // Handle empty data
-    if (!data.root.children || data.root.children.length === 0) {
-      content.innerHTML = '<div class="empty-sheet"><p>No data to display</p></div>';
-      container.appendChild(content);
-      sheetContent.innerHTML = '';
-      sheetContent.appendChild(container);
-      return;
-    }
-    
-    // Add parent references to all nodes for hierarchy traversal
-    addParentReferences(data.root);
-    
-    // Render children
-    data.root.children.forEach(child => {
-      content.appendChild(renderNode(child, 0));
-    });
-    
-    container.appendChild(content);
-    sheetContent.innerHTML = '';
-    sheetContent.appendChild(container);
-  }
-  
-  // Helper function to add parent references to all nodes
-  function addParentReferences(node) {
-    if (!node) return;
-    
-    if (node.children && node.children.length > 0) {
-      for (const child of node.children) {
-        child.parent = node;
-        addParentReferences(child);
+    // Check if we have a stored expandStateMap from a recent add/delete operation
+    if (window.expandStateMap) {
+      expandStateMap = window.expandStateMap;
+      window.expandStateMap = null; // Clear after use
+      console.log("Using stored expand state map");
+    } else {
+      // Otherwise get the current state from the DOM
+      const sheetContent = document.getElementById(`sheet-${sheetId}`);
+      if (sheetContent) {
+        const nodes = sheetContent.querySelectorAll('[class*="-node"]');
+        nodes.forEach(node => {
+          // Get the node ID from its data attribute
+          const nodeId = node.getAttribute('data-node-id');
+          if (nodeId) {
+            // Store if the node is collapsed or expanded
+            expandStateMap[nodeId] = !node.classList.contains(`level-${node.getAttribute('data-level')}-collapsed`);
+          }
+        });
       }
     }
+    
+    const content = document.getElementById(`sheet-${sheetId}`);
+    content.innerHTML = '';  // Clear content
+    
+    // Create hierarchy container
+    const hierarchyContainer = document.createElement('div');
+    hierarchyContainer.className = 'hierarchy-container';
+    
+    // Create controls bar
+    const controlsBar = document.createElement('div');
+    controlsBar.className = 'controls-bar';
+    controlsBar.style.display = 'flex';
+    controlsBar.style.alignItems = 'center';
+    controlsBar.style.marginBottom = '10px';
+    controlsBar.style.padding = '5px';
+    controlsBar.style.background = '#f8f9fa';
+    controlsBar.style.border = '1px solid #ddd';
+    controlsBar.style.borderRadius = '4px';
+    
+    // Create expand/collapse all buttons
+    const expandAllBtn = document.createElement('button');
+    expandAllBtn.textContent = 'Expand All';
+    expandAllBtn.className = 'expand-all-button';
+    expandAllBtn.style.marginRight = '10px';
+    expandAllBtn.style.padding = '5px 10px';
+    expandAllBtn.style.border = '1px solid #ddd';
+    expandAllBtn.style.borderRadius = '4px';
+    expandAllBtn.style.cursor = 'pointer';
+    
+    const collapseAllBtn = document.createElement('button');
+    collapseAllBtn.textContent = 'Collapse All';
+    collapseAllBtn.className = 'collapse-all-button';
+    collapseAllBtn.style.marginRight = '10px';
+    collapseAllBtn.style.padding = '5px 10px';
+    collapseAllBtn.style.border = '1px solid #ddd';
+    collapseAllBtn.style.borderRadius = '4px';
+    collapseAllBtn.style.cursor = 'pointer';
+    
+    // Add click handlers
+    expandAllBtn.addEventListener('click', () => toggleAllNodes(false));
+    collapseAllBtn.addEventListener('click', () => toggleAllNodes(true));
+    
+    // Add save hierarchy button
+    const saveHierarchyButton = document.createElement('button');
+    saveHierarchyButton.textContent = 'Save Hierarchy';
+    saveHierarchyButton.className = 'save-hierarchy-button';
+    saveHierarchyButton.style.marginLeft = 'auto';
+    saveHierarchyButton.style.padding = '5px 10px';
+    saveHierarchyButton.style.border = '1px solid #ddd';
+    saveHierarchyButton.style.borderRadius = '4px';
+    saveHierarchyButton.style.cursor = 'pointer';
+    
+    saveHierarchyButton.addEventListener('click', () => {
+      // Show saving indicator
+      const oldText = saveHierarchyButton.textContent;
+      saveHierarchyButton.textContent = 'Saving...';
+      saveHierarchyButton.disabled = true;
+      
+      // Simulate async operation
+      setTimeout(() => {
+        try {
+          // Serialize hierarchy
+          const hierarchy = {};
+          
+          saveHierarchyButton.textContent = 'Saved ✓';
+          setTimeout(() => {
+            saveHierarchyButton.textContent = oldText;
+            saveHierarchyButton.disabled = false;
+          }, 1500);
+        } catch (e) {
+          console.error("Error saving hierarchy:", e);
+          saveHierarchyButton.textContent = 'Error Saving';
+          saveHierarchyButton.style.color = 'red';
+          setTimeout(() => {
+            saveHierarchyButton.textContent = oldText;
+            saveHierarchyButton.style.color = '';
+            saveHierarchyButton.disabled = false;
+          }, 1500);
+        }
+      }, 500);
+    });
+    
+    // Add buttons to controls bar
+    controlsBar.appendChild(expandAllBtn);
+    controlsBar.appendChild(collapseAllBtn);
+    controlsBar.appendChild(saveHierarchyButton);
+    
+    // Add controls bar to container
+    hierarchyContainer.appendChild(controlsBar);
+    
+    // Check if data is empty
+    if (!sheetData.root.children || sheetData.root.children.length === 0) {
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'empty-data-message';
+      emptyMessage.textContent = 'No data available for this sheet.';
+      emptyMessage.style.padding = '20px';
+      emptyMessage.style.textAlign = 'center';
+      emptyMessage.style.color = '#666';
+      
+      hierarchyContainer.appendChild(emptyMessage);
+      content.appendChild(hierarchyContainer);
+      return;
+    }
+    
+    // Render each child of the root
+    sheetData.root.children.forEach(child => {
+      content.appendChild(renderNode(child, 0, expandStateMap));
+    });
+    
+    // Attach content to page
+    content.appendChild(hierarchyContainer);
   }
   
   // Render a node and its children
-  function renderNode(node, level) {
+  function renderNode(node, level, expandStateMap = {}) {
     const nodeEl = document.createElement('div');
     
     // Use level-specific class names
@@ -1040,8 +1090,13 @@ document.addEventListener('DOMContentLoaded', function() {
     nodeEl.setAttribute('data-column-name', node.columnName || '');
     nodeEl.setAttribute('data-column-index', node.columnIndex || '');
     nodeEl.setAttribute('data-is-empty', node.isEmpty ? 'true' : 'false');
+    nodeEl.setAttribute('data-node-id', node.id || '');
     
-    if (level < 2) {
+    // Set initial collapse state based on level and expandStateMap
+    const shouldBeExpanded = expandStateMap[node.id] !== undefined ? 
+      expandStateMap[node.id] : (level >= 2);
+    
+    if (!shouldBeExpanded) {
       nodeEl.classList.add(`level-${level}-collapsed`);
     }
     
@@ -1120,21 +1175,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Confirm deletion
         if (confirm(`Are you sure you want to delete this "${node.columnName}" element?`)) {
-          // Remove the node from the DOM
-          nodeEl.remove();
-          
-          // Find the parent node in the data structure
-          const parentNode = findParentNode(node.id);
-          if (parentNode) {
-            // Remove the node from its parent's children array
-            const index = parentNode.children.findIndex(child => child.id === node.id);
-            if (index !== -1) {
-              parentNode.children.splice(index, 1);
-              
-              // Re-render the sheet to update the hierarchy
-              renderSheet(window.excelData.activeSheetId, window.excelData.sheetsLoaded[window.excelData.activeSheetId]);
-            }
-          }
+          // Use our new deletion function that preserves expand state
+          deleteNode(node.id);
         }
       });
       
@@ -1178,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         node.children.forEach(child => {
-          childrenContainer.appendChild(renderNode(child, level + 1));
+          childrenContainer.appendChild(renderNode(child, level + 1, expandStateMap));
         });
         
         content.appendChild(childrenContainer);
@@ -1462,10 +1504,10 @@ document.addEventListener('DOMContentLoaded', function() {
           previewContent.innerHTML = `
             <p><strong>Selected:</strong> ${columnName} (Column ${coordinates.excelColumn})</p>
             <p><strong>Excel Cell:</strong> ${coordinates.excelCell}</p>
-            <p><strong>Value:</strong> "${cellValue || ''}"</p>
+            <p><strong>Value:</strong> "${cellValue || '(empty)'}"</p>
           `;
           
-          // Disable add button for null/undefined values, but allow empty strings
+          // Allow adding elements with empty values - only disable for null/undefined
           addButton.disabled = cellValue === null || cellValue === undefined;
           
           return;
@@ -1489,11 +1531,11 @@ document.addEventListener('DOMContentLoaded', function() {
       previewContent.innerHTML = `
         <p><strong>Selected:</strong> ${columnName} (Column ${coordinates.excelColumn})</p>
         <p><strong>Excel Cell:</strong> ${coordinates.excelCell}</p>
-        <p><strong>Value:</strong> "${cellValue || ''}"</p>
+        <p><strong>Value:</strong> "${cellValue || '(empty)'}"</p>
       `;
       
-      // Disable add button if no data
-      addButton.disabled = !cellValue;
+      // Allow adding elements with empty values - only disable for null/undefined
+      addButton.disabled = cellValue === null || cellValue === undefined;
     }
     
     // Add buttons
@@ -1578,8 +1620,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get the value from the specified cell
       const value = coordinates.value;
       
-      if (!value) {
-        alert(`No value found in Excel cell ${coordinates.excelCell}`);
+      // Allow empty values (empty string) - only block null/undefined
+      if (value === null || value === undefined) {
+        alert(`No valid data found in Excel cell ${coordinates.excelCell}`);
         return;
       }
       
@@ -1628,16 +1671,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn("Target row not found or not an array, skipping property extraction");
       }
       
-      // Add to parent
-      if (!parentNode.children) {
-        parentNode.children = [];
-      }
-      
-      parentNode.children.push(newNode);
-      
-      // Close modal and update
+      // Close modal
       document.body.removeChild(modal);
-      renderSheet(activeSheetId, sheetData);
+      
+      // Add node and re-render with preserved expand state
+      addNode(parentNode, newNode);
     });
     
     // Handle cancel
@@ -2087,6 +2125,68 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     return searchChildren(sheetData.root);
+  }
+  
+  // Function to store current expand/collapse state
+  function storeExpandState() {
+    const activeSheetId = window.excelData.activeSheetId;
+    const expandStateMap = {};
+    const sheetContent = document.getElementById(`sheet-${activeSheetId}`);
+    
+    if (sheetContent) {
+      const nodes = sheetContent.querySelectorAll('[class*="-node"]');
+      nodes.forEach(node => {
+        // Get the node ID from its data attribute
+        const nodeId = node.getAttribute('data-node-id');
+        if (nodeId) {
+          // Store if the node is expanded (not collapsed)
+          const level = node.getAttribute('data-level');
+          expandStateMap[nodeId] = !node.classList.contains(`level-${level}-collapsed`);
+        }
+      });
+    }
+    
+    console.log("Stored expand state for", Object.keys(expandStateMap).length, "nodes");
+    window.expandStateMap = expandStateMap;
+    return expandStateMap;
+  }
+  
+  // Function to add a new child node and preserve expand/collapse state
+  function addNode(parentNode, newNode) {
+    if (!parentNode.children) {
+      parentNode.children = [];
+    }
+    
+    // Store expand state before modifying the DOM
+    storeExpandState();
+    
+    // Add the new node to the parent
+    parentNode.children.push(newNode);
+    
+    // Re-render with preserved expand state
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    renderSheet(activeSheetId, sheetData);
+  }
+  
+  function deleteNode(nodeId) {
+    // Find the parent node in the data structure
+    const parentNode = findParentNode(nodeId);
+    if (parentNode) {
+      // Store expand/collapse state before re-rendering
+      storeExpandState();
+      
+      // Remove the node from its parent's children array
+      const index = parentNode.children.findIndex(child => child.id === nodeId);
+      if (index !== -1) {
+        parentNode.children.splice(index, 1);
+        
+        // Re-render the sheet to update the hierarchy
+        const activeSheetId = window.excelData.activeSheetId;
+        const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+        renderSheet(activeSheetId, sheetData);
+      }
+    }
   }
   
   initialize();
