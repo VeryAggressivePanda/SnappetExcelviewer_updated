@@ -685,9 +685,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get value from currentValues, or use empty string (don't skip empty cells)
       const childValue = currentValues[childColIndex] || '';
       
-      // Create a unique key for this child based on column and value
-      // Remove rowIndex from key to ensure grouping by value
-      const childKey = `${parentNode.id}-col${childColIndex}-${childValue || 'empty'}`;
+      // DO NOT SKIP EMPTY CELLS - Include them as empty children with proper labeling
+      // Create a unique key for this child based on column, value, AND row index to prevent duplicates
+      // Include rowIndex in key to ensure no value reuse across rows
+      const childKey = `${parentNode.id}-col${childColIndex}-row${rowIndex}-${childValue || 'empty'}`;
       let childNode = parentNode.childNodes[childKey];
       
       if (!childNode) {
@@ -697,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const excelCoord = `${excelColumn}${excelRow}`;
         
         childNode = {
-          id: `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}`, // Make ID based on value, not row
+          id: `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}-row${rowIndex}`, // Make ID unique to row
           value: childValue || `Empty ${headers[childColIndex]}`,
           columnName: headers[childColIndex] || `Column ${childColIndex+1}`,
           columnIndex: childColIndex,
@@ -2754,6 +2755,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Add this new function to handle the manage items modal
   function showManageItemsModal(lesNode) {
+    console.log("%c === MANAGE ITEMS MODAL OPENED === ", "background: #ff5722; color: white; font-weight: bold; padding: 4px;");
+    console.log(`Node: ${lesNode.id} - ${lesNode.columnName}: ${lesNode.value}`);
+    console.log("Excel Coordinates:", lesNode.excelCoordinates);
+    console.log("Children:", lesNode.children);
+    
     // Create modal
     const modal = document.createElement('div');
     modal.className = 'manage-items-modal';
@@ -2810,11 +2816,6 @@ document.addEventListener('DOMContentLoaded', function() {
     debugInfo.style.backgroundColor = '#f5f5f5';
     debugInfo.style.fontSize = '12px';
     
-    // Log for troubleshooting
-    console.log("Les Node:", lesNode);
-    console.log("Excel Coordinates:", lesNode.excelCoordinates);
-    console.log("Children:", lesNode.children);
-    
     let childrenHTML = '';
     if (lesNode.children && lesNode.children.length > 0) {
       childrenHTML = '<p><strong>Child Items:</strong></p><ul style="margin-top: 5px; padding-left: 20px;">';
@@ -2833,7 +2834,7 @@ document.addEventListener('DOMContentLoaded', function() {
     content.appendChild(debugInfo);
     
     // Get headers and target row
-    const headers = rawData[0];
+    const headers = window.excelData.sheetsLoaded[activeSheetId].headers;
     
     // Find row for this node - CRITICAL to get this right
     let targetRow = null;
@@ -2849,7 +2850,25 @@ document.addEventListener('DOMContentLoaded', function() {
       if (targetRowIndex >= 0 && targetRowIndex < rawData.length) {
         targetRow = rawData[targetRowIndex];
       }
+    } else {
+      // Try to find by value match on "Les" column
+      // Only use this if we couldn't find by coordinates
+      const lesMatch = lesNode.value.match(/Les\s+(\d+)/i);
+      if (lesMatch && lesMatch[1]) {
+        const lesNumber = parseInt(lesMatch[1]);
+        for (let i = 0; i < rawData.length; i++) {
+          if (rawData[i] && rawData[i][2] === `Les ${lesNumber}`) {
+            targetRowIndex = i;
+            targetRow = rawData[i];
+            console.log(`Found row by Les number search: Les ${lesNumber} -> row ${i}`);
+            break;
+          }
+        }
+      }
     }
+    
+    console.log("Target row index:", targetRowIndex);
+    console.log("Target row:", targetRow);
     
     if (!targetRow) {
       content.appendChild(document.createTextNode('Could not find Excel row for this item'));
@@ -2857,9 +2876,6 @@ document.addEventListener('DOMContentLoaded', function() {
       document.body.appendChild(modal);
       return;
     }
-    
-    console.log("Target row index:", targetRowIndex);
-    console.log("Target row:", targetRow);
     
     // Create map of current children with visibility state
     const childrenMap = {};
@@ -2909,19 +2925,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // THEN, add items from the Excel row that aren't already children
-    // ONLY process the specific row
+    // ONLY process the specific row for this Les node
     for (let i = 0; i < headers.length; i++) {
       const colName = headers[i];
       
-      // Skip parent columns or empty headers
+      // Skip parent columns, empty headers, or columns we've already processed
       if (!colName || parentColumns.has(i)) {
         continue;
       }
       
       const cellValue = targetRow[i];
       
-      // Skip empty cells
+      // CRITICAL FIX: Skip empty cells - DO NOT reuse data from other rows
       if (!cellValue || cellValue === '') {
+        console.log(`Skipping empty cell at column ${i} (${colName})`);
         continue;
       }
       
@@ -3056,6 +3073,7 @@ document.addEventListener('DOMContentLoaded', function() {
     saveButton.addEventListener('click', () => {
       // Get all checkboxes
       const checkboxes = content.querySelectorAll('input[type="checkbox"]');
+      console.log(`Processing ${checkboxes.length} checkboxes`);
       let changesApplied = false;
       
       // Create children array if needed
@@ -3073,7 +3091,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const nodeId = cb.dataset.nodeId;
         
         if (exists) {
-          // Find existing child
+          // Find existing child BY ID - more reliable than string matching
           const childIndex = lesNode.children.findIndex(child => child.id === nodeId);
           if (childIndex >= 0) {
             // Update visibility
@@ -3085,19 +3103,17 @@ document.addEventListener('DOMContentLoaded', function() {
               changesApplied = true;
               console.log(`Changed visibility of "${value}" to ${!shouldBeHidden}`);
               
-              // IMPORTANT: Immediately update the DOM element if it exists
+              // Immediately apply visibility change to DOM
               const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
               if (nodeElement) {
                 nodeElement.style.display = shouldBeHidden ? 'none' : '';
-                console.log(`Updated DOM element display: ${shouldBeHidden ? 'none' : 'block'}`);
-              } else {
-                console.log(`DOM element not found for node ID: ${nodeId}`);
+                console.log(`Updated DOM element display for ${nodeId} to ${shouldBeHidden ? 'none' : 'block'}`);
               }
             }
           }
         } else if (checked) {
-          // Add new child
-          const newNodeId = `node-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          // Add new child with a more consistent ID
+          const newNodeId = `node-${colIndex}-${value.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now().toString(36)}`;
           const newNode = {
             id: newNodeId,
             columnName: colName,
@@ -3105,52 +3121,38 @@ document.addEventListener('DOMContentLoaded', function() {
             value: value,
             level: lesNode.level + 1,
             children: [],
-            excelCoordinates: lesNode.excelCoordinates,
+            // Copy parent coordinates but update column
+            excelCoordinates: {
+              ...lesNode.excelCoordinates,
+              column: String.fromCharCode(65 + colIndex) // Convert to Excel column letter
+            },
             hidden: false
           };
           
+          // Add directly to THIS parent node's children
           lesNode.children.push(newNode);
           changesApplied = true;
-          console.log(`Added new node: ${colName} - ${value}`);
+          console.log(`Added new child: ${colName} - ${value}`);
         }
       });
       
       // Close modal
       document.body.removeChild(modal);
       
-      // Always do a full refresh if any changes were made
+      // Always do a full refresh if new items were added (can't just update visibility)
       if (changesApplied) {
-        // Get visible child count for DOM update
-        const visibleCount = lesNode.children.filter(child => !child.hidden).length;
+        // Get the root node and re-render
+        const activeSheetId = window.excelData.activeSheetId;
+        const rootNode = window.excelData.sheetsLoaded[activeSheetId].rootNode;
         
-        // Update DOM to reflect the correct child count
-        const nodeElement = document.querySelector(`[data-node-id="${lesNode.id}"]`);
-        if (nodeElement) {
-          const childrenContainer = nodeElement.querySelector(`.level-${lesNode.level}-children`);
-          if (childrenContainer) {
-            childrenContainer.setAttribute('data-child-count', visibleCount);
-            childrenContainer.className = childrenContainer.className.replace(
-              /level-\d+-child-count-\d+/, 
-              `level-${lesNode.level}-child-count-${visibleCount}`
-            );
-          }
-        }
+        // Store expand state
+        const expandStateMap = storeExpandState();
         
-        // For new items, we need to do a full refresh
-        if (checkboxes.some(cb => cb.checked && cb.dataset.exists !== "true")) {
-          console.log("New items added, doing full refresh");
-          const activeSheetId = window.excelData.activeSheetId;
-          const rootNode = window.excelData.sheetsLoaded[activeSheetId].rootNode;
-          
-          // Store expand state
-          const expandStateMap = storeExpandState();
-          
-          // Refresh view
-          const container = document.getElementById('data-container');
-          if (container) {
-            container.innerHTML = '';
-            renderNode(rootNode, 0, expandStateMap);
-          }
+        // Clear and re-render the view
+        const container = document.getElementById('data-container');
+        if (container) {
+          container.innerHTML = '';
+          renderNode(rootNode, 0, expandStateMap);
         }
       }
     });
