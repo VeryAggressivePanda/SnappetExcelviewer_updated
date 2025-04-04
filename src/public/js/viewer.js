@@ -591,69 +591,73 @@ document.addEventListener('DOMContentLoaded', function() {
     // Track current parent values for each column level
     const currentValues = {};
     
-    // Process all rows
+    // Process each row
     for (let rowIndex = 1; rowIndex < data.length; rowIndex++) {
       const row = data[rowIndex];
+      if (!row) continue;
       
-      // Skip empty rows
-      if (row.every(cell => !cell)) continue;
-      
-      // Update current values for each column
+      // Store current values for each column in this row
       for (const colIndex in hierarchy) {
-        const i = parseInt(colIndex);
-        if (row[i] && row[i].trim() !== '') {
-          currentValues[i] = row[i];
+        const colIdx = parseInt(colIndex);
+        if (row[colIdx] !== undefined && row[colIdx] !== null && row[colIdx] !== '') {
+          currentValues[colIdx] = row[colIdx];
         }
       }
       
-      // Process each top-level column
-      for (const topColIndex of topLevelColumns) {
-        // Use current value for this column (may come from a previous row)
-        const topValue = currentValues[topColIndex] || '';
-        if (!topValue) continue;
+      // Process top-level columns for this row
+      for (const topLevelColIndex of topLevelColumns) {
+        const value = currentValues[topLevelColIndex] || '';
+        if (!value) continue; // Skip if no value
         
-        // Create or get top-level node - use value-based key, not row-based
-        const topKey = `col${topColIndex}-${topValue}`;
-        if (!nodesByColumn[topKey]) {
-          const node = {
-            id: `node-${topColIndex}-${topValue.replace(/[^a-zA-Z0-9]/g, '-')}`,
-            value: topValue,
-            columnName: headers[topColIndex] || `Column ${topColIndex+1}`,
-            columnIndex: topColIndex,
+        const key = `col${topLevelColIndex}-${value}`;
+        
+        // Create node if not exists
+        if (!nodesByColumn[key]) {
+          // Create Excel coordinates reference (A1, B2, etc.)
+          const excelColumn = String.fromCharCode(65 + topLevelColIndex);
+          const excelRow = rowIndex + 1; // Excel is 1-indexed
+          const excelCoord = `${excelColumn}${excelRow}`;
+          
+          nodesByColumn[key] = {
+            id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            value: value,
+            columnName: headers[topLevelColIndex] || `Column ${topLevelColIndex+1}`,
+            columnIndex: topLevelColIndex,
             level: 0,
             children: [],
+            childNodes: {},
             properties: [],
-            childNodes: {} // Temporary map to track child nodes
+            // Store Excel coordinates with the node
+            excelCoordinates: {
+              column: excelColumn,
+              row: excelRow,
+              cell: excelCoord,
+              rowIndex: rowIndex
+            }
           };
-          root.children.push(node);
-          nodesByColumn[topKey] = node;
+          
+          root.children.push(nodesByColumn[key]);
         }
         
-        // Process child columns recursively using current values
+        // Process children recursively with the stored values for this row
         processChildrenWithCurrentValues(
-          nodesByColumn[topKey], 
+          nodesByColumn[key], 
           row, 
           0, 
-          topColIndex, 
+          topLevelColIndex, 
           rowIndex, 
           childrenMap, 
           headers, 
-          hierarchy, 
+          hierarchy,
           currentValues
         );
       }
     }
     
-    // Clean up temporary tracking objects
-    for (const key in nodesByColumn) {
-      cleanupNode(nodesByColumn[key]);
-    }
+    // Cleanup temporary objects
+    root.children.forEach(cleanupNode);
     
-    // Log the result
-    console.log("Processed data structure:", {
-      topLevelCount: root.children.length,
-      levels: countLevels(root)
-    });
+    console.log("Processed data structure:", root);
     
     return {
       headers: headers,
@@ -687,6 +691,11 @@ document.addEventListener('DOMContentLoaded', function() {
       let childNode = parentNode.childNodes[childKey];
       
       if (!childNode) {
+        // Create Excel coordinates reference (A1, B2, etc.)
+        const excelColumn = String.fromCharCode(65 + childColIndex);
+        const excelRow = rowIndex + 1; // Excel is 1-indexed
+        const excelCoord = `${excelColumn}${excelRow}`;
+        
         childNode = {
           id: `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}`, // Make ID based on value, not row
           value: childValue || `Empty ${headers[childColIndex]}`,
@@ -696,7 +705,14 @@ document.addEventListener('DOMContentLoaded', function() {
           children: [],
           properties: [],
           childNodes: {}, // For its own children
-          isEmpty: !childValue // Track if this is an empty cell
+          isEmpty: !childValue, // Track if this is an empty cell
+          // Store Excel coordinates with the node
+          excelCoordinates: {
+            column: excelColumn,
+            row: excelRow,
+            cell: excelCoord,
+            rowIndex: rowIndex
+          }
         };
         parentNode.children.push(childNode);
         parentNode.childNodes[childKey] = childNode;
@@ -752,39 +768,27 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get value (could be empty string)
       const value = (i < row.length) ? (row[i] || '') : '';
       
+      // Create Excel coordinates for this property
+      const excelColumn = String.fromCharCode(65 + i);
+      const excelRow = node.excelCoordinates ? node.excelCoordinates.row : null;
+      const excelCoord = excelRow ? `${excelColumn}${excelRow}` : null;
+      
       // Add property if not already exists with this column index
       const existingProp = node.properties.find(p => p.columnIndex === i);
       if (!existingProp) {
         node.properties.push({
           columnIndex: i,
           columnName: columnName,
-          value: value
+          value: value,
+          // Store Excel coordinates with property
+          excelCoordinates: excelCoord ? {
+            column: excelColumn,
+            row: excelRow,
+            cell: excelCoord
+          } : null
         });
       }
     }
-  }
-  
-  // Helper to count nodes at each level
-  function countLevels(node) {
-    const counts = {0: 0, 1: 0, 2: 0};
-    
-    function traverse(node, level) {
-      if (level in counts) {
-        counts[level]++;
-      }
-      
-      if (node.children) {
-        for (const child of node.children) {
-          traverse(child, level + 1);
-        }
-      }
-    }
-    
-    for (const child of node.children) {
-      traverse(child, 0);
-    }
-    
-    return counts;
   }
   
   // Tab switching with lazy loading
@@ -816,129 +820,71 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // Load sheet data via AJAX
+  // Function to load sheet data
   async function loadSheetData(sheetId) {
+    const fileId = window.excelData.fileId;
+    console.log("Loading sheet data for sheet " + sheetId + ", using fileId: " + fileId);
+    
+    // If already loaded, return the cached data
+    if (window.excelData.sheetsLoaded[sheetId]) {
+      return window.excelData.sheetsLoaded[sheetId];
+    }
+    
+    // Request sheet data from server
+    console.log("Requesting: /api/sheet/" + fileId + "/" + sheetId);
     try {
-      const sheetContent = document.getElementById(`sheet-${sheetId}`);
+      const response = await fetch("/api/sheet/" + fileId + "/" + sheetId);
+      console.log("Response received, parsing JSON...");
+      const data = await response.json();
+      console.log("API response parsed:", data);
       
-      // Show loading indicator
-      sheetContent.innerHTML = '<div class="loading-indicator"><p>Loading sheet data...</p></div>';
-      
-      console.log(`Loading sheet data for sheet ${sheetId}, using fileId: ${window.excelData.fileId}`);
-      
-      if (!window.excelData.fileId) {
-        throw new Error('No file ID available for API request');
+      // Store raw data for later use
+      if (!window.rawExcelData) window.rawExcelData = {};
+      if (data.data?.data) {
+        window.rawExcelData[sheetId] = data.data.data;
+        console.log("Stored raw Excel data for sheet", sheetId, "length:", data.data.data.length);
       }
       
-      // Fetch the sheet data
-      const url = `/api/sheet/${window.excelData.fileId}/${sheetId}`;
-      console.log(`Requesting: ${url}`);
+      // Cache the data
+      window.excelData.sheetsLoaded[sheetId] = data.data;
       
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API response error: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Failed to load sheet data: ${response.statusText}`);
-      }
-      
-      console.log('Response received, parsing JSON...');
-      const result = await response.json();
-      console.log('API response parsed:', result);
-      
-      if (!result.data) {
-        throw new Error('Invalid response from server');
-      }
-      
-      const data = result.data;
-      
-      // If we have raw data, check for saved configuration first
-      if (data.needsConfiguration && data.headers && data.data) {
-        // Create a unique key for this file/sheet combination
-        const configKey = `${window.excelData.fileId}-${sheetId}`;
-        
-        // Try to load from in-memory saved configuration first
-        let savedConfig = window.excelData.savedConfigurations[configKey];
-        
-        // If not found in memory but localStorage has configurations, reload from localStorage
-        // This handles page refresh case when memory is cleared but localStorage persists
-        if (!savedConfig) {
-          try {
-            const savedHierarchyConfigs = localStorage.getItem('hierarchyConfigurations');
-            if (savedHierarchyConfigs) {
-              const allConfigs = JSON.parse(savedHierarchyConfigs);
-              if (allConfigs && typeof allConfigs === 'object' && allConfigs[configKey]) {
-                savedConfig = allConfigs[configKey];
-                console.log('Found saved configuration in localStorage:', savedConfig);
-                
-                // Update in-memory version too
-                window.excelData.savedConfigurations[configKey] = savedConfig;
-              }
-            }
-          } catch (e) {
-            console.error('Error loading hierarchy configuration from localStorage:', e);
-          }
-        }
+      // Process the data if it requires configuration
+      if (data.data.needsConfiguration) {
+        // Check if we have a saved configuration
+        const savedConfig = getSavedHierarchyConfiguration(fileId, sheetId);
+        console.log("Checking for saved configuration...");
         
         if (savedConfig) {
-          console.log('Using saved hierarchy configuration:', savedConfig);
-          
-          // Store hierarchy configuration
-          window.excelData.hierarchyConfigurations[sheetId] = savedConfig;
-          
-          // Process data with saved hierarchy
-          console.log('Processing data with saved hierarchy...');
-          const processedData = processExcelData(data, savedConfig);
-          
-          // Render processed data
-          console.log('Rendering processed data...');
-          renderSheet(sheetId, processedData);
-          
-          // Store processed data
+          console.log("Using saved hierarchy configuration:", savedConfig);
+          const processedData = processExcelData(data.data, savedConfig);
           window.excelData.sheetsLoaded[sheetId] = processedData;
-          
-          // Update export column dropdown
-          populateExportColumnDropdown();
+          renderSheet(sheetId, processedData);
         } else {
-          // No saved configuration, show modal
-          console.log('No saved configuration found, showing modal...');
-          showHierarchyConfigModal(data.headers, (hierarchy) => {
-            console.log('Hierarchy configuration received:', hierarchy);
-            
-            // Store hierarchy configuration
-            window.excelData.hierarchyConfigurations[sheetId] = hierarchy;
-            
-            // Save to localStorage
-            saveHierarchyConfiguration(configKey, hierarchy);
+          // Show modal to configure hierarchy
+          console.log("No saved configuration found, showing modal...");
+          showHierarchyConfigModal(data.data.headers, (hierarchy) => {
+            console.log("Hierarchy configuration received:", hierarchy);
             
             // Process data with hierarchy
-            console.log('Processing data with hierarchy...');
-            const processedData = processExcelData(data, hierarchy);
-            
-            // Render processed data
-            console.log('Rendering processed data...');
-            renderSheet(sheetId, processedData);
-            
-            // Store processed data
+            const processedData = processExcelData(data.data, hierarchy);
             window.excelData.sheetsLoaded[sheetId] = processedData;
             
-            // Update export column dropdown
-            populateExportColumnDropdown();
+            // Save hierarchy configuration for next time
+            saveHierarchyConfiguration(fileId + "-" + sheetId, hierarchy);
+            
+            // Render the sheet
+            renderSheet(sheetId, processedData);
           });
         }
       } else {
-        // Already processed data
-        console.log('Rendering pre-processed data...');
-        renderSheet(sheetId, data);
-        window.excelData.sheetsLoaded[sheetId] = data;
-        
-        // Update export column dropdown
-        populateExportColumnDropdown();
+        // Just render the data as is
+        renderSheet(sheetId, data.data);
       }
+      
+      return data.data;
     } catch (error) {
-      console.error('Error loading sheet data:', error);
-      const sheetContent = document.getElementById(`sheet-${sheetId}`);
-      sheetContent.innerHTML = `<div class="error-message"><p>Error loading data: ${error.message}</p></div>`;
+      console.error("Error loading sheet data:", error);
+      return null;
     }
   }
   
@@ -956,15 +902,55 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Function to save current hierarchy configuration
+  function saveCurrentHierarchyConfiguration() {
+    try {
+      const activeSheetId = window.excelData.activeSheetId;
+      if (!activeSheetId) {
+        console.error('No active sheet selected');
+        alert('Please select a sheet before saving hierarchy configuration');
+        return;
+      }
+      
+      const configKey = `${window.excelData.fileId}-${activeSheetId}`;
+      const currentConfig = window.excelData.hierarchyConfigurations[activeSheetId];
+      
+      if (!currentConfig) {
+        console.error('No hierarchy configuration found for active sheet');
+        alert('No hierarchy configuration found to save');
+        return;
+      }
+      
+      // Save using existing function
+      saveHierarchyConfiguration(configKey, currentConfig);
+      
+      // Provide user feedback
+      alert('Hierarchy configuration saved successfully');
+    } catch (error) {
+      console.error('Error saving current hierarchy configuration:', error);
+      alert(`Error saving configuration: ${error.message}`);
+    }
+  }
+  
   // Render hierarchical data to the sheet
   function renderSheet(sheetId, data) {
+    if (!data) {
+      console.error("No data provided to renderSheet");
+      return;
+    }
+    
+    if (!data.root) {
+      console.error("No root node in data", data);
+      return;
+    }
+    
     const sheetContent = document.getElementById(`sheet-${sheetId}`);
     
     // Create hierarchical container
     const container = document.createElement('div');
     container.className = 'excel-hierarchical-container';
     
-    // Add controls 
+    // Add controls
     const controls = document.createElement('div');
     controls.className = 'controls';
     
@@ -988,8 +974,17 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
     
+    const saveHierarchyButton = document.createElement('button');
+    saveHierarchyButton.textContent = 'Save Hierarchy';
+    saveHierarchyButton.className = 'control-button save-hierarchy';
+    saveHierarchyButton.style.marginLeft = 'auto';
+    saveHierarchyButton.style.backgroundColor = '#4CAF50';
+    saveHierarchyButton.style.color = 'white';
+    saveHierarchyButton.addEventListener('click', saveCurrentHierarchyConfiguration);
+    
     controls.appendChild(expandAllButton);
     controls.appendChild(collapseAllButton);
+    controls.appendChild(saveHierarchyButton);
     container.appendChild(controls);
     
     // Add hierarchical content
@@ -997,13 +992,16 @@ document.addEventListener('DOMContentLoaded', function() {
     content.className = 'excel-hierarchical-content';
     
     // Handle empty data
-    if (!data.root || !data.root.children || data.root.children.length === 0) {
+    if (!data.root.children || data.root.children.length === 0) {
       content.innerHTML = '<div class="empty-sheet"><p>No data to display</p></div>';
       container.appendChild(content);
       sheetContent.innerHTML = '';
       sheetContent.appendChild(container);
       return;
     }
+    
+    // Add parent references to all nodes for hierarchy traversal
+    addParentReferences(data.root);
     
     // Render children
     data.root.children.forEach(child => {
@@ -1013,6 +1011,18 @@ document.addEventListener('DOMContentLoaded', function() {
     container.appendChild(content);
     sheetContent.innerHTML = '';
     sheetContent.appendChild(container);
+  }
+  
+  // Helper function to add parent references to all nodes
+  function addParentReferences(node) {
+    if (!node) return;
+    
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        child.parent = node;
+        addParentReferences(child);
+      }
+    }
   }
   
   // Render a node and its children
@@ -1066,6 +1076,70 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     header.appendChild(title);
+    
+    // Add 'Add Child' button for level-2 nodes (Les)
+    if (level === 2) {
+      const addChildBtn = document.createElement('button');
+      addChildBtn.className = 'add-child-button';
+      addChildBtn.textContent = '+';
+      addChildBtn.title = 'Add Child Element';
+      addChildBtn.style.marginLeft = '10px';
+      addChildBtn.style.padding = '2px 6px';
+      addChildBtn.style.fontSize = '12px';
+      addChildBtn.style.border = '1px solid #ccc';
+      addChildBtn.style.borderRadius = '3px';
+      addChildBtn.style.background = '#f8f9fa';
+      addChildBtn.style.cursor = 'pointer';
+      
+      addChildBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering parent events
+        showAddChildElementModal(node, level);
+      });
+      
+      header.appendChild(addChildBtn);
+    }
+    
+    // Add 'Delete' button for child elements of Les nodes (level 3 or higher)
+    if (level > 2) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-element-button';
+      deleteBtn.textContent = '×';
+      deleteBtn.title = 'Delete Element';
+      deleteBtn.style.marginLeft = '10px';
+      deleteBtn.style.padding = '2px 8px';
+      deleteBtn.style.fontSize = '12px';
+      deleteBtn.style.border = '1px solid #ccc';
+      deleteBtn.style.borderRadius = '3px';
+      deleteBtn.style.background = '#f8f8f8';
+      deleteBtn.style.color = '#d9534f';
+      deleteBtn.style.fontWeight = 'bold';
+      deleteBtn.style.cursor = 'pointer';
+      
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering parent events
+        
+        // Confirm deletion
+        if (confirm(`Are you sure you want to delete this "${node.columnName}" element?`)) {
+          // Remove the node from the DOM
+          nodeEl.remove();
+          
+          // Find the parent node in the data structure
+          const parentNode = findParentNode(node.id);
+          if (parentNode) {
+            // Remove the node from its parent's children array
+            const index = parentNode.children.findIndex(child => child.id === node.id);
+            if (index !== -1) {
+              parentNode.children.splice(index, 1);
+              
+              // Re-render the sheet to update the hierarchy
+              renderSheet(window.excelData.activeSheetId, window.excelData.sheetsLoaded[window.excelData.activeSheetId]);
+            }
+          }
+        }
+      });
+      
+      header.appendChild(deleteBtn);
+    }
     
     // Add click handler for expanding/collapsing
     header.addEventListener('click', (e) => {
@@ -1170,6 +1244,408 @@ document.addEventListener('DOMContentLoaded', function() {
     return nodeEl;
   }
   
+  // Show modal to add a child element
+  function showAddChildElementModal(parentNode, parentLevel) {
+    console.log("Show add child modal for:", {
+      parentNodeId: parentNode.id,
+      parentNodeValue: parentNode.value, 
+      parentNodeColumnName: parentNode.columnName,
+      parentLevel: parentLevel,
+      excelCoordinates: parentNode.excelCoordinates
+    });
+    
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.className = 'element-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '1000';
+    
+    // Create content container
+    const content = document.createElement('div');
+    content.className = 'element-modal-content';
+    content.style.backgroundColor = 'white';
+    content.style.padding = '20px';
+    content.style.borderRadius = '8px';
+    content.style.maxWidth = '500px';
+    content.style.width = '90%';
+    
+    // Create header
+    const header = document.createElement('h2');
+    header.textContent = `Add Child Element to: ${parentNode.columnName} (${parentNode.value})`;
+    header.style.marginBottom = '15px';
+    content.appendChild(header);
+    
+    // Create form
+    const form = document.createElement('form');
+    form.style.display = 'flex';
+    form.style.flexDirection = 'column';
+    form.style.gap = '15px';
+    
+    // Get Excel data
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+
+    // Log sheet data keys to help debug
+    console.log("Sheet data keys:", Object.keys(sheetData || {}));
+    
+    // Get the raw data directly from the API response
+    const rawData = sheetData?.data?.data || [];
+    console.log("Found raw data:", rawData.length > 0 ? "Yes" : "No", "Length:", rawData.length);
+    
+    // Log the first few rows if available
+    if (rawData.length > 0) {
+      console.log("Headers row:", rawData[0]);
+      if (rawData.length > 1) console.log("First data row:", rawData[1]);
+    }
+    
+    const sheetHeaders = sheetData?.headers || (rawData.length > 0 ? rawData[0] : []);
+    
+    // Find the correct indices for key columns
+    let verlengdeInstructieIndex = -1;
+    let zelfstandigeVerwerkingIndex = -1;
+    let werkbladIndex = -1;
+    
+    sheetHeaders.forEach((header, index) => {
+      if (header && typeof header === 'string') {
+        if (header.includes('Verlengde Instructie')) {
+          verlengdeInstructieIndex = index;
+          console.log(`Found 'Verlengde Instructie' at index ${index}`);
+        }
+        if (header.includes('Zelfstandige verwerking')) {
+          zelfstandigeVerwerkingIndex = index;
+          console.log(`Found 'Zelfstandige verwerking' at index ${index}`);
+        }
+        if (header === 'Werkblad') {
+          werkbladIndex = index;
+          console.log(`Found 'Werkblad' at index ${index}`);
+        }
+      }
+    });
+    
+    // Add simple column selector
+    const columnGroup = document.createElement('div');
+    const columnLabel = document.createElement('label');
+    columnLabel.textContent = 'Select Column:';
+    columnLabel.style.fontWeight = 'bold';
+    columnLabel.style.marginBottom = '5px';
+    columnLabel.style.display = 'block';
+    
+    const columnSelect = document.createElement('select');
+    columnSelect.style.width = '100%';
+    columnSelect.style.padding = '8px';
+    columnSelect.style.borderRadius = '4px';
+    columnSelect.style.border = '1px solid #ced4da';
+    
+    // Add options for common columns with correct indices
+    const columnOptions = [
+      { name: 'Verlengde Instructie', index: verlengdeInstructieIndex !== -1 ? verlengdeInstructieIndex : 6 },
+      { name: 'Zelfstandige verwerking', index: zelfstandigeVerwerkingIndex !== -1 ? zelfstandigeVerwerkingIndex : 7 },
+      { name: 'Werkblad', index: werkbladIndex !== -1 ? werkbladIndex : 3 },
+      { name: 'Other', index: -1 }
+    ];
+    
+    columnOptions.forEach(col => {
+      if (col.index >= 0 || col.name === 'Other') {
+        const option = document.createElement('option');
+        option.value = col.index;
+        option.textContent = col.name;
+        columnSelect.appendChild(option);
+      }
+    });
+    
+    // Create a container for the "other" column selector (initially hidden)
+    const otherColumnContainer = document.createElement('div');
+    otherColumnContainer.style.marginTop = '10px';
+    otherColumnContainer.style.display = 'none';
+    
+    const otherColumnSelect = document.createElement('select');
+    otherColumnSelect.style.width = '100%';
+    otherColumnSelect.style.padding = '8px';
+    otherColumnSelect.style.borderRadius = '4px';
+    otherColumnSelect.style.border = '1px solid #ced4da';
+    
+    // Add all Excel columns to the "other" selector with proper column letters
+    sheetHeaders.forEach((header, index) => {
+      // Skip parent column and empty headers
+      if (index === parentNode.columnIndex || !header) return;
+      
+      const columnLetter = String.fromCharCode(65 + index);
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = `${columnLetter}: ${header}`;
+      otherColumnSelect.appendChild(option);
+    });
+    
+    otherColumnContainer.appendChild(otherColumnSelect);
+    
+    // Show "other" selector if "Other" is selected
+    columnSelect.addEventListener('change', () => {
+      if (columnSelect.value === '-1') {
+        otherColumnContainer.style.display = 'block';
+      } else {
+        otherColumnContainer.style.display = 'none';
+      }
+      
+      // Update preview
+      updatePreview();
+    });
+    
+    otherColumnSelect.addEventListener('change', updatePreview);
+    
+    // Add to form
+    columnGroup.appendChild(columnLabel);
+    columnGroup.appendChild(columnSelect);
+    columnGroup.appendChild(otherColumnContainer);
+    form.appendChild(columnGroup);
+    
+    // Preview section
+    const previewContainer = document.createElement('div');
+    previewContainer.style.marginTop = '15px';
+    previewContainer.style.padding = '10px';
+    previewContainer.style.backgroundColor = '#f8f9fa';
+    previewContainer.style.borderRadius = '4px';
+    previewContainer.style.fontSize = '0.9rem';
+    
+    const previewHeader = document.createElement('div');
+    previewHeader.textContent = 'Preview';
+    previewHeader.style.fontWeight = 'bold';
+    previewHeader.style.marginBottom = '5px';
+    
+    const previewContent = document.createElement('div');
+    previewContent.style.fontFamily = 'monospace';
+    
+    previewContainer.appendChild(previewHeader);
+    previewContainer.appendChild(previewContent);
+    form.appendChild(previewContainer);
+    
+    // Update preview with actual Excel data
+    function updatePreview() {
+      console.log("Updating preview...");
+      const selectedColIndex = columnSelect.value === '-1' ? parseInt(otherColumnSelect.value) : parseInt(columnSelect.value);
+      
+      console.log("Selected column index:", selectedColIndex);
+      
+      // DIRECT ACCESS APPROACH - don't use complicated coordinate mapping
+      // If we have parentNode.excelCoordinates, we can directly access the row
+      if (parentNode.excelCoordinates && parentNode.excelCoordinates.rowIndex !== undefined) {
+        const rowIndex = parentNode.excelCoordinates.rowIndex;
+        
+        console.log(`Using direct row index: ${rowIndex} for parent node:`, parentNode.value);
+        
+        if (rawData && rawData.length > rowIndex && rowIndex >= 0) {
+          const row = rawData[rowIndex];
+          const excelRow = rowIndex + 1; // Convert to Excel's 1-based row numbering
+          const columnLetter = String.fromCharCode(65 + selectedColIndex);
+          const cellValue = row && selectedColIndex < row.length ? row[selectedColIndex] : null;
+          
+          console.log(`Direct access - Found row: ${rowIndex}, column: ${selectedColIndex}, value:`, cellValue);
+          
+          const coordinates = {
+            rowIndex: rowIndex,
+            columnIndex: selectedColIndex,
+            excelRow: excelRow,
+            excelColumn: columnLetter,
+            excelCell: `${columnLetter}${excelRow}`,
+            value: cellValue
+          };
+          
+          const columnName = sheetHeaders[selectedColIndex] || `Column ${selectedColIndex+1}`;
+          
+          previewContent.innerHTML = `
+            <p><strong>Selected:</strong> ${columnName} (Column ${coordinates.excelColumn})</p>
+            <p><strong>Excel Cell:</strong> ${coordinates.excelCell}</p>
+            <p><strong>Value:</strong> "${cellValue || ''}"</p>
+          `;
+          
+          // Disable add button for null/undefined values, but allow empty strings
+          addButton.disabled = cellValue === null || cellValue === undefined;
+          
+          return;
+        } else {
+          console.error(`Invalid row index ${rowIndex} for raw data of length ${rawData?.length}`);
+        }
+      }
+      
+      // Fallback to regular getExcelCoordinates
+      console.log("Falling back to getExcelCoordinates function");
+      const coordinates = getExcelCoordinates(parentNode, selectedColIndex);
+      
+      if (!coordinates) {
+        previewContent.innerHTML = '<p class="error">Could not determine Excel coordinates</p>';
+        return;
+      }
+      
+      const cellValue = coordinates.value;
+      const columnName = sheetHeaders[selectedColIndex] || `Column ${selectedColIndex+1}`;
+      
+      previewContent.innerHTML = `
+        <p><strong>Selected:</strong> ${columnName} (Column ${coordinates.excelColumn})</p>
+        <p><strong>Excel Cell:</strong> ${coordinates.excelCell}</p>
+        <p><strong>Value:</strong> "${cellValue || ''}"</p>
+      `;
+      
+      // Disable add button if no data
+      addButton.disabled = !cellValue;
+    }
+    
+    // Add buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'space-between';
+    buttonContainer.style.marginTop = '20px';
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.type = 'button';
+    cancelButton.style.padding = '8px 15px';
+    
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Element';
+    addButton.type = 'submit';
+    addButton.style.padding = '8px 15px';
+    addButton.style.backgroundColor = '#34a3d7';
+    addButton.style.color = 'white';
+    addButton.style.border = 'none';
+    
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(addButton);
+    form.appendChild(buttonContainer);
+    
+    // Add form to content
+    content.appendChild(form);
+    
+    // Add content to modal
+    modal.appendChild(content);
+    
+    // Add modal to document
+    document.body.appendChild(modal);
+    
+    // Initial preview update
+    updatePreview();
+    
+    // Handle form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Get the selected column
+      const selectedColIndex = columnSelect.value === '-1' ? parseInt(otherColumnSelect.value) : parseInt(columnSelect.value);
+      const columnName = sheetHeaders[selectedColIndex] || `Column ${selectedColIndex+1}`;
+      
+      // DIRECT ACCESS APPROACH - don't use complicated coordinate mapping
+      // If we have parentNode.excelCoordinates, we can directly access the row
+      let coordinates = null;
+      
+      if (parentNode.excelCoordinates && parentNode.excelCoordinates.rowIndex !== undefined) {
+        const rowIndex = parentNode.excelCoordinates.rowIndex;
+        
+        if (rawData && rawData.length > rowIndex && rowIndex >= 0) {
+          const row = rawData[rowIndex];
+          const excelRow = rowIndex + 1; // Convert to Excel's 1-based row numbering
+          const columnLetter = String.fromCharCode(65 + selectedColIndex);
+          const cellValue = row && selectedColIndex < row.length ? row[selectedColIndex] : '';
+          
+          coordinates = {
+            rowIndex: rowIndex,
+            columnIndex: selectedColIndex,
+            excelRow: excelRow,
+            excelColumn: columnLetter,
+            excelCell: `${columnLetter}${excelRow}`,
+            value: cellValue
+          };
+        }
+      }
+      
+      // Fallback to regular getExcelCoordinates if direct access failed
+      if (!coordinates) {
+        coordinates = getExcelCoordinates(parentNode, selectedColIndex);
+      }
+      
+      if (!coordinates) {
+        alert("Could not determine Excel coordinates for this element");
+        return;
+      }
+      
+      console.log(`Using Excel cell ${coordinates.excelCell} for ${columnName}`);
+      
+      // Get the value from the specified cell
+      const value = coordinates.value;
+      
+      if (!value) {
+        alert(`No value found in Excel cell ${coordinates.excelCell}`);
+        return;
+      }
+      
+      // Check if already exists
+      if (parentNode.children) {
+        const existing = parentNode.children.find(child => 
+          child.columnIndex === selectedColIndex && child.value === value
+        );
+        
+        if (existing) {
+          alert(`${columnName} already exists as a child element`);
+          return;
+        }
+      }
+      
+      // Create new node
+      const newNode = {
+        id: `node-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        columnName: columnName,
+        columnIndex: selectedColIndex,
+        value: value,
+        level: parentLevel + 1,
+        children: [],
+        properties: []
+      };
+      
+      // Add properties from the same row
+      const targetRow = rawData ? rawData[coordinates.rowIndex] : null;
+      
+      // Check if targetRow exists before trying to iterate through its properties
+      if (targetRow && Array.isArray(targetRow)) {
+        for (let i = 0; i < targetRow.length; i++) {
+          // Skip hierarchy columns
+          if (i === selectedColIndex || i === parentNode.columnIndex) continue;
+          
+          const propValue = targetRow[i];
+          if (propValue && propValue.toString().trim() !== '') {
+            newNode.properties.push({
+              columnIndex: i,
+              columnName: sheetHeaders[i] || `Column ${i+1}`,
+              value: propValue
+            });
+          }
+        }
+      } else {
+        console.warn("Target row not found or not an array, skipping property extraction");
+      }
+      
+      // Add to parent
+      if (!parentNode.children) {
+        parentNode.children = [];
+      }
+      
+      parentNode.children.push(newNode);
+      
+      // Close modal and update
+      document.body.removeChild(modal);
+      renderSheet(activeSheetId, sheetData);
+    });
+    
+    // Handle cancel
+    cancelButton.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+  }
+  
   // Handle style controls
   function applyStyles() {
     // Font size
@@ -1247,6 +1723,370 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Apply initial styles
     applyStyles();
+  }
+  
+  // Simple function to get Excel coordinates
+  function getExcelCoordinates(node, targetColumnIndex) {
+    console.log("NODE DEBUG:", {
+      nodeId: node.id,
+      value: node.value,
+      columnName: node.columnName,
+      level: node.level,
+      hasExcelCoords: !!node.excelCoordinates,
+      excelCoordinates: node.excelCoordinates,
+      targetColumn: targetColumnIndex
+    });
+    
+    // Get the active sheet data
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    console.log("Sheet data available:", !!sheetData);
+    
+    // Try to get raw data from the API response
+    let rawData = [];
+    if (sheetData?.data?.data && Array.isArray(sheetData.data.data)) {
+      rawData = sheetData.data.data;
+      console.log("Using data from sheetData.data.data, length:", rawData.length);
+    }
+    
+    // If no data was found, try another approach using the loaded Excel data
+    if (!rawData || rawData.length <= 1) {
+      const excelFilePath = sheetData?.filePath || window.excelData.filePath;
+      console.log("No data found, looking for Excel data from file:", excelFilePath);
+      
+      // Get the Excel file data from the window object
+      const excelFile = window.excelData.loadedFiles?.[excelFilePath];
+      if (excelFile && excelFile.sheets && excelFile.sheets[activeSheetId]) {
+        rawData = excelFile.sheets[activeSheetId].data || [];
+        console.log("Found data in excelFile.sheets, length:", rawData.length);
+      } else if (window.rawExcelData && window.rawExcelData[activeSheetId]) {
+        rawData = window.rawExcelData[activeSheetId] || [];
+        console.log("Found data in window.rawExcelData, length:", rawData.length);
+      }
+    }
+    
+    // Final check for raw data
+    if (!rawData || rawData.length <= 1) {
+      console.error("No Excel data available, rawData length:", rawData?.length);
+      
+      // EMERGENCY FALLBACK: Get data from any available source
+      if (node.excelCoordinates && node.excelCoordinates.rowIndex !== undefined) {
+        const lesNumber = parseInt((node.value || '').match(/\d+/)?.[0] || '0');
+        console.log("Emergency fallback: Found Les number", lesNumber);
+        return {
+          rowIndex: lesNumber,
+          columnIndex: targetColumnIndex,
+          excelRow: lesNumber + 1,
+          excelColumn: String.fromCharCode(65 + targetColumnIndex),
+          excelCell: `${String.fromCharCode(65 + targetColumnIndex)}${lesNumber + 1}`,
+          value: `Unable to load value for ${node.value}`
+        };
+      }
+      return null;
+    }
+    
+    // Log the first few rows of data we found for debugging
+    console.log("First row (headers):", JSON.stringify(rawData[0]));
+    if (rawData.length > 1) console.log("Second row:", JSON.stringify(rawData[1]));
+    if (rawData.length > 2) console.log("Third row:", JSON.stringify(rawData[2]));
+    
+    // Check if excelCoordinates might be lower in the node hierarchy
+    if (!node.excelCoordinates && node.parent && node.parent.excelCoordinates) {
+      console.log("Using parent's Excel coordinates as fallback");
+      node.excelCoordinates = node.parent.excelCoordinates;
+    }
+    
+    // Direct access approach - use the stored row index directly
+    if (node.excelCoordinates && node.excelCoordinates.rowIndex !== undefined) {
+      const rowIndex = node.excelCoordinates.rowIndex;
+      const excelRow = rowIndex + 1; // Convert to Excel's 1-based row numbering
+      
+      // Convert column index to Excel column letter (A, B, C, etc.)
+      const columnLetter = String.fromCharCode(65 + targetColumnIndex);
+      
+      // Access the target cell directly 
+      const targetRow = rawData[rowIndex];
+      
+      // Log the entire row to debug issues
+      console.log("TARGET ROW:", JSON.stringify(targetRow));
+      console.log(`Accessing cell at row ${rowIndex}, column ${targetColumnIndex}`);
+      
+      // Get the cell value directly
+      const value = targetRow && targetColumnIndex < targetRow.length 
+        ? targetRow[targetColumnIndex] 
+        : null;
+      
+      const result = {
+        rowIndex: rowIndex,
+        columnIndex: targetColumnIndex,
+        excelRow: excelRow,
+        excelColumn: columnLetter,
+        excelCell: `${columnLetter}${excelRow}`,
+        value: value
+      };
+      
+      console.log(`Excel coordinates: ${result.excelCell}, value:`, value);
+      return result;
+    }
+    
+    // Fallback for level 2 nodes (Les) - use the Les number to locate the row
+    if (node.columnName === "Les" && node.value) {
+      // Extract the Les number (e.g., "Les 1" -> 1)
+      const lesMatch = node.value.match(/Les\s+(\d+)/i);
+      if (lesMatch && lesMatch[1]) {
+        const lesNumber = parseInt(lesMatch[1]);
+        
+        // Simple mapping: Les 1 -> row index 1 (row 2 in Excel)
+        const rowIndex = lesNumber;
+        
+        console.log(`Using Les number to find row: Les ${lesNumber} -> row index ${rowIndex}`);
+        
+        if (rowIndex >= 0 && rowIndex < rawData.length) {
+          const targetRow = rawData[rowIndex];
+          const excelRow = rowIndex + 1;
+          const columnLetter = String.fromCharCode(65 + targetColumnIndex);
+          
+          // Log the row we found
+          console.log("FOUND ROW:", JSON.stringify(targetRow));
+          
+          // Get the cell value directly
+          const value = targetRow && targetColumnIndex < targetRow.length 
+            ? targetRow[targetColumnIndex] 
+            : null;
+          
+          const result = {
+            rowIndex: rowIndex,
+            columnIndex: targetColumnIndex,
+            excelRow: excelRow,
+            excelColumn: columnLetter,
+            excelCell: `${columnLetter}${excelRow}`,
+            value: value
+          };
+          
+          console.log(`Excel coordinates by Les number: ${result.excelCell}, value:`, value);
+          return result;
+        }
+      }
+    }
+    
+    // Last resort: search for the row with matching values in key columns
+    if (node.columnName && node.value) {
+      // Determine which column this node's value should be in
+      let columnToSearch = -1;
+      if (node.columnName === "Blok") columnToSearch = 0;
+      else if (node.columnName === "Week") columnToSearch = 1;
+      else if (node.columnName === "Les") columnToSearch = 2;
+      
+      if (columnToSearch >= 0) {
+        console.log(`Trying to find '${node.value}' in column ${columnToSearch}`);
+        
+        // Search for row with matching value
+        for (let i = 1; i < rawData.length; i++) {
+          if (rawData[i][columnToSearch] === node.value) {
+            console.log(`Found matching row at index ${i} for ${node.value}`);
+            
+            const rowIndex = i;
+            const excelRow = rowIndex + 1;
+            const columnLetter = String.fromCharCode(65 + targetColumnIndex);
+            
+            // Get the cell value directly
+            const value = rawData[i] && targetColumnIndex < rawData[i].length 
+              ? rawData[i][targetColumnIndex] 
+              : null;
+            
+            const result = {
+              rowIndex: rowIndex,
+              columnIndex: targetColumnIndex,
+              excelRow: excelRow,
+              excelColumn: columnLetter,
+              excelCell: `${columnLetter}${excelRow}`,
+              value: value
+            };
+            
+            console.log(`Excel coordinates by search: ${result.excelCell}, value:`, value);
+            return result;
+          }
+        }
+      }
+    }
+    
+    console.error("No Excel coordinates could be determined for node:", node);
+    return null;
+  }
+  
+  // Get cell value directly using coordinates
+  function getExcelCellValue(coordinates) {
+    if (!coordinates) return null;
+    
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    const rawData = sheetData?.data || [];
+    
+    if (!rawData || coordinates.rowIndex >= rawData.length) {
+      return null;
+    }
+    
+    const row = rawData[coordinates.rowIndex];
+    if (!row || coordinates.columnIndex >= row.length) {
+      return null;
+    }
+    
+    return row[coordinates.columnIndex];
+  }
+  
+  function addElementDirectly(columnIndex, elementName) {
+    // Get Excel data for the active sheet
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    if (!sheetData) {
+      alert("No sheet data loaded");
+      return;
+    }
+    
+    const rawData = sheetData.data || [];
+    const headers = sheetData.headers || [];
+    
+    // Make sure we have data
+    if (rawData.length <= 1) {
+      alert("No data found in Excel file");
+      return;
+    }
+    
+    // Find the active node (current parent in the hierarchy)
+    const activeNode = sheetData.root.children[0];
+    if (!activeNode) {
+      alert("Cannot find active top-level node");
+      return;
+    }
+    
+    // Use our new utility function to get exact Excel cell coordinates
+    const coordinates = getExcelCoordinates(activeNode, columnIndex);
+    
+    if (!coordinates) {
+      alert("Could not determine Excel coordinates for this element");
+      return;
+    }
+    
+    console.log(`Using Excel cell ${coordinates.excelCell} for ${elementName}`);
+    
+    // Get the value from the specified cell
+    const value = coordinates.value;
+    
+    if (!value) {
+      alert(`No value found in Excel cell ${coordinates.excelCell}`);
+      return;
+    }
+    
+    console.log(`Found value "${value}" in Excel cell ${coordinates.excelCell}`);
+    
+    // Check if this element already exists
+    if (activeNode.children) {
+      const existing = activeNode.children.find(child => 
+        child.columnIndex === columnIndex && child.value === value
+      );
+      
+      if (existing) {
+        alert(`An element for "${elementName}" with value "${value}" already exists`);
+        return;
+      }
+    }
+    
+    // Create a new node
+    const newNode = {
+      id: `node-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      columnName: elementName,
+      columnIndex: columnIndex,
+      value: value,
+      level: activeNode.level + 1,
+      children: [],
+      properties: []
+    };
+    
+    // Add properties from other columns in the same row
+    const targetRow = rawData[coordinates.rowIndex];
+    for (let i = 0; i < targetRow.length; i++) {
+      // Skip hierarchy columns and the target column
+      if (i === columnIndex || i === activeNode.columnIndex) continue;
+      
+      const propValue = targetRow[i];
+      if (propValue && propValue.toString().trim() !== '') {
+        newNode.properties.push({
+          columnIndex: i,
+          columnName: headers[i] || `Column ${i+1}`,
+          value: propValue
+        });
+      }
+    }
+    
+    // Add to parent's children
+    if (!activeNode.children) {
+      activeNode.children = [];
+    }
+    
+    activeNode.children.push(newNode);
+    
+    // Re-render sheet
+    renderSheet(activeSheetId, sheetData);
+  }
+  
+  // Helper function to get saved hierarchy configuration
+  function getSavedHierarchyConfiguration(fileId, sheetId) {
+    // Create a unique key for this file/sheet combination
+    const configKey = `${fileId}-${sheetId}`;
+    
+    // Try to load from in-memory saved configuration first
+    let savedConfig = window.excelData.savedConfigurations[configKey];
+    
+    // If not found in memory but localStorage has configurations, reload from localStorage
+    if (!savedConfig) {
+      try {
+        const savedHierarchyConfigs = localStorage.getItem('hierarchyConfigurations');
+        if (savedHierarchyConfigs) {
+          const allConfigs = JSON.parse(savedHierarchyConfigs);
+          if (allConfigs && typeof allConfigs === 'object' && allConfigs[configKey]) {
+            savedConfig = allConfigs[configKey];
+            console.log('Found saved configuration in localStorage:', savedConfig);
+            
+            // Update in-memory version too
+            window.excelData.savedConfigurations[configKey] = savedConfig;
+          }
+        }
+      } catch (e) {
+        console.error('Error loading hierarchy configuration from localStorage:', e);
+      }
+    }
+    
+    return savedConfig;
+  }
+  
+  // Helper function to find a node's parent in the hierarchy
+  function findParentNode(nodeId) {
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    if (!sheetData || !sheetData.root) return null;
+    
+    // Recursive function to search the hierarchy
+    function searchChildren(parent) {
+      if (!parent.children) return null;
+      
+      // Check if any direct children match the target node ID
+      for (const child of parent.children) {
+        if (child.id === nodeId) {
+          return parent;
+        }
+        
+        // Search deeper in the hierarchy
+        const found = searchChildren(child);
+        if (found) return found;
+      }
+      
+      return null;
+    }
+    
+    return searchChildren(sheetData.root);
   }
   
   initialize();
