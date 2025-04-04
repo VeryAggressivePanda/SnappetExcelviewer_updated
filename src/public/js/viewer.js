@@ -1130,16 +1130,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return null;
     }
     
+    // Use the node's own level if it has one, otherwise use the passed level
+    const nodeLevel = node.level !== undefined ? node.level : level;
+    
     const nodeEl = document.createElement('div');
     
     // Use level-specific class names
-    nodeEl.className = `level-${level}-node`;
+    // Support negative levels by using _1, _2, etc. instead of -1, -2 for CSS compatibility
+    const cssLevel = nodeLevel < 0 ? `_${Math.abs(nodeLevel)}` : nodeLevel;
+    nodeEl.className = `level-${cssLevel}-node`;
+    
     if (node.isEmpty) {
-      nodeEl.classList.add(`level-${level}-empty`);
+      nodeEl.classList.add(`level-${cssLevel}-empty`);
     }
     
     // Add data attributes for styling and debugging
-    nodeEl.setAttribute('data-level', level);
+    nodeEl.setAttribute('data-level', nodeLevel);
     nodeEl.setAttribute('data-column-name', node.columnName || '');
     nodeEl.setAttribute('data-column-index', node.columnIndex || '');
     nodeEl.setAttribute('data-is-empty', node.isEmpty ? 'true' : 'false');
@@ -1147,29 +1153,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set initial collapse state based on level and expandStateMap
     const shouldBeExpanded = expandStateMap[node.id] !== undefined ? 
-      expandStateMap[node.id] : (level >= 2);
+      expandStateMap[node.id] : (nodeLevel >= 2);
     
     if (!shouldBeExpanded) {
-      nodeEl.classList.add(`level-${level}-collapsed`);
+      nodeEl.classList.add(`level-${cssLevel}-collapsed`);
     }
     
     // Node header - contains column title AND cell data if this is a parent node
     const header = document.createElement('div');
-    header.className = `level-${level}-header`;
+    header.className = `level-${cssLevel}-header`;
     if (node.isEmpty) {
-      header.classList.add(`level-${level}-empty-header`);
+      header.classList.add(`level-${cssLevel}-empty-header`);
     }
     
-    // Add expand button for level 0 and 1
-    if (level < 2) {
+    // Add expand button for level _1, 0 and 1
+    if (level < 2 || level === -1) {
       const expandBtn = document.createElement('div');
-      expandBtn.className = `level-${level}-expand-button`;
+      expandBtn.className = `level-${cssLevel}-expand-button`;
       header.appendChild(expandBtn);
     }
     
     // Title shows the column name
     const title = document.createElement('div');
-    title.className = `level-${level}-title`;
+    title.className = `level-${cssLevel}-title`;
     
     // IMPORTANT: For parent nodes, show both column name AND value in the header
     // Check if node has children to determine if it's a parent
@@ -1185,8 +1191,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     header.appendChild(title);
     
-    // Add Manage Items button for level-0 nodes (Blok)
-    if (level === 0) {
+    // Add Manage Items button for level-0 nodes (Blok) and level-_1 nodes (new top parent)
+    if (level === 0 || level === -1) {
       const manageItemsBtn = document.createElement('button');
       manageItemsBtn.className = 'manage-items-button';
       manageItemsBtn.textContent = '☑';
@@ -1207,31 +1213,10 @@ document.addEventListener('DOMContentLoaded', function() {
       header.appendChild(manageItemsBtn);
     }
     
-    // Add 'Add Child' button for level-2 nodes (Les)
-    if (level === 2) {
-      // Remove the add child button
-      /* 
-      const addChildBtn = document.createElement('button');
-      addChildBtn.className = 'add-child-button';
-      addChildBtn.textContent = '+';
-      addChildBtn.title = 'Add Child Element';
-      addChildBtn.style.marginLeft = '10px';
-      addChildBtn.style.padding = '2px 6px';
-      addChildBtn.style.fontSize = '12px';
-      addChildBtn.style.border = '1px solid #ccc';
-      addChildBtn.style.borderRadius = '3px';
-      addChildBtn.style.background = '#f8f9fa';
-      addChildBtn.style.cursor = 'pointer';
-      
-      addChildBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering parent events
-        showAddChildElementModal(node, level);
-      });
-      
-      header.appendChild(addChildBtn);
-      */
-      
-      // Keep the manage items button for Les nodes
+    // Add Manage Items button for level-2 nodes (Les, which may now be level 3 if Course is added)
+    // We use the node's original column name to determine if it's actually a "Les" node
+    if ((level === 2 && node.columnName === 'Les') ||
+        (level === 3 && node.columnName === 'Les')) {
       const manageItemsBtn = document.createElement('button');
       manageItemsBtn.className = 'manage-items-button';
       manageItemsBtn.textContent = '☑';
@@ -1250,96 +1235,12 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(manageItemsBtn);
-      
-      // Remove the delete button for level-2 nodes (Les)
-      /*
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-les-button';
-      deleteBtn.textContent = '×';
-      deleteBtn.title = 'Delete Les';
-      deleteBtn.style.marginLeft = '5px';
-      deleteBtn.style.padding = '2px 8px';
-      deleteBtn.style.fontSize = '12px';
-      deleteBtn.style.border = '1px solid #ccc';
-      deleteBtn.style.borderRadius = '3px';
-      deleteBtn.style.background = '#f8f8f8';
-      deleteBtn.style.color = '#d9534f';
-      deleteBtn.style.fontWeight = 'bold';
-      deleteBtn.style.cursor = 'pointer';
-      
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering parent events
-        
-        // Confirm deletion
-        if (confirm(`Are you sure you want to delete "${node.value}" and all its child elements?`)) {
-          // Use our deletion function that preserves expand state
-          deleteNode(node.id);
-        }
-      });
-      
-      header.appendChild(deleteBtn);
-      */
-    }
-    
-    // Remove 'Add Les' button for level-1 nodes (Week)
-    if (level === 1) {
-      /*
-      const addLesBtn = document.createElement('button');
-      addLesBtn.className = 'add-les-button';
-      addLesBtn.textContent = '+ Les';
-      addLesBtn.title = 'Add New Les';
-      addLesBtn.style.marginLeft = '10px';
-      addLesBtn.style.padding = '2px 6px';
-      addLesBtn.style.fontSize = '12px';
-      addLesBtn.style.border = '1px solid #ccc';
-      addLesBtn.style.borderRadius = '3px';
-      addLesBtn.style.background = '#f8f9fa';
-      addLesBtn.style.cursor = 'pointer';
-      
-      addLesBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering parent events
-        showAddLesModal(node);
-      });
-      
-      header.appendChild(addLesBtn);
-      */
-    }
-    
-    // Remove 'Delete' button for child elements of Les nodes (level 3 or higher)
-    if (level > 2) {
-      /*
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-element-button';
-      deleteBtn.textContent = '×';
-      deleteBtn.title = 'Delete Element';
-      deleteBtn.style.marginLeft = '10px';
-      deleteBtn.style.padding = '2px 8px';
-      deleteBtn.style.fontSize = '12px';
-      deleteBtn.style.border = '1px solid #ccc';
-      deleteBtn.style.borderRadius = '3px';
-      deleteBtn.style.background = '#f8f8f8';
-      deleteBtn.style.color = '#d9534f';
-      deleteBtn.style.fontWeight = 'bold';
-      deleteBtn.style.cursor = 'pointer';
-      
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering parent events
-        
-        // Confirm deletion
-        if (confirm(`Are you sure you want to delete this "${node.columnName}" element?`)) {
-          // Use our new deletion function that preserves expand state
-          deleteNode(node.id);
-        }
-      });
-      
-      header.appendChild(deleteBtn);
-      */
     }
     
     // Add click handler for expanding/collapsing
     header.addEventListener('click', (e) => {
-      if (level < 2) {
-        nodeEl.classList.toggle(`level-${level}-collapsed`);
+      if (level < 2 || level === -1) {
+        nodeEl.classList.toggle(`level-${cssLevel}-collapsed`);
         e.stopPropagation();
       }
     });
@@ -1348,20 +1249,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Content section
     const content = document.createElement('div');
-    content.className = `level-${level}-content`;
+    content.className = `level-${cssLevel}-content`;
     
     if (isParent) {
       // For parent nodes: content contains children
       if (node.children && node.children.length > 0) {
         const childrenContainer = document.createElement('div');
-        childrenContainer.className = `level-${level}-children`;
+        childrenContainer.className = `level-${cssLevel}-children`;
         childrenContainer.setAttribute('data-child-count', node.children.length);
         
         // Add class based on number of children to allow CSS targeting
-        childrenContainer.classList.add(`level-${level}-child-count-${node.children.length}`);
+        childrenContainer.classList.add(`level-${cssLevel}-child-count-${node.children.length}`);
         
         // Add layout class specific to level
-        if (level === 0) {
+        if (level === -1) {
+          childrenContainer.classList.add('level-_1-vertical-layout');
+        } else if (level === 0) {
           childrenContainer.classList.add('level-0-vertical-layout');
         } else if (level === 1) {
           childrenContainer.classList.add('level-1-grid-layout');
@@ -1383,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', function() {
       content.textContent = node.value || '';
       
       if (node.isEmpty) {
-        content.classList.add(`level-${level}-empty-content`);
+        content.classList.add(`level-${cssLevel}-empty-content`);
       }
     }
     
@@ -1392,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Process properties (non-hierarchy columns)
     if (node.properties && node.properties.length > 0) {
       const propsContainer = document.createElement('div');
-      propsContainer.className = `level-${level}-properties`;
+      propsContainer.className = `level-${cssLevel}-properties`;
       
       // Create a row of property nodes
       node.properties.forEach(prop => {
@@ -1904,13 +1807,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Add event listeners for collapse/expand all buttons
-    if (collapseAllButton) {
-      collapseAllButton.addEventListener('click', () => toggleAllNodes(true));
-    }
-    if (expandAllButton) {
-      expandAllButton.addEventListener('click', () => toggleAllNodes(false));
-    }
+    // Initialize toolbar including the Add Parent Level button
+    initToolbar();
     
     // Apply initial styles
     applyStyles();
@@ -3265,6 +3163,144 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       return null;
+    }
+  }
+  
+  // Add this function after the initToolbar function
+  function addParentLevel() {
+    console.log("Adding parent level - ensuring correct hierarchy levels");
+    
+    // Get active sheet data
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    if (!sheetData || !sheetData.headers) {
+      alert("No active sheet data found");
+      return;
+    }
+
+    // Check if this tab already has Course nodes at level -1
+    const hasCourseAtLevelMinus1 = sheetData.root.children.some(node => 
+      node.columnName === 'Course' && node.level === -1);
+    
+    if (hasCourseAtLevelMinus1) {
+      alert("This tab already has a Course at level -1.");
+      return;
+    }
+    
+    // First option: Check if there are existing Course nodes at level 0
+    const courseNodesAtLevel0 = sheetData.root.children.filter(node => 
+      node.columnName === 'Course' && node.level === 0);
+    
+    if (courseNodesAtLevel0.length > 0) {
+      // For each Course node, change its level to -1 and adjust all child levels
+      courseNodesAtLevel0.forEach(courseNode => {
+        // Set Course to level -1
+        courseNode.level = -1;
+        
+        // Adjust levels of Blok nodes to be 0 instead of 1
+        if (courseNode.children) {
+          courseNode.children.forEach(blokNode => {
+            blokNode.level = 0;
+            
+            // Adjust Week nodes to be level 1 
+            if (blokNode.children) {
+              blokNode.children.forEach(weekNode => {
+                weekNode.level = 1;
+                
+                // Adjust Les nodes to be level 2
+                if (weekNode.children) {
+                  weekNode.children.forEach(lesNode => {
+                    lesNode.level = 2;
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+      
+      console.log("Promoted existing Course nodes to level -1 and adjusted child levels");
+    } else {
+      // Second option: We need to create a new Course parent
+      const parentNode = {
+        id: `node-course-${Date.now()}`,
+        value: "Course",
+        columnName: "Course",
+        level: -1
+      };
+      
+      // Take existing nodes (Blok nodes) and adjust their levels
+      const existingNodes = [...sheetData.root.children];
+      
+      // Make Blok nodes level 0 instead of level 1
+      existingNodes.forEach(blokNode => {
+        blokNode.level = 0;
+        
+        // Adjust Week nodes to be level 1 instead of level 2
+        if (blokNode.children) {
+          blokNode.children.forEach(weekNode => {
+            weekNode.level = 1;
+            
+            // Adjust Les nodes to be level 2 instead of level 3
+            if (weekNode.children) {
+              weekNode.children.forEach(lesNode => {
+                lesNode.level = 2;
+              });
+            }
+          });
+        }
+      });
+      
+      // Add the adjusted nodes as children of the Course parent
+      parentNode.children = existingNodes;
+      
+      // Replace the root's children with just the Course parent
+      sheetData.root.children = [parentNode];
+      
+      console.log("Created new Course parent at level -1 with Blok nodes at level 0");
+    }
+    
+    // Re-render the sheet with the updated hierarchy
+    renderSheet(activeSheetId, sheetData);
+    
+    console.log("Parent level update complete - hierarchy now has proper level-0 elements");
+  }
+  
+  // Helper function to update node levels recursively
+  function updateLevels(node) {
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(child => {
+        // Child level is parent level + 1
+        child.level = node.level + 1;
+        // Recursively update grandchildren
+        updateLevels(child);
+      });
+    }
+  }
+  
+  // Function to initialize toolbar
+  function initToolbar() {
+    // Add event listeners for collapse/expand all buttons
+    if (collapseAllButton) {
+      collapseAllButton.addEventListener('click', () => toggleAllNodes(true));
+    }
+    if (expandAllButton) {
+      expandAllButton.addEventListener('click', () => toggleAllNodes(false));
+    }
+    
+    // Add Parent Level button
+    const addParentLevelButton = document.createElement('button');
+    addParentLevelButton.textContent = 'Add Parent Level';
+    addParentLevelButton.className = 'toolbar-button';
+    addParentLevelButton.style.marginLeft = '10px';
+    
+    addParentLevelButton.addEventListener('click', addParentLevel);
+    
+    // Add to toolbar after other buttons
+    const toolbar = document.querySelector('.toolbar');
+    if (toolbar) {
+      toolbar.appendChild(addParentLevelButton);
     }
   }
   
