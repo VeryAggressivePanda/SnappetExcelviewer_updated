@@ -686,9 +686,23 @@ document.addEventListener('DOMContentLoaded', function() {
       const childValue = currentValues[childColIndex] || '';
       
       // DO NOT SKIP EMPTY CELLS - Include them as empty children with proper labeling
-      // Create a unique key for this child based on column, value, AND row index to prevent duplicates
-      // Include rowIndex in key to ensure no value reuse across rows
-      const childKey = `${parentNode.id}-col${childColIndex}-row${rowIndex}-${childValue || 'empty'}`;
+      
+      // HIERARCHY FIX: Use different key strategies for hierarchy nodes vs. content nodes
+      // For hierarchy columns (0=Blok, 1=Week, 2=Les), use keys without row index to group properly
+      // For content columns (level>2), include row index to keep items unique per row
+      let childKey;
+      
+      // Hierarchy columns (Blok, Week, Les) - omit row index to ensure grouping
+      if (childColIndex <= 2) {
+        childKey = `${parentNode.id}-col${childColIndex}-${childValue || 'empty'}`;
+        console.log(`Creating HIERARCHY node key: ${childKey}`);
+      } 
+      // Content columns - include row index to ensure uniqueness per row
+      else {
+        childKey = `${parentNode.id}-col${childColIndex}-row${rowIndex}-${childValue || 'empty'}`;
+        console.log(`Creating CONTENT node key: ${childKey}`);
+      }
+      
       let childNode = parentNode.childNodes[childKey];
       
       if (!childNode) {
@@ -697,8 +711,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const excelRow = rowIndex + 1; // Excel is 1-indexed
         const excelCoord = `${excelColumn}${excelRow}`;
         
+        // Generate ID differently for hierarchy vs content nodes
+        let nodeId;
+        if (childColIndex <= 2) {
+          // For hierarchy nodes, make ID based on column and value only
+          nodeId = `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        } else {
+          // For content nodes, include row index to keep unique
+          nodeId = `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}-row${rowIndex}`;
+        }
+        
         childNode = {
-          id: `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}-row${rowIndex}`, // Make ID unique to row
+          id: nodeId,
           value: childValue || `Empty ${headers[childColIndex]}`,
           columnName: headers[childColIndex] || `Column ${childColIndex+1}`,
           columnIndex: childColIndex,
