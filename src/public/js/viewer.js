@@ -1185,6 +1185,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     header.appendChild(title);
     
+    // Add Manage Items button for level-0 nodes (Blok)
+    if (level === 0) {
+      const manageItemsBtn = document.createElement('button');
+      manageItemsBtn.className = 'manage-items-button';
+      manageItemsBtn.textContent = '☑';
+      manageItemsBtn.title = 'Manage Items';
+      manageItemsBtn.style.marginLeft = '5px';
+      manageItemsBtn.style.padding = '2px 6px';
+      manageItemsBtn.style.fontSize = '12px';
+      manageItemsBtn.style.border = '1px solid #ccc';
+      manageItemsBtn.style.borderRadius = '3px';
+      manageItemsBtn.style.background = '#f8f9fa';
+      manageItemsBtn.style.cursor = 'pointer';
+      
+      manageItemsBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering parent events
+        showManageItemsModal(node);
+      });
+      
+      header.appendChild(manageItemsBtn);
+    }
+    
     // Add 'Add Child' button for level-2 nodes (Les)
     if (level === 2) {
       // Remove the add child button
@@ -2777,14 +2799,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Add this new function to handle the manage items modal
-  function showManageItemsModal(lesNode) {
-    console.log("%c === MANAGE ITEMS MODAL OPENED === ", "background: #ff5722; color: white; font-weight: bold; padding: 4px;");
-    console.log(`Node: ${lesNode.id} - ${lesNode.columnName}: ${lesNode.value}`);
-    console.log("Excel Coordinates:", lesNode.excelCoordinates);
-    console.log("Children:", lesNode.children);
+  // Function to show modal for managing items
+  function showManageItemsModal(node) {
+    console.log("Show manage items modal for:", {
+      nodeId: node.id,
+      nodeValue: node.value,
+      nodeColumnName: node.columnName,
+      nodeLevel: node.level
+    });
     
-    // Create modal
+    // Create modal container
     const modal = document.createElement('div');
     modal.className = 'manage-items-modal';
     modal.style.position = 'fixed';
@@ -2798,196 +2822,190 @@ document.addEventListener('DOMContentLoaded', function() {
     modal.style.alignItems = 'center';
     modal.style.zIndex = '1000';
     
-    // Create content
+    // Create content container
     const content = document.createElement('div');
     content.className = 'manage-items-modal-content';
     content.style.backgroundColor = 'white';
     content.style.padding = '20px';
     content.style.borderRadius = '8px';
-    content.style.maxWidth = '80%';
-    content.style.width = '600px';
+    content.style.maxWidth = '600px';
+    content.style.width = '90%';
     content.style.maxHeight = '80vh';
     content.style.overflowY = 'auto';
     
     // Create header
     const header = document.createElement('h2');
-    header.textContent = `Manage Items for ${lesNode.columnName}: ${lesNode.value}`;
+    header.textContent = `Manage Items for: ${node.columnName} (${node.value})`;
+    header.style.marginBottom = '15px';
     content.appendChild(header);
     
-    // Get raw Excel data - brute force approach
-    let rawData = null;
+    // Create description
+    const description = document.createElement('p');
+    description.textContent = 'Check or uncheck items to show or hide them. Items from Excel that are not yet children can be added by checking them.';
+    description.style.marginBottom = '20px';
+    content.appendChild(description);
+    
+    // Get the active sheet ID
     const activeSheetId = window.excelData.activeSheetId;
     
-    if (window.rawExcelData && window.rawExcelData[activeSheetId]) {
-      rawData = window.rawExcelData[activeSheetId];
-    } else if (window.excelData.sheetsLoaded && window.excelData.sheetsLoaded[activeSheetId] && 
-               window.excelData.sheetsLoaded[activeSheetId].data && 
-               window.excelData.sheetsLoaded[activeSheetId].data.data) {
-      rawData = window.excelData.sheetsLoaded[activeSheetId].data.data;
-    }
+    // Get raw Excel data
+    let rawExcelData = getRawExcelData(activeSheetId);
     
-    if (!rawData || !rawData.length) {
-      content.appendChild(document.createTextNode('No Excel data found'));
-      modal.appendChild(content);
-      document.body.appendChild(modal);
-      return;
-    }
-    
-    // Create debug info section with more details
-    const debugInfo = document.createElement('div');
-    debugInfo.style.marginBottom = '15px';
-    debugInfo.style.padding = '10px';
-    debugInfo.style.backgroundColor = '#f5f5f5';
-    debugInfo.style.fontSize = '12px';
-    
-    let childrenHTML = '';
-    if (lesNode.children && lesNode.children.length > 0) {
-      childrenHTML = '<p><strong>Child Items:</strong></p><ul style="margin-top: 5px; padding-left: 20px;">';
-      lesNode.children.forEach(child => {
-        childrenHTML += `<li>${child.columnName}: ${child.value} (${child.hidden ? 'hidden' : 'visible'})</li>`;
-      });
-      childrenHTML += '</ul>';
-    }
-    
-    debugInfo.innerHTML = `
-      <p><strong>Debug:</strong> Node ID: ${lesNode.id}, Type: ${lesNode.columnName}, Value: ${lesNode.value}</p>
-      <p>Excel Coordinates: ${JSON.stringify(lesNode.excelCoordinates || 'None')}</p>
-      <p>Current children: ${lesNode.children ? lesNode.children.length : 0}</p>
-      ${childrenHTML}
-    `;
-    content.appendChild(debugInfo);
-    
-    // Get headers and target row
-    const headers = window.excelData.sheetsLoaded[activeSheetId].headers;
-    
-    // Find row for this node - CRITICAL to get this right
-    let targetRow = null;
-    let targetRowIndex = -1;
-    
-    if (lesNode.excelCoordinates && lesNode.excelCoordinates.row !== undefined) {
-      targetRowIndex = lesNode.excelCoordinates.rowIndex || lesNode.excelCoordinates.row;
-      if (typeof targetRowIndex === 'string') {
-        targetRowIndex = parseInt(targetRowIndex, 10);
-      }
-      
-      // Make sure we have a valid index
-      if (targetRowIndex >= 0 && targetRowIndex < rawData.length) {
-        targetRow = rawData[targetRowIndex];
-      }
-    } else {
-      // Try to find by value match on "Les" column
-      // Only use this if we couldn't find by coordinates
-      const lesMatch = lesNode.value.match(/Les\s+(\d+)/i);
-      if (lesMatch && lesMatch[1]) {
-        const lesNumber = parseInt(lesMatch[1]);
-        for (let i = 0; i < rawData.length; i++) {
-          if (rawData[i] && rawData[i][2] === `Les ${lesNumber}`) {
-            targetRowIndex = i;
-            targetRow = rawData[i];
-            console.log(`Found row by Les number search: Les ${lesNumber} -> row ${i}`);
-            break;
-          }
-        }
-      }
-    }
-    
-    console.log("Target row index:", targetRowIndex);
-    console.log("Target row:", targetRow);
-    
-    if (!targetRow) {
-      content.appendChild(document.createTextNode('Could not find Excel row for this item'));
-      modal.appendChild(content);
-      document.body.appendChild(modal);
-      return;
-    }
-    
-    // Create map of current children with visibility state
-    const childrenMap = {};
-    if (lesNode.children) {
-      lesNode.children.forEach(child => {
-        const key = `${child.columnIndex}:${child.value}`;
-        childrenMap[key] = {
-          node: child,
-          visible: !child.hidden
-        };
-      });
-    }
-    
-    // Find parent columns to skip
-    const parentColumns = new Set();
-    let parent = lesNode;
-    while (parent) {
-      parentColumns.add(parent.columnIndex);
-      parent = findParentNode(parent.id);
-    }
+    // Debug Excel data structure
+    console.log('Excel Data Structure:', {
+      windowExcelData: window.excelData ? 'exists' : 'missing',
+      activeSheetId: activeSheetId,
+      sheetsLoaded: window.excelData?.sheetsLoaded ? 'exists' : 'missing',
+      activeSheetLoaded: window.excelData?.sheetsLoaded?.[activeSheetId] ? 'exists' : 'missing',
+      rawDataFound: rawExcelData ? `found (${rawExcelData.length} rows)` : 'not found'
+    });
     
     // Create container for items
     const itemsContainer = document.createElement('div');
-    itemsContainer.style.marginTop = '15px';
-    itemsContainer.style.marginBottom = '15px';
+    itemsContainer.style.display = 'flex';
+    itemsContainer.style.flexDirection = 'column';
+    itemsContainer.style.gap = '10px';
     
-    // Build sections from existing children first
+    // Check if we have data
+    if (!rawExcelData || !Array.isArray(rawExcelData) || rawExcelData.length <= 1) {
+      const errorMessage = document.createElement('p');
+      errorMessage.textContent = 'No Excel data found. Please upload an Excel file first.';
+      errorMessage.style.color = 'red';
+      itemsContainer.appendChild(errorMessage);
+      content.appendChild(itemsContainer);
+      
+      // Add a close button
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'Close';
+      closeButton.style.marginTop = '20px';
+      closeButton.style.padding = '8px 16px';
+      closeButton.style.backgroundColor = '#f44336';
+      closeButton.style.color = 'white';
+      closeButton.style.border = 'none';
+      closeButton.style.borderRadius = '4px';
+      closeButton.style.cursor = 'pointer';
+      
+      closeButton.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+      
+      content.appendChild(closeButton);
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+      return;
+    }
+    
+    // Get Excel coordinates to find the row
+    const excelCoordinates = node.excelCoordinates || { rowIndex: null };
+    console.log("Excel coordinates:", excelCoordinates);
+    
+    // Get headers row
+    const headers = rawExcelData[0];
+    console.log("Headers:", headers);
+    
+    // Find starting column index based on node level
+    // For level 0 (Blok), start from column 1 (Week)
+    // For level 2 (Les), start from column 3 (first content column)
+    let startColumnIndex = node.level === 0 ? 1 : 3;
+    
+    // Dictionary to group items by column
     const columnGroups = {};
     
-    // FIRST, add all existing children to the groups
-    if (lesNode.children && lesNode.children.length > 0) {
-      lesNode.children.forEach(child => {
-        if (!columnGroups[child.columnName]) {
-          columnGroups[child.columnName] = [];
+    // Process existing children
+    if (node.children && node.children.length > 0) {
+      console.log(`Processing ${node.children.length} existing children`);
+      
+      node.children.forEach(child => {
+        const colName = child.columnName || 'Unknown';
+        const colIndex = child.columnIndex || -1;
+        
+        // Initialize group if needed
+        if (!columnGroups[colName]) {
+          columnGroups[colName] = [];
         }
         
-        columnGroups[child.columnName].push({
-          columnIndex: child.columnIndex,
-          columnName: child.columnName,
+        // Add to group
+        columnGroups[colName].push({
+          columnIndex: colIndex,
+          columnName: colName,
           value: child.value,
-          isChecked: !child.hidden,
+          isChecked: !child.hidden, // If not hidden, should be checked
           exists: true,
           nodeId: child.id,
           fromExcel: false
         });
+        
+        console.log(`Added existing child: ${colName} - ${child.value} (${child.hidden ? 'hidden' : 'visible'})`);
       });
     }
     
-    // THEN, add items from the Excel row that aren't already children
-    // ONLY process the specific row for this Les node
-    for (let i = 0; i < headers.length; i++) {
-      const colName = headers[i];
-      
-      // Skip parent columns, empty headers, or columns we've already processed
-      if (!colName || parentColumns.has(i)) {
-        continue;
+    // Get the appropriate row from Excel data based on node level and value
+    let rowIndex = null;
+    
+    if (excelCoordinates.rowIndex !== undefined && excelCoordinates.rowIndex !== null) {
+      // Use stored Excel coordinates if available
+      rowIndex = excelCoordinates.rowIndex;
+      console.log(`Using stored row index: ${rowIndex}`);
+    } else if (node.level === 0 && node.columnName === "Blok") {
+      // For Blok nodes, try to find by exact value in column 0
+      for (let i = 1; i < rawExcelData.length; i++) {
+        if (rawExcelData[i][0] === node.value) {
+          rowIndex = i;
+          console.log(`Found Blok row at index ${i} for value "${node.value}"`);
+          break;
+        }
       }
-      
-      const cellValue = targetRow[i];
-      
-      // CRITICAL FIX: Skip empty cells - DO NOT reuse data from other rows
-      if (!cellValue || cellValue === '') {
-        console.log(`Skipping empty cell at column ${i} (${colName})`);
-        continue;
+    } else if (node.level === 2 && node.columnName === "Les") {
+      // For Les nodes, try to extract Les number
+      const lesMatch = node.value.match(/Les\s+(\d+)/i);
+      if (lesMatch && lesMatch[1]) {
+        const lesNumber = parseInt(lesMatch[1]);
+        rowIndex = lesNumber;
+        console.log(`Using Les number to find row: Les ${lesNumber} -> row index ${rowIndex}`);
       }
+    }
+    
+    // If we found a row, process it
+    if (rowIndex !== null && rowIndex >= 0 && rowIndex < rawExcelData.length) {
+      const targetRow = rawExcelData[rowIndex];
+      console.log(`Processing Excel row ${rowIndex}:`, targetRow);
       
-      // Create group for this column
-      if (!columnGroups[colName]) {
-        columnGroups[colName] = [];
+      // Loop through the row, starting from the appropriate column
+      for (let i = startColumnIndex; i < targetRow.length; i++) {
+        const cellValue = targetRow[i];
+        
+        // Skip empty cells and hierarchy columns (0, 1, 2)
+        if (!cellValue || cellValue.toString().trim() === '' || i < startColumnIndex) continue;
+        
+        // Get column name from headers
+        const colName = headers[i] || `Column ${i+1}`;
+        
+        // Initialize group if needed
+        if (!columnGroups[colName]) {
+          columnGroups[colName] = [];
+        }
+        
+        // Check if this value already exists in the group
+        const existing = columnGroups[colName].some(item => 
+          item.columnIndex === i && item.value === cellValue
+        );
+        
+        // Only add if not already added as a child
+        if (!existing) {
+          // Add to group
+          columnGroups[colName].push({
+            columnIndex: i,
+            columnName: colName,
+            value: cellValue,
+            isChecked: false,
+            exists: false,
+            nodeId: null,
+            fromExcel: true
+          });
+        }
       }
-      
-      // Check if this item is already a child
-      const key = `${i}:${cellValue}`;
-      const existing = childrenMap[key];
-      
-      // Only add if not already added as a child
-      if (!existing) {
-        // Add to group
-        columnGroups[colName].push({
-          columnIndex: i,
-          columnName: colName,
-          value: cellValue,
-          isChecked: false,
-          exists: false,
-          nodeId: null,
-          fromExcel: true
-        });
-      }
+    } else {
+      console.warn(`Could not find Excel row for ${node.columnName} ${node.value}`);
     }
     
     // Sort column groups by column index for consistent display
@@ -3101,8 +3119,8 @@ document.addEventListener('DOMContentLoaded', function() {
       let changesApplied = false;
       
       // Create children array if needed
-      if (!lesNode.children) {
-        lesNode.children = [];
+      if (!node.children) {
+        node.children = [];
       }
       
       // Process each checkbox
@@ -3116,14 +3134,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (exists) {
           // Find existing child BY ID - more reliable than string matching
-          const childIndex = lesNode.children.findIndex(child => child.id === nodeId);
+          const childIndex = node.children.findIndex(child => child.id === nodeId);
           if (childIndex >= 0) {
             // Update visibility
-            const wasHidden = !!lesNode.children[childIndex].hidden;
+            const wasHidden = !!node.children[childIndex].hidden;
             const shouldBeHidden = !checked;
             
             if (wasHidden !== shouldBeHidden) {
-              lesNode.children[childIndex].hidden = shouldBeHidden;
+              node.children[childIndex].hidden = shouldBeHidden;
               changesApplied = true;
               console.log(`Changed visibility of "${value}" to ${!shouldBeHidden}`);
               
@@ -3143,18 +3161,18 @@ document.addEventListener('DOMContentLoaded', function() {
             columnName: colName,
             columnIndex: colIndex,
             value: value,
-            level: lesNode.level + 1,
+            level: node.level + 1,
             children: [],
             // Copy parent coordinates but update column
             excelCoordinates: {
-              ...lesNode.excelCoordinates,
+              ...node.excelCoordinates,
               column: String.fromCharCode(65 + colIndex) // Convert to Excel column letter
             },
             hidden: false
           };
           
           // Add directly to THIS parent node's children
-          lesNode.children.push(newNode);
+          node.children.push(newNode);
           changesApplied = true;
           console.log(`Added new child: ${colName} - ${value}`);
         }
