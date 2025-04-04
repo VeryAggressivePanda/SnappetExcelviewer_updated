@@ -216,7 +216,6 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
       console.log(`Calculated max column count: ${maxColumns}`);
     }
     
-    maxColumns = Math.max(maxColumns, 10);
     console.log(`Final column count: ${maxColumns}`);
     
     // Extract data
@@ -295,8 +294,7 @@ function processWorksheet(worksheet) {
     console.log(`Calculated max column count: ${maxColumns}`);
   }
   
-  // Add a minimum of columns
-  maxColumns = Math.max(maxColumns, 10);
+  // Remove the forced minimum of 10 columns
   console.log(`Final column count: ${maxColumns}`);
   
   // Map out the data including all rows (with empty cells)
