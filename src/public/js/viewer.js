@@ -1152,6 +1152,55 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(addChildBtn);
+      
+      // Add delete button for level-2 nodes (Les)
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-les-button';
+      deleteBtn.textContent = '×';
+      deleteBtn.title = 'Delete Les';
+      deleteBtn.style.marginLeft = '5px';
+      deleteBtn.style.padding = '2px 8px';
+      deleteBtn.style.fontSize = '12px';
+      deleteBtn.style.border = '1px solid #ccc';
+      deleteBtn.style.borderRadius = '3px';
+      deleteBtn.style.background = '#f8f8f8';
+      deleteBtn.style.color = '#d9534f';
+      deleteBtn.style.fontWeight = 'bold';
+      deleteBtn.style.cursor = 'pointer';
+      
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering parent events
+        
+        // Confirm deletion
+        if (confirm(`Are you sure you want to delete "${node.value}" and all its child elements?`)) {
+          // Use our deletion function that preserves expand state
+          deleteNode(node.id);
+        }
+      });
+      
+      header.appendChild(deleteBtn);
+    }
+    
+    // Add 'Add Les' button for level-1 nodes (Week)
+    if (level === 1) {
+      const addLesBtn = document.createElement('button');
+      addLesBtn.className = 'add-les-button';
+      addLesBtn.textContent = '+ Les';
+      addLesBtn.title = 'Add New Les';
+      addLesBtn.style.marginLeft = '10px';
+      addLesBtn.style.padding = '2px 6px';
+      addLesBtn.style.fontSize = '12px';
+      addLesBtn.style.border = '1px solid #ccc';
+      addLesBtn.style.borderRadius = '3px';
+      addLesBtn.style.background = '#f8f9fa';
+      addLesBtn.style.cursor = 'pointer';
+      
+      addLesBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering parent events
+        showAddLesModal(node);
+      });
+      
+      header.appendChild(addLesBtn);
     }
     
     // Add 'Delete' button for child elements of Les nodes (level 3 or higher)
@@ -2187,6 +2236,423 @@ document.addEventListener('DOMContentLoaded', function() {
         renderSheet(activeSheetId, sheetData);
       }
     }
+  }
+  
+  // Show modal to add a new Les to a Week node
+  function showAddLesModal(weekNode) {
+    console.log("showAddLesModal - Raw node data:", weekNode);
+
+    // Get all existing Les nodes for this week
+    const existingLesValues = [];
+    if (weekNode.children) {
+      weekNode.children.forEach(child => {
+        if (child.columnName === 'Les') {
+          existingLesValues.push(child.value);
+        }
+      });
+    }
+    
+    console.log("Initial existing Les values:", existingLesValues);
+    
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.className = 'element-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '1000';
+    
+    // Create content container
+    const content = document.createElement('div');
+    content.className = 'element-modal-content';
+    content.style.backgroundColor = 'white';
+    content.style.padding = '20px';
+    content.style.borderRadius = '8px';
+    content.style.maxWidth = '500px';
+    content.style.width = '90%';
+    
+    // Create header
+    const header = document.createElement('h2');
+    header.textContent = `Add Les to: ${weekNode.columnName} (${weekNode.value})`;
+    header.style.marginBottom = '15px';
+    content.appendChild(header);
+    
+    // Create form
+    const form = document.createElement('form');
+    form.style.display = 'flex';
+    form.style.flexDirection = 'column';
+    form.style.gap = '15px';
+    
+    // Get Excel data
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    // Get the raw data directly from the API response or window storage
+    let rawData = [];
+    if (window.rawExcelData && window.rawExcelData[activeSheetId]) {
+      rawData = window.rawExcelData[activeSheetId];
+      console.log("Using raw Excel data from window.rawExcelData, length:", rawData.length);
+    } else if (sheetData?.data?.data && Array.isArray(sheetData.data.data)) {
+      rawData = sheetData.data.data;
+      console.log("Using data from sheetData.data.data, length:", rawData.length);
+    }
+    
+    // Les selector
+    const lesSelectGroup = document.createElement('div');
+    const lesSelectLabel = document.createElement('label');
+    lesSelectLabel.textContent = 'Select Les:';
+    lesSelectLabel.style.fontWeight = 'bold';
+    lesSelectLabel.style.marginBottom = '5px';
+    lesSelectLabel.style.display = 'block';
+    
+    const lesSelect = document.createElement('select');
+    lesSelect.style.width = '100%';
+    lesSelect.style.padding = '8px';
+    lesSelect.style.borderRadius = '4px';
+    lesSelect.style.border = '1px solid #ced4da';
+    
+    // Find all available Les nodes for this week from the raw data
+    const availableLesOptions = [];
+    const weekValue = weekNode.value.trim();
+
+    // Find which Blok this Week belongs to by traversing the hierarchy
+    let blokNode = null;
+    let currentNode = weekNode;
+    while (currentNode.parent) {
+      currentNode = currentNode.parent;
+      if (currentNode.columnName === 'Blok') {
+        blokNode = currentNode;
+        break;
+      }
+    }
+    
+    const blokValue = blokNode ? blokNode.value.trim() : "";
+    console.log(`Looking for Les nodes for Blok node:`, blokNode);
+    console.log(`Looking for Les nodes for Blok: "${blokValue}", Week: "${weekValue}"`);
+    
+    // Track all possible Les nodes from the Excel data for this Week
+    const allLesPossibilities = [];
+    
+    // DEBUG: Print out a sample of the raw data
+    if (rawData && rawData.length > 0) {
+      console.log("Excel headers:", rawData[0]);
+      if (rawData.length > 3) {
+        console.log("Sample data row 1:", rawData[1]);
+        console.log("Sample data row 2:", rawData[2]);
+        console.log("Sample data row 3:", rawData[3]);
+      }
+    }
+    
+    if (!rawData || rawData.length <= 1) {
+      console.error("No raw data available to process Les nodes");
+    } else {
+      console.log("Processing Excel data with", rawData.length, "rows");
+      
+      // Get the Excel column indices
+      const headers = rawData[0];
+      const blokColIndex = 0;
+      const weekColIndex = 1;
+      const lesColIndex = 2;
+      
+      // Track the context for empty cells
+      let currentContextBlok = "";
+      let currentContextWeek = "";
+      
+      // First, directly extract all Les nodes from every row in the raw data
+      const allLesNodesInExcel = [];
+      
+      for (let i = 1; i < rawData.length; i++) {
+        const row = rawData[i];
+        if (!row || row.length < 3) continue;
+        
+        // Update context when non-empty cells are found
+        if (row[blokColIndex] && row[blokColIndex].trim() !== "") {
+          currentContextBlok = row[blokColIndex].trim();
+        }
+        
+        if (row[weekColIndex] && row[weekColIndex].trim() !== "") {
+          currentContextWeek = row[weekColIndex].trim();
+        }
+        
+        const rowLes = row[lesColIndex] ? row[lesColIndex].trim() : "";
+        if (!rowLes) continue;
+        
+        // Add to the list of all Les nodes with their context
+        allLesNodesInExcel.push({
+          blok: currentContextBlok,
+          week: currentContextWeek,
+          les: rowLes,
+          rowIndex: i
+        });
+      }
+      
+      console.log("All Les nodes found in Excel:", allLesNodesInExcel);
+      
+      // Now filter for only the ones matching our Week/Blok context
+      const weekLesNodes = allLesNodesInExcel.filter(node => {
+        // Direct comparison with our Week node
+        const weekMatches = node.week.toLowerCase() === weekValue.toLowerCase();
+        
+        // If we have a Blok node, compare with it too
+        let blokMatches = true;
+        if (blokValue) {
+          blokMatches = node.blok.toLowerCase() === blokValue.toLowerCase();
+        }
+        
+        return weekMatches && blokMatches;
+      });
+      
+      console.log("Les nodes matching current Week/Blok context:", weekLesNodes);
+      
+      // Add all matching Les nodes to the possibilities list
+      weekLesNodes.forEach(node => {
+        if (!allLesPossibilities.some(p => p.value.toLowerCase() === node.les.toLowerCase())) {
+          allLesPossibilities.push({
+            value: node.les,
+            rowIndex: node.rowIndex
+          });
+          
+          // If not already in the existing values, add to available options
+          if (!existingLesValues.some(v => v.toLowerCase() === node.les.toLowerCase())) {
+            availableLesOptions.push({
+              value: node.les,
+              rowIndex: node.rowIndex
+            });
+          }
+        }
+      });
+    }
+    
+    console.log("All Les possibilities for this week:", allLesPossibilities);
+    console.log("Existing Les values:", existingLesValues);
+    console.log("Available Les options for dropdown:", availableLesOptions);
+    
+    // Add no options text if none available
+    if (availableLesOptions.length === 0) {
+      if (allLesPossibilities.length === 0) {
+        const noOptionsOption = document.createElement('option');
+        noOptionsOption.value = "";
+        noOptionsOption.textContent = "No Les nodes found for this Week";
+        noOptionsOption.disabled = true;
+        lesSelect.appendChild(noOptionsOption);
+      } else {
+        // All Les nodes for this Week are already added
+        const noOptionsOption = document.createElement('option');
+        noOptionsOption.value = "";
+        noOptionsOption.textContent = "All Les nodes for this Week are already added";
+        noOptionsOption.disabled = true;
+        lesSelect.appendChild(noOptionsOption);
+      }
+    } else {
+      // Add a default option
+      const defaultOption = document.createElement('option');
+      defaultOption.value = "";
+      defaultOption.textContent = "-- Select a Les --";
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
+      lesSelect.appendChild(defaultOption);
+      
+      // Add options to select, sorted by Les number if possible
+      availableLesOptions.sort((a, b) => {
+        // Try to extract numbers from Les names for proper sorting
+        const aMatch = a.value.match(/Les\s+(\d+)/i);
+        const bMatch = b.value.match(/Les\s+(\d+)/i);
+        
+        if (aMatch && bMatch) {
+          return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+        }
+        
+        // Fallback to alphabetical sorting
+        return a.value.localeCompare(b.value);
+      }).forEach(option => {
+        const lesOption = document.createElement('option');
+        lesOption.value = option.value;
+        lesOption.textContent = option.value;
+        lesOption.dataset.rowIndex = option.rowIndex;
+        lesSelect.appendChild(lesOption);
+      });
+    }
+    
+    lesSelectGroup.appendChild(lesSelectLabel);
+    lesSelectGroup.appendChild(lesSelect);
+    form.appendChild(lesSelectGroup);
+    
+    // Preview section
+    const previewContainer = document.createElement('div');
+    previewContainer.style.marginTop = '15px';
+    previewContainer.style.padding = '10px';
+    previewContainer.style.backgroundColor = '#f8f9fa';
+    previewContainer.style.borderRadius = '4px';
+    previewContainer.style.fontSize = '0.9rem';
+    
+    const previewHeader = document.createElement('div');
+    previewHeader.textContent = 'Preview';
+    previewHeader.style.fontWeight = 'bold';
+    previewHeader.style.marginBottom = '5px';
+    
+    const previewContent = document.createElement('div');
+    previewContent.style.fontFamily = 'monospace';
+    
+    previewContainer.appendChild(previewHeader);
+    previewContainer.appendChild(previewContent);
+    form.appendChild(previewContainer);
+    
+    // Update preview function
+    function updatePreview() {
+      const selectedLes = lesSelect.value;
+      const selectedOption = lesSelect.options[lesSelect.selectedIndex];
+      const rowIndex = selectedOption ? parseInt(selectedOption.dataset.rowIndex) : -1;
+      
+      if (!selectedLes || rowIndex < 0) {
+        previewContent.innerHTML = '<p class="error">No Les selected</p>';
+        return;
+      }
+      
+      // Get row data
+      const row = rawData[rowIndex];
+      
+      if (!row) {
+        previewContent.innerHTML = '<p class="error">Could not find data for selected Les</p>';
+        return;
+      }
+      
+      // Display preview
+      previewContent.innerHTML = `
+        <p><strong>Les:</strong> ${selectedLes}</p>
+        <p><strong>Excel Row:</strong> ${rowIndex + 1}</p>
+        <p><strong>Werkblad:</strong> ${row[3] || '(empty)'}</p>
+        <p><strong>Instructie & begeleide inoefening - Leerlingen:</strong> ${row[4] || '(empty)'}</p>
+      `;
+    }
+    
+    // Update preview when selection changes
+    lesSelect.addEventListener('change', updatePreview);
+    
+    // Add buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'space-between';
+    buttonContainer.style.marginTop = '20px';
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.type = 'button';
+    cancelButton.style.padding = '8px 15px';
+    
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Les';
+    addButton.type = 'submit';
+    addButton.style.padding = '8px 15px';
+    addButton.style.backgroundColor = '#34a3d7';
+    addButton.style.color = 'white';
+    addButton.style.border = 'none';
+    
+    // Disable add button if no options available
+    addButton.disabled = availableLesOptions.length === 0;
+    
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(addButton);
+    form.appendChild(buttonContainer);
+    
+    // Add form to content
+    content.appendChild(form);
+    
+    // Add content to modal
+    modal.appendChild(content);
+    
+    // Add modal to document
+    document.body.appendChild(modal);
+    
+    // Initial preview update
+    updatePreview();
+    
+    // Handle form submission
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const selectedLes = lesSelect.value;
+      const selectedOption = lesSelect.options[lesSelect.selectedIndex];
+      const rowIndex = selectedOption ? parseInt(selectedOption.dataset.rowIndex) : -1;
+      
+      console.log("Form submitted with Les:", selectedLes, "row index:", rowIndex);
+      
+      if (!selectedLes || rowIndex < 0) {
+        alert('Please select a Les from the dropdown');
+        return;
+      }
+      
+      // Get the Excel row data
+      const row = rawData[rowIndex];
+      if (!row) {
+        alert('Could not find data for the selected Les');
+        return;
+      }
+      
+      // Get headers for property names
+      const headers = rawData[0] || [];
+      
+      // Create new Les node
+      const newLesNode = {
+        id: `node-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        columnName: 'Les',
+        columnIndex: 2, // Index for Les column
+        value: selectedLes,
+        level: 2,
+        children: [],
+        properties: [],
+        parent: weekNode
+      };
+      
+      // Add Excel coordinates for reference
+      newLesNode.excelCoordinates = {
+        rowIndex: rowIndex,
+        row: rowIndex + 1,
+        column: 'C',
+        cell: `C${rowIndex + 1}`
+      };
+      
+      // Add properties from the Excel row (all columns after Les)
+      for (let i = 3; i < row.length; i++) {
+        // Include even empty cells to maintain structure
+        newLesNode.properties.push({
+          columnIndex: i,
+          columnName: headers[i] || `Column ${i+1}`,
+          value: row[i] || ''  // Use empty string for null/undefined values
+        });
+      }
+      
+      console.log("Adding new Les node:", newLesNode);
+      
+      // Add the Les node to the Week node
+      addNode(weekNode, newLesNode);
+      
+      // Store the expand state before updating UI
+      storeExpandState();
+      
+      // Close modal
+      document.body.removeChild(modal);
+      
+      // Update the UI without refreshing the page
+      const sheetContainer = document.getElementById('sheet-container');
+      if (sheetContainer) {
+        sheetContainer.innerHTML = '';
+        renderNode(window.hierarchicalData, 0);
+        applyStyles();
+      } else {
+        console.error("Could not find sheet-container, UI may not update properly");
+      }
+    });
+    
+    // Handle cancel
+    cancelButton.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
   }
   
   initialize();
