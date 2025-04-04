@@ -860,21 +860,42 @@ document.addEventListener('DOMContentLoaded', function() {
           window.excelData.sheetsLoaded[sheetId] = processedData;
           renderSheet(sheetId, processedData);
         } else {
-          // Show modal to configure hierarchy
-          console.log("No saved configuration found, showing modal...");
-          showHierarchyConfigModal(data.data.headers, (hierarchy) => {
-            console.log("Hierarchy configuration received:", hierarchy);
-            
-            // Process data with hierarchy
-            const processedData = processExcelData(data.data, hierarchy);
-            window.excelData.sheetsLoaded[sheetId] = processedData;
-            
-            // Save hierarchy configuration for next time
-            saveHierarchyConfiguration(fileId + "-" + sheetId, hierarchy);
-            
-            // Render the sheet
-            renderSheet(sheetId, processedData);
-          });
+          // Instead of showing modal, use default hierarchy configuration (base template)
+          console.log("No saved configuration found, using default base template...");
+          
+          // Create default base template hierarchy (column b is child of column a, column c is child of column b,
+          // columns d, e, f, g, h are children of column c)
+          const defaultHierarchy = {};
+          
+          // If we have data, we can determine the number of columns
+          let columnCount = 0;
+          if (data.data && data.data.data && data.data.data.length > 0) {
+            columnCount = data.data.data[0].length;
+          }
+          
+          // Set up the default hierarchy: Column 0 is the root, others are children
+          defaultHierarchy[0] = null; // root
+          for (let i = 1; i < columnCount; i++) {
+            if (i === 1) {
+              defaultHierarchy[i] = 0; // Column 1 is a child of Column 0
+            } else if (i === 2) {
+              defaultHierarchy[i] = 1; // Column 2 is a child of Column 1
+            } else {
+              defaultHierarchy[i] = 2; // Columns 3+ are children of Column 2
+            }
+          }
+          
+          console.log("Using default hierarchy configuration:", defaultHierarchy);
+          
+          // Process data with hierarchy
+          const processedData = processExcelData(data.data, defaultHierarchy);
+          window.excelData.sheetsLoaded[sheetId] = processedData;
+          
+          // Save hierarchy configuration for next time
+          saveHierarchyConfiguration(fileId + "-" + sheetId, defaultHierarchy);
+          
+          // Render the sheet
+          renderSheet(sheetId, processedData);
         }
       } else {
         // Just render the data as is
@@ -1077,6 +1098,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Render a node and its children
   function renderNode(node, level, expandStateMap = {}) {
+    if (!node) return null;
+    
+    // Skip hidden nodes
+    if (node.hidden === true) {
+      return null;
+    }
+    
     const nodeEl = document.createElement('div');
     
     // Use level-specific class names
@@ -1152,6 +1180,26 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(addChildBtn);
+      
+      // Add manage items button for Les nodes
+      const manageItemsBtn = document.createElement('button');
+      manageItemsBtn.className = 'manage-items-button';
+      manageItemsBtn.textContent = '☑';
+      manageItemsBtn.title = 'Manage Items';
+      manageItemsBtn.style.marginLeft = '5px';
+      manageItemsBtn.style.padding = '2px 6px';
+      manageItemsBtn.style.fontSize = '12px';
+      manageItemsBtn.style.border = '1px solid #ccc';
+      manageItemsBtn.style.borderRadius = '3px';
+      manageItemsBtn.style.background = '#f8f9fa';
+      manageItemsBtn.style.cursor = 'pointer';
+      
+      manageItemsBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering parent events
+        showManageItemsModal(node);
+      });
+      
+      header.appendChild(manageItemsBtn);
       
       // Add delete button for level-2 nodes (Les)
       const deleteBtn = document.createElement('button');
@@ -2178,25 +2226,23 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Function to store current expand/collapse state
   function storeExpandState() {
-    const activeSheetId = window.excelData.activeSheetId;
     const expandStateMap = {};
-    const sheetContent = document.getElementById(`sheet-${activeSheetId}`);
     
-    if (sheetContent) {
-      const nodes = sheetContent.querySelectorAll('[class*="-node"]');
-      nodes.forEach(node => {
-        // Get the node ID from its data attribute
-        const nodeId = node.getAttribute('data-node-id');
-        if (nodeId) {
-          // Store if the node is expanded (not collapsed)
-          const level = node.getAttribute('data-level');
-          expandStateMap[nodeId] = !node.classList.contains(`level-${level}-collapsed`);
-        }
-      });
-    }
+    // Get all nodes in the DOM
+    const nodes = document.querySelectorAll('[data-node-id]');
+    console.log(`Stored expand state for ${nodes.length} nodes`);
     
-    console.log("Stored expand state for", Object.keys(expandStateMap).length, "nodes");
-    window.expandStateMap = expandStateMap;
+    nodes.forEach(node => {
+      // Get the node ID and level
+      const nodeId = node.getAttribute('data-node-id');
+      const level = parseInt(node.getAttribute('data-level') || '0');
+      
+      if (nodeId) {
+        // Store whether the node is expanded (not collapsed)
+        expandStateMap[nodeId] = !node.classList.contains(`level-${level}-collapsed`);
+      }
+    });
+    
     return expandStateMap;
   }
   
@@ -2218,24 +2264,66 @@ document.addEventListener('DOMContentLoaded', function() {
     renderSheet(activeSheetId, sheetData);
   }
   
-  function deleteNode(nodeId) {
-    // Find the parent node in the data structure
-    const parentNode = findParentNode(nodeId);
-    if (parentNode) {
-      // Store expand/collapse state before re-rendering
-      storeExpandState();
+  function deleteNode(nodeId, skipRefresh = true) {
+    console.log(`Deleting node ${nodeId}, skipRefresh: ${skipRefresh}`);
+    const activeSheetId = window.excelData.activeSheetId;
+    const rootNode = window.excelData.sheetsLoaded[activeSheetId].rootNode;
+    
+    // Store current expand state before deleting
+    const expandStateMap = skipRefresh ? storeExpandState() : null;
+    
+    // Find the node's parent by recursively searching
+    let found = false;
+    
+    function searchAndRemove(parent) {
+      if (!parent || !parent.children) return false;
       
-      // Remove the node from its parent's children array
-      const index = parentNode.children.findIndex(child => child.id === nodeId);
-      if (index !== -1) {
-        parentNode.children.splice(index, 1);
-        
-        // Re-render the sheet to update the hierarchy
-        const activeSheetId = window.excelData.activeSheetId;
-        const sheetData = window.excelData.sheetsLoaded[activeSheetId];
-        renderSheet(activeSheetId, sheetData);
+      // Check direct children
+      for (let i = 0; i < parent.children.length; i++) {
+        const child = parent.children[i];
+        if (child.id === nodeId) {
+          // Found it - remove this node
+          parent.children.splice(i, 1);
+          console.log(`Node ${nodeId} removed from parent`);
+          found = true;
+          return true;
+        }
       }
+      
+      // Not found in direct children, check descendants
+      for (let i = 0; i < parent.children.length; i++) {
+        if (searchAndRemove(parent.children[i])) {
+          return true;
+        }
+      }
+      
+      return false;
     }
+    
+    // Start search from root
+    searchAndRemove(rootNode);
+    
+    if (!found) {
+      console.error(`Node ${nodeId} not found for deletion`);
+      return false;
+    }
+    
+    // If we need to refresh, re-render with preserved expand state
+    if (!skipRefresh) {
+      console.log('Skipping UI refresh after node deletion');
+      return true;
+    }
+    
+    console.log('Re-rendering UI after node deletion');
+    // Get the container
+    const containerEl = document.getElementById('data-container');
+    if (containerEl) {
+      // Clear and re-render with the stored expand state
+      containerEl.innerHTML = '';
+      renderNode(rootNode, 0, expandStateMap);
+    }
+    
+    return true;
   }
   
   // Show modal to add a new Les to a Week node
@@ -2653,6 +2741,478 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelButton.addEventListener('click', () => {
       document.body.removeChild(modal);
     });
+  }
+  
+  // Add this new function to handle the manage items modal
+  function showManageItemsModal(lesNode) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'manage-items-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '1000';
+    
+    // Create content
+    const content = document.createElement('div');
+    content.className = 'manage-items-modal-content';
+    content.style.backgroundColor = 'white';
+    content.style.padding = '20px';
+    content.style.borderRadius = '8px';
+    content.style.maxWidth = '80%';
+    content.style.width = '600px';
+    content.style.maxHeight = '80vh';
+    content.style.overflowY = 'auto';
+    
+    // Create header
+    const header = document.createElement('h2');
+    header.textContent = `Manage Items for ${lesNode.columnName}: ${lesNode.value}`;
+    content.appendChild(header);
+    
+    // Get raw Excel data - brute force approach
+    let rawData = null;
+    const activeSheetId = window.excelData.activeSheetId;
+    
+    if (window.rawExcelData && window.rawExcelData[activeSheetId]) {
+      rawData = window.rawExcelData[activeSheetId];
+    } else if (window.excelData.sheetsLoaded && window.excelData.sheetsLoaded[activeSheetId] && 
+               window.excelData.sheetsLoaded[activeSheetId].data && 
+               window.excelData.sheetsLoaded[activeSheetId].data.data) {
+      rawData = window.excelData.sheetsLoaded[activeSheetId].data.data;
+    }
+    
+    if (!rawData || !rawData.length) {
+      content.appendChild(document.createTextNode('No Excel data found'));
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+      return;
+    }
+    
+    // Create debug info section with more details
+    const debugInfo = document.createElement('div');
+    debugInfo.style.marginBottom = '15px';
+    debugInfo.style.padding = '10px';
+    debugInfo.style.backgroundColor = '#f5f5f5';
+    debugInfo.style.fontSize = '12px';
+    
+    // Log for troubleshooting
+    console.log("Les Node:", lesNode);
+    console.log("Excel Coordinates:", lesNode.excelCoordinates);
+    console.log("Children:", lesNode.children);
+    
+    let childrenHTML = '';
+    if (lesNode.children && lesNode.children.length > 0) {
+      childrenHTML = '<p><strong>Child Items:</strong></p><ul style="margin-top: 5px; padding-left: 20px;">';
+      lesNode.children.forEach(child => {
+        childrenHTML += `<li>${child.columnName}: ${child.value} (${child.hidden ? 'hidden' : 'visible'})</li>`;
+      });
+      childrenHTML += '</ul>';
+    }
+    
+    debugInfo.innerHTML = `
+      <p><strong>Debug:</strong> Node ID: ${lesNode.id}, Type: ${lesNode.columnName}, Value: ${lesNode.value}</p>
+      <p>Excel Coordinates: ${JSON.stringify(lesNode.excelCoordinates || 'None')}</p>
+      <p>Current children: ${lesNode.children ? lesNode.children.length : 0}</p>
+      ${childrenHTML}
+    `;
+    content.appendChild(debugInfo);
+    
+    // Get headers and target row
+    const headers = rawData[0];
+    
+    // Find row for this node - CRITICAL to get this right
+    let targetRow = null;
+    let targetRowIndex = -1;
+    
+    if (lesNode.excelCoordinates && lesNode.excelCoordinates.row !== undefined) {
+      targetRowIndex = lesNode.excelCoordinates.rowIndex || lesNode.excelCoordinates.row;
+      if (typeof targetRowIndex === 'string') {
+        targetRowIndex = parseInt(targetRowIndex, 10);
+      }
+      
+      // Make sure we have a valid index
+      if (targetRowIndex >= 0 && targetRowIndex < rawData.length) {
+        targetRow = rawData[targetRowIndex];
+      }
+    }
+    
+    if (!targetRow) {
+      content.appendChild(document.createTextNode('Could not find Excel row for this item'));
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+      return;
+    }
+    
+    console.log("Target row index:", targetRowIndex);
+    console.log("Target row:", targetRow);
+    
+    // Create map of current children with visibility state
+    const childrenMap = {};
+    if (lesNode.children) {
+      lesNode.children.forEach(child => {
+        const key = `${child.columnIndex}:${child.value}`;
+        childrenMap[key] = {
+          node: child,
+          visible: !child.hidden
+        };
+      });
+    }
+    
+    // Find parent columns to skip
+    const parentColumns = new Set();
+    let parent = lesNode;
+    while (parent) {
+      parentColumns.add(parent.columnIndex);
+      parent = findParentNode(parent.id);
+    }
+    
+    // Create container for items
+    const itemsContainer = document.createElement('div');
+    itemsContainer.style.marginTop = '15px';
+    itemsContainer.style.marginBottom = '15px';
+    
+    // Build sections from existing children first
+    const columnGroups = {};
+    
+    // FIRST, add all existing children to the groups
+    if (lesNode.children && lesNode.children.length > 0) {
+      lesNode.children.forEach(child => {
+        if (!columnGroups[child.columnName]) {
+          columnGroups[child.columnName] = [];
+        }
+        
+        columnGroups[child.columnName].push({
+          columnIndex: child.columnIndex,
+          columnName: child.columnName,
+          value: child.value,
+          isChecked: !child.hidden,
+          exists: true,
+          nodeId: child.id,
+          fromExcel: false
+        });
+      });
+    }
+    
+    // THEN, add items from the Excel row that aren't already children
+    // ONLY process the specific row
+    for (let i = 0; i < headers.length; i++) {
+      const colName = headers[i];
+      
+      // Skip parent columns or empty headers
+      if (!colName || parentColumns.has(i)) {
+        continue;
+      }
+      
+      const cellValue = targetRow[i];
+      
+      // Skip empty cells
+      if (!cellValue || cellValue === '') {
+        continue;
+      }
+      
+      // Create group for this column
+      if (!columnGroups[colName]) {
+        columnGroups[colName] = [];
+      }
+      
+      // Check if this item is already a child
+      const key = `${i}:${cellValue}`;
+      const existing = childrenMap[key];
+      
+      // Only add if not already added as a child
+      if (!existing) {
+        // Add to group
+        columnGroups[colName].push({
+          columnIndex: i,
+          columnName: colName,
+          value: cellValue,
+          isChecked: false,
+          exists: false,
+          nodeId: null,
+          fromExcel: true
+        });
+      }
+    }
+    
+    // Sort column groups by column index for consistent display
+    const sortedColumnNames = Object.keys(columnGroups).sort((a, b) => {
+      const firstItemA = columnGroups[a][0];
+      const firstItemB = columnGroups[b][0];
+      return firstItemA.columnIndex - firstItemB.columnIndex;
+    });
+    
+    // Render each column group
+    sortedColumnNames.forEach(colName => {
+      const items = columnGroups[colName];
+      
+      if (!items || items.length === 0) return;
+      
+      // Create group header
+      const groupHeader = document.createElement('h3');
+      groupHeader.textContent = colName;
+      groupHeader.style.borderBottom = '1px solid #ddd';
+      groupHeader.style.paddingBottom = '5px';
+      groupHeader.style.marginTop = '20px';
+      groupHeader.style.marginBottom = '10px';
+      itemsContainer.appendChild(groupHeader);
+      
+      // Create items
+      items.forEach(item => {
+        const itemRow = document.createElement('div');
+        itemRow.style.display = 'flex';
+        itemRow.style.alignItems = 'center';
+        itemRow.style.padding = '8px';
+        itemRow.style.marginBottom = '5px';
+        itemRow.style.backgroundColor = item.isChecked ? '#e0f7fa' : '#f5f5f5';
+        itemRow.style.borderRadius = '4px';
+        
+        // Create checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.isChecked;
+        checkbox.dataset.columnIndex = item.columnIndex;
+        checkbox.dataset.columnName = item.columnName;
+        checkbox.dataset.value = item.value;
+        checkbox.dataset.exists = item.exists;
+        if (item.nodeId) {
+          checkbox.dataset.nodeId = item.nodeId;
+        }
+        
+        // Add label with source indicator
+        const label = document.createElement('label');
+        label.textContent = item.value + (item.fromExcel ? ' (from Excel)' : item.exists ? ' (existing)' : '');
+        label.style.marginLeft = '10px';
+        label.style.fontWeight = item.isChecked ? 'bold' : 'normal';
+        
+        // Update style on change
+        checkbox.addEventListener('change', () => {
+          itemRow.style.backgroundColor = checkbox.checked ? '#e0f7fa' : '#f5f5f5';
+          label.style.fontWeight = checkbox.checked ? 'bold' : 'normal';
+        });
+        
+        itemRow.appendChild(checkbox);
+        itemRow.appendChild(label);
+        itemsContainer.appendChild(itemRow);
+      });
+    });
+    
+    // Show message if no items
+    if (Object.keys(columnGroups).length === 0) {
+      const noItems = document.createElement('p');
+      noItems.textContent = 'No items found in Excel row or current children';
+      noItems.style.fontStyle = 'italic';
+      itemsContainer.appendChild(noItems);
+    }
+    
+    content.appendChild(itemsContainer);
+    
+    // Create buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'space-between';
+    buttonContainer.style.marginTop = '20px';
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.style.padding = '8px 16px';
+    
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save Changes';
+    saveButton.style.padding = '8px 16px';
+    saveButton.style.backgroundColor = '#2196F3';
+    saveButton.style.color = 'white';
+    saveButton.style.border = 'none';
+    saveButton.style.borderRadius = '4px';
+    
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(saveButton);
+    content.appendChild(buttonContainer);
+    
+    // Add modal to document
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Cancel button handler
+    cancelButton.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    
+    // Save button handler
+    saveButton.addEventListener('click', () => {
+      // Get all checkboxes
+      const checkboxes = content.querySelectorAll('input[type="checkbox"]');
+      let changesApplied = false;
+      
+      // Create children array if needed
+      if (!lesNode.children) {
+        lesNode.children = [];
+      }
+      
+      // Process each checkbox
+      checkboxes.forEach(cb => {
+        const colIndex = parseInt(cb.dataset.columnIndex);
+        const colName = cb.dataset.columnName;
+        const value = cb.dataset.value;
+        const checked = cb.checked;
+        const exists = cb.dataset.exists === "true";
+        const nodeId = cb.dataset.nodeId;
+        
+        if (exists) {
+          // Find existing child
+          const childIndex = lesNode.children.findIndex(child => child.id === nodeId);
+          if (childIndex >= 0) {
+            // Update visibility
+            const wasHidden = !!lesNode.children[childIndex].hidden;
+            const shouldBeHidden = !checked;
+            
+            if (wasHidden !== shouldBeHidden) {
+              lesNode.children[childIndex].hidden = shouldBeHidden;
+              changesApplied = true;
+              console.log(`Changed visibility of "${value}" to ${!shouldBeHidden}`);
+              
+              // IMPORTANT: Immediately update the DOM element if it exists
+              const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+              if (nodeElement) {
+                nodeElement.style.display = shouldBeHidden ? 'none' : '';
+                console.log(`Updated DOM element display: ${shouldBeHidden ? 'none' : 'block'}`);
+              } else {
+                console.log(`DOM element not found for node ID: ${nodeId}`);
+              }
+            }
+          }
+        } else if (checked) {
+          // Add new child
+          const newNodeId = `node-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          const newNode = {
+            id: newNodeId,
+            columnName: colName,
+            columnIndex: colIndex,
+            value: value,
+            level: lesNode.level + 1,
+            children: [],
+            excelCoordinates: lesNode.excelCoordinates,
+            hidden: false
+          };
+          
+          lesNode.children.push(newNode);
+          changesApplied = true;
+          console.log(`Added new node: ${colName} - ${value}`);
+        }
+      });
+      
+      // Close modal
+      document.body.removeChild(modal);
+      
+      // Always do a full refresh if any changes were made
+      if (changesApplied) {
+        // Get visible child count for DOM update
+        const visibleCount = lesNode.children.filter(child => !child.hidden).length;
+        
+        // Update DOM to reflect the correct child count
+        const nodeElement = document.querySelector(`[data-node-id="${lesNode.id}"]`);
+        if (nodeElement) {
+          const childrenContainer = nodeElement.querySelector(`.level-${lesNode.level}-children`);
+          if (childrenContainer) {
+            childrenContainer.setAttribute('data-child-count', visibleCount);
+            childrenContainer.className = childrenContainer.className.replace(
+              /level-\d+-child-count-\d+/, 
+              `level-${lesNode.level}-child-count-${visibleCount}`
+            );
+          }
+        }
+        
+        // For new items, we need to do a full refresh
+        if (checkboxes.some(cb => cb.checked && cb.dataset.exists !== "true")) {
+          console.log("New items added, doing full refresh");
+          const activeSheetId = window.excelData.activeSheetId;
+          const rootNode = window.excelData.sheetsLoaded[activeSheetId].rootNode;
+          
+          // Store expand state
+          const expandStateMap = storeExpandState();
+          
+          // Refresh view
+          const container = document.getElementById('data-container');
+          if (container) {
+            container.innerHTML = '';
+            renderNode(rootNode, 0, expandStateMap);
+          }
+        }
+      }
+    });
+  }
+  
+  // Helper function to safely store and retrieve raw data
+  function storeRawExcelData(sheetId, data) {
+    if (!window.rawExcelData) {
+      window.rawExcelData = {};
+    }
+    window.rawExcelData[sheetId] = data;
+    console.log(`Stored raw Excel data for sheet ${sheetId} length: ${data.length}`);
+  }
+  
+  // Helper function to get raw Excel data
+  function getRawExcelData(sheetId) {
+    try {
+      // First try getting it from window.rawExcelData
+      if (window.rawExcelData && window.rawExcelData[sheetId]) {
+        console.log(`Using stored rawExcelData for sheet ${sheetId}`);
+        return window.rawExcelData[sheetId];
+      }
+      
+      // Then try getting it from sheetsLoaded if available
+      if (window.excelData.sheetsLoaded && 
+          window.excelData.sheetsLoaded[sheetId] && 
+          window.excelData.sheetsLoaded[sheetId].data && 
+          Array.isArray(window.excelData.sheetsLoaded[sheetId].data.data)) {
+        console.log(`Using data from sheetsLoaded for sheet ${sheetId}`);
+        return window.excelData.sheetsLoaded[sheetId].data.data;
+      }
+      
+      console.warn(`No raw data found for sheet ${sheetId}`);
+      return null;
+    } catch (error) {
+      console.error(`Error retrieving raw Excel data for sheet ${sheetId}:`, error);
+      return null;
+    }
+  }
+  
+  // Find parent node by traversing the node tree
+  function findParentNode(nodeId) {
+    const activeSheetId = window.excelData.activeSheetId;
+    const rootNode = window.excelData.sheetsLoaded[activeSheetId].rootNode;
+    
+    // Use a recursive function to search through all nodes
+    return searchChildren(rootNode);
+    
+    function searchChildren(parent) {
+      // Skip if this node doesn't have children
+      if (!parent || !parent.children || !Array.isArray(parent.children)) {
+        return null;
+      }
+      
+      // Check direct children first
+      for (const child of parent.children) {
+        if (child.id === nodeId) {
+          return parent;
+        }
+      }
+      
+      // Then recursively check grandchildren
+      for (const child of parent.children) {
+        const foundParent = searchChildren(child);
+        if (foundParent) {
+          return foundParent;
+        }
+      }
+      
+      return null;
+    }
   }
   
   initialize();
