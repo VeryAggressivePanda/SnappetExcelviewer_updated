@@ -1162,6 +1162,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add 'Add Child' button for level-2 nodes (Les)
     if (level === 2) {
+      // Remove the add child button
+      /* 
       const addChildBtn = document.createElement('button');
       addChildBtn.className = 'add-child-button';
       addChildBtn.textContent = '+';
@@ -1180,8 +1182,9 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(addChildBtn);
+      */
       
-      // Add manage items button for Les nodes
+      // Keep the manage items button for Les nodes
       const manageItemsBtn = document.createElement('button');
       manageItemsBtn.className = 'manage-items-button';
       manageItemsBtn.textContent = '☑';
@@ -1201,7 +1204,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       header.appendChild(manageItemsBtn);
       
-      // Add delete button for level-2 nodes (Les)
+      // Remove the delete button for level-2 nodes (Les)
+      /*
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-les-button';
       deleteBtn.textContent = '×';
@@ -1227,10 +1231,12 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(deleteBtn);
+      */
     }
     
-    // Add 'Add Les' button for level-1 nodes (Week)
+    // Remove 'Add Les' button for level-1 nodes (Week)
     if (level === 1) {
+      /*
       const addLesBtn = document.createElement('button');
       addLesBtn.className = 'add-les-button';
       addLesBtn.textContent = '+ Les';
@@ -1249,10 +1255,12 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(addLesBtn);
+      */
     }
     
-    // Add 'Delete' button for child elements of Les nodes (level 3 or higher)
+    // Remove 'Delete' button for child elements of Les nodes (level 3 or higher)
     if (level > 2) {
+      /*
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-element-button';
       deleteBtn.textContent = '×';
@@ -1278,6 +1286,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       header.appendChild(deleteBtn);
+      */
     }
     
     // Add click handler for expanding/collapsing
