@@ -687,17 +687,32 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // DO NOT SKIP EMPTY CELLS - Include them as empty children with proper labeling
       
-      // HIERARCHY FIX: Use different key strategies for hierarchy nodes vs. content nodes
-      // For hierarchy columns (0=Blok, 1=Week, 2=Les), use keys without row index to group properly
-      // For content columns (level>2), include row index to keep items unique per row
+      // Special handling for Les and its children
       let childKey;
       
-      // Hierarchy columns (Blok, Week, Les) - omit row index to ensure grouping
-      if (childColIndex <= 2) {
+      // Special case: If parent is Les (column 3/D) and child is in columns 4+ (E+),
+      // the child should be a DIRECT child of Les, not a sibling.
+      // Les nodes are typically at level 2 (or 3 if Course is present)
+      const isLesColumnIndex = 
+        (headers[parentColIndex] === 'Les') || 
+        (parentColIndex === 2) || 
+        (parentColIndex === 3); // Support both 0-indexed and 1-indexed Les columns
+      
+      const isChildOfLes = isLesColumnIndex && childColIndex > parentColIndex;
+      
+      // For hierarchy columns (main structure), use consistent keys without row index
+      if (headers[childColIndex] === 'Blok' || 
+          headers[childColIndex] === 'Week' || 
+          headers[childColIndex] === 'Les') {
         childKey = `${parentNode.id}-col${childColIndex}-${childValue || 'empty'}`;
         console.log(`Creating HIERARCHY node key: ${childKey}`);
-      } 
-      // Content columns - include row index to ensure uniqueness per row
+      }
+      // For Les children (content columns E, F, G, etc), include row for uniqueness
+      else if (isChildOfLes) {
+        childKey = `${parentNode.id}-col${childColIndex}-row${rowIndex}-${childValue || 'empty'}`;
+        console.log(`Creating LES CHILD node key: ${childKey}`);
+      }
+      // For other content columns
       else {
         childKey = `${parentNode.id}-col${childColIndex}-row${rowIndex}-${childValue || 'empty'}`;
         console.log(`Creating CONTENT node key: ${childKey}`);
@@ -713,12 +728,25 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Generate ID differently for hierarchy vs content nodes
         let nodeId;
-        if (childColIndex <= 2) {
-          // For hierarchy nodes, make ID based on column and value only
+        // For main hierarchy columns, use consistent IDs
+        if (headers[childColIndex] === 'Blok' || 
+            headers[childColIndex] === 'Week' || 
+            headers[childColIndex] === 'Les') {
           nodeId = `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}`;
-        } else {
-          // For content nodes, include row index to keep unique
+        } 
+        // For content nodes or Les children, include row to keep unique
+        else {
           nodeId = `node-${childColIndex}-${childValue.replace(/[^a-zA-Z0-9]/g, '-')}-row${rowIndex}`;
+        }
+        
+        // Determine the correct level based on relationship
+        let nodeLevel;
+        if (isChildOfLes) {
+          // Direct children of Les should be level+1 (typically level 3 or 4)
+          nodeLevel = parentNode.level + 1;
+        } else {
+          // Normal parent-child relationship
+          nodeLevel = level + 1;
         }
         
         childNode = {
@@ -726,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function() {
           value: childValue || `Empty ${headers[childColIndex]}`,
           columnName: headers[childColIndex] || `Column ${childColIndex+1}`,
           columnIndex: childColIndex,
-          level: level + 1,
+          level: nodeLevel,
           children: [],
           properties: [],
           childNodes: {}, // For its own children
@@ -852,7 +880,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // If already loaded, return the cached data
     if (window.excelData.sheetsLoaded[sheetId]) {
-      return window.excelData.sheetsLoaded[sheetId];
+      renderSheet(sheetId, window.excelData.sheetsLoaded[sheetId]);
+      return;
     }
     
     // Request sheet data from server
@@ -900,13 +929,33 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Set up the default hierarchy: Column 0 is the root, others are children
           defaultHierarchy[0] = null; // root
-          for (let i = 1; i < columnCount; i++) {
-            if (i === 1) {
-              defaultHierarchy[i] = 0; // Column 1 is a child of Column 0
-            } else if (i === 2) {
-              defaultHierarchy[i] = 1; // Column 2 is a child of Column 1
-            } else {
-              defaultHierarchy[i] = 2; // Columns 3+ are children of Column 2
+          
+          // Determine if we have a Course column (check first row's first column)
+          const hasCourseColumn = data.data && data.data.headers && 
+                                 data.data.headers[0] && 
+                                 data.data.headers[0].toLowerCase().includes('course');
+          
+          // Set up hierarchy based on column structure
+          if (hasCourseColumn) {
+            // Course > Blok > Week > Les > Other columns
+            defaultHierarchy[0] = null; // Course is root
+            defaultHierarchy[1] = 0;    // Blok is child of Course
+            defaultHierarchy[2] = 1;    // Week is child of Blok
+            defaultHierarchy[3] = 2;    // Les is child of Week
+            
+            // All remaining columns are children of Les
+            for (let i = 4; i < columnCount; i++) {
+              defaultHierarchy[i] = 3;  // Other columns are children of Les
+            }
+          } else {
+            // Standard Blok > Week > Les > Other columns
+            defaultHierarchy[0] = null; // Blok is root
+            defaultHierarchy[1] = 0;    // Week is child of Blok
+            defaultHierarchy[2] = 1;    // Les is child of Week
+            
+            // All remaining columns are children of Les
+            for (let i = 3; i < columnCount; i++) {
+              defaultHierarchy[i] = 2;  // Other columns are children of Les
             }
           }
           
@@ -926,6 +975,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Just render the data as is
         renderSheet(sheetId, data.data);
       }
+      
+      // Update the active sheet ID
+      window.excelData.activeSheetId = sheetId;
       
       return data.data;
     } catch (error) {
@@ -1167,13 +1219,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Add expand button for level _1, 0 and 1
-    if (level < 2 || level === -1) {
+    if (nodeLevel < 2 || nodeLevel === -1) {
       const expandBtn = document.createElement('div');
       expandBtn.className = `level-${cssLevel}-expand-button`;
       header.appendChild(expandBtn);
     }
     
-    // Title shows the column name
     const title = document.createElement('div');
     title.className = `level-${cssLevel}-title`;
     
@@ -1192,7 +1243,7 @@ document.addEventListener('DOMContentLoaded', function() {
     header.appendChild(title);
     
     // Add Manage Items button for level-0 nodes (Blok) and level-_1 nodes (new top parent)
-    if (level === 0 || level === -1) {
+    if (nodeLevel === 0 || nodeLevel === -1) {
       const manageItemsBtn = document.createElement('button');
       manageItemsBtn.className = 'manage-items-button';
       manageItemsBtn.textContent = '☑';
@@ -1213,10 +1264,9 @@ document.addEventListener('DOMContentLoaded', function() {
       header.appendChild(manageItemsBtn);
     }
     
-    // Add Manage Items button for level-2 nodes (Les, which may now be level 3 if Course is added)
-    // We use the node's original column name to determine if it's actually a "Les" node
-    if ((level === 2 && node.columnName === 'Les') ||
-        (level === 3 && node.columnName === 'Les')) {
+    // Add Manage Items button for Les nodes
+    // This handles both cases - Les at level 2 (original hierarchy) or level 3 (when Course is added)
+    if (node.columnName === 'Les') {
       const manageItemsBtn = document.createElement('button');
       manageItemsBtn.className = 'manage-items-button';
       manageItemsBtn.textContent = '☑';
@@ -1239,7 +1289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add click handler for expanding/collapsing
     header.addEventListener('click', (e) => {
-      if (level < 2 || level === -1) {
+      if (nodeLevel < 3 || nodeLevel === -1) { // Allow clicking for hierarchy elements
         nodeEl.classList.toggle(`level-${cssLevel}-collapsed`);
         e.stopPropagation();
       }
@@ -1247,40 +1297,49 @@ document.addEventListener('DOMContentLoaded', function() {
     
     nodeEl.appendChild(header);
     
-    // Content section
+    // Node content - contains EITHER child nodes OR a cell value (for leaf nodes)
     const content = document.createElement('div');
     content.className = `level-${cssLevel}-content`;
     
-    if (isParent) {
+    // If node has children, render them
+    if (node.children && node.children.length > 0) {
       // For parent nodes: content contains children
-      if (node.children && node.children.length > 0) {
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = `level-${cssLevel}-children`;
-        childrenContainer.setAttribute('data-child-count', node.children.length);
+      const childrenContainer = document.createElement('div');
+      childrenContainer.className = `level-${cssLevel}-children`;
+      childrenContainer.setAttribute('data-child-count', node.children.length);
+      
+      // Add class based on number of children to allow CSS targeting
+      childrenContainer.classList.add(`level-${cssLevel}-child-count-${node.children.length}`);
+      
+      // Add layout class specific to level
+      if (nodeLevel === -1) {
+        childrenContainer.classList.add('level-_1-vertical-layout');
+      } else if (nodeLevel === 0) {
+        childrenContainer.classList.add('level-0-vertical-layout');
+      } else if (nodeLevel === 1) {
+        childrenContainer.classList.add('level-1-grid-layout');
         
-        // Add class based on number of children to allow CSS targeting
-        childrenContainer.classList.add(`level-${cssLevel}-child-count-${node.children.length}`);
-        
-        // Add layout class specific to level
-        if (level === -1) {
-          childrenContainer.classList.add('level-_1-vertical-layout');
-        } else if (level === 0) {
-          childrenContainer.classList.add('level-0-vertical-layout');
-        } else if (level === 1) {
-          childrenContainer.classList.add('level-1-grid-layout');
-          
-          // If there are many children, optimize the layout
-          if (node.children.length > 3) {
-            childrenContainer.classList.add('level-1-many-children');
-          }
+        // If there are many children, optimize the layout
+        if (node.children.length > 3) {
+          childrenContainer.classList.add('level-1-many-children');
         }
-        
-        node.children.forEach(child => {
-          childrenContainer.appendChild(renderNode(child, level + 1, expandStateMap));
-        });
-        
-        content.appendChild(childrenContainer);
+      } else if (nodeLevel === 2) {
+        childrenContainer.classList.add('level-2-vertical-layout');
+      } else if (nodeLevel === 3) {
+        childrenContainer.classList.add('level-3-vertical-layout');
+      } else if (nodeLevel === 4) {
+        childrenContainer.classList.add('level-4-vertical-layout');
       }
+      
+      // Render all children with proper level nesting
+      node.children.forEach(child => {
+        const childEl = renderNode(child, nodeLevel + 1, expandStateMap);
+        if (childEl) {
+          childrenContainer.appendChild(childEl);
+        }
+      });
+      
+      content.appendChild(childrenContainer);
     } else {
       // For leaf nodes: content contains cell value
       content.textContent = node.value || '';
@@ -1303,11 +1362,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (prop.columnName === "Column 9" || prop.columnName === "Column 10") return;
         
         // Create a property node
-        const propLevel = level + 1;
+        const propLevel = Math.min(nodeLevel + 1, 4); // Cap at level 4 for properties
         const propNode = document.createElement('div');
         propNode.className = `level-${propLevel}-node`;
         propNode.setAttribute('data-column-name', prop.columnName);
         propNode.setAttribute('data-column-index', prop.columnIndex);
+        propNode.setAttribute('data-level', propLevel);
         
         // Create property header - contains ONLY column name for properties
         const propHeader = document.createElement('div');
