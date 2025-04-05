@@ -3168,7 +3168,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Add this function after the initToolbar function
   function addParentLevel() {
-    console.log("Adding parent level - ensuring correct hierarchy for all levels including Les children");
+    console.log("Adding parent level - properly adjusting all hierarchy levels");
     
     // Get active sheet data
     const activeSheetId = window.excelData.activeSheetId;
@@ -3188,110 +3188,46 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // Make a deep copy of the entire tree
-    const originalHierarchy = JSON.parse(JSON.stringify(sheetData.root.children));
+    // Check if this tab already has Course nodes at level 0
+    const courseNodesAtLevel0 = sheetData.root.children.filter(node => 
+      node.columnName === 'Course' && node.level === 0);
     
-    // Find the column names to identify hierarchy levels
-    const firstNode = originalHierarchy[0];
-    const excelColumns = {};
-    
-    // Determine column structure from node types
-    if (firstNode.columnName === 'Course') {
-      excelColumns.course = true;
-      excelColumns.hasExistingCourse = true;
-    } else if (firstNode.columnName === 'Blok') {
-      excelColumns.course = false;
-      excelColumns.hasExistingCourse = false;
-    }
-    
-    console.log("Detected structure:", excelColumns);
-    
-    if (excelColumns.hasExistingCourse) {
-      // Option 1: Tab has Course > Blok > Week > Les structure
-      // Promote Course to level-_1, adjust all other levels accordingly
-      
-      originalHierarchy.forEach(courseNode => {
-        if (courseNode.columnName === 'Course') {
-          // Course becomes level -1
-          courseNode.level = -1;
-          
-          // Adjust Blok nodes to level 0
-          if (courseNode.children) {
-            courseNode.children.forEach(blokNode => {
-              blokNode.level = 0;
-              
-              // Adjust Week nodes to level 1
-              if (blokNode.children) {
-                blokNode.children.forEach(weekNode => {
-                  weekNode.level = 1;
-                  
-                  // Adjust Les nodes to level 2
-                  if (weekNode.children) {
-                    weekNode.children.forEach(lesNode => {
-                      lesNode.level = 2;
-                      
-                      // Adjust any Les children to level 3
-                      if (lesNode.children) {
-                        lesNode.children.forEach(childNode => {
-                          childNode.level = 3;
-                          
-                          // Handle any deeper nesting
-                          if (childNode.children) {
-                            childNode.children.forEach(grandChild => {
-                              grandChild.level = 4;
-                            });
-                          }
-                        });
-                      }
-                    });
-                  }
-                });
-              }
-            });
-          }
-        }
+    if (courseNodesAtLevel0.length > 0) {
+      // If we have Course nodes at level 0, promote them to level -1
+      // and update all child levels recursively
+      courseNodesAtLevel0.forEach(courseNode => {
+        // Change Course to level -1
+        courseNode.level = -1;
+        
+        // Now update all children recursively using existing function
+        updateLevels(courseNode);
       });
       
-      console.log("Promoted existing Course nodes to level -1 and adjusted all child levels");
+      console.log("Promoted existing Course nodes to level -1 and adjusted all children");
     } else {
-      // Option 2: Tab has Blok > Week > Les structure
-      // Create a new Course node as parent
+      // If no Course nodes exist, create a new one as parent
       const parentNode = {
         id: `node-course-${Date.now()}`,
         value: "Course",
         columnName: "Course",
-        level: -1
+        level: -1,
+        children: []
       };
       
-      // Make a deep copy of all existing nodes
-      const existingNodes = JSON.parse(JSON.stringify(originalHierarchy));
+      // Make a deep copy of existing nodes to avoid reference issues
+      const existingNodes = JSON.parse(JSON.stringify(sheetData.root.children));
       
-      // Recursively update all levels in the hierarchy to be one level lower
-      function adjustNodeLevels(node) {
-        const newLevel = node.level - 1;
-        node.level = newLevel;
-        
-        if (node.children && node.children.length > 0) {
-          node.children.forEach(adjustNodeLevels);
-        }
-        return node;
-      }
-      
-      // Adjust all levels in the existing hierarchy
-      existingNodes.forEach(adjustNodeLevels);
-      
-      // Set the adjusted nodes as children of the Course parent
+      // Set the existing nodes as children of the Course parent
       parentNode.children = existingNodes;
       
-      // Replace the root's children with just the Course parent
-      originalHierarchy.length = 0;
-      originalHierarchy.push(parentNode);
+      // Replace root's children with just the Course parent
+      sheetData.root.children = [parentNode];
       
-      console.log("Created new Course parent with properly adjusted hierarchy");
+      // Update all children recursively to ensure proper level assignment
+      updateLevels(parentNode);
+      
+      console.log("Created new Course parent at level -1 and adjusted all children");
     }
-    
-    // Replace the current hierarchy with the modified one
-    sheetData.root.children = originalHierarchy;
     
     // Add CSS for level-_1 if it doesn't exist yet
     if (!document.getElementById('level-_1-styles')) {
@@ -3346,7 +3282,85 @@ document.addEventListener('DOMContentLoaded', function() {
     // Re-render the sheet with the updated hierarchy
     renderSheet(activeSheetId, sheetData);
     
-    console.log("Hierarchy restructuring complete with all levels properly adjusted");
+    console.log("Parent level added successfully with proper hierarchy levels");
+  }
+  
+  // Helper function to ensure CSS styles for all levels are set up
+  function ensureLevelStyles() {
+    // Add CSS for level-_1 if it doesn't exist yet
+    if (!document.getElementById('level-_1-styles')) {
+      const style = document.createElement('style');
+      style.id = 'level-_1-styles';
+      style.textContent = `
+        .level-_1-node {
+          margin-bottom: 20px;
+          border: 1px solid #007bff;
+          border-radius: 5px;
+          overflow: hidden;
+        }
+        .level-_1-header {
+          background-color: #007bff;
+          color: white;
+          padding: 8px 15px;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        .level-_1-title {
+          flex: 1;
+        }
+        .level-_1-content {
+          padding: 0;
+          overflow: hidden;
+        }
+        .level-_1-children {
+          display: flex;
+          flex-direction: column;
+        }
+        .level-_1-expand-button {
+          width: 12px;
+          height: 12px;
+          margin-right: 10px;
+          background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="white" d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>');
+          background-repeat: no-repeat;
+          background-position: center;
+          transition: transform 0.2s;
+        }
+        .level-_1-collapsed .level-_1-expand-button {
+          transform: rotate(0deg);
+        }
+        .level-_1-collapsed > .level-_1-content {
+          display: none;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Add CSS for level-4 if it doesn't exist yet (for Les children)
+    if (!document.getElementById('level-4-styles')) {
+      const style = document.createElement('style');
+      style.id = 'level-4-styles';
+      style.textContent = `
+        .level-4-node {
+          padding: 8px 10px;
+          margin-left: 30px;
+          border-left: 3px solid #17a2b8;
+          background-color: #f8f9fa;
+          margin-bottom: 5px;
+        }
+        .level-4-header {
+          display: flex;
+          align-items: center;
+          font-size: 0.9em;
+        }
+        .level-4-title {
+          flex: 1;
+          margin-left: 10px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
   }
   
   // Helper function to update node levels recursively
