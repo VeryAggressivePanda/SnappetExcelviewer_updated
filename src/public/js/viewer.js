@@ -1264,19 +1264,27 @@ document.addEventListener('DOMContentLoaded', function() {
       header.appendChild(manageItemsBtn);
     }
     
-    // Add "Add Child" button for hierarchy nodes (Blok, Week, Les)
-    if (nodeLevel < 3) {
-      const addButton = document.createElement('button');
-      addButton.textContent = '+';
-      addButton.className = 'add-button';
-      addButton.title = `Add ${node.columnName} child`;
+    // Add Manage Items button for Les nodes
+    // This handles both cases - Les at level 2 (original hierarchy) or level 3 (when Course is added)
+    if (node.columnName === 'Les') {
+      const manageItemsBtn = document.createElement('button');
+      manageItemsBtn.className = 'manage-items-button';
+      manageItemsBtn.textContent = '☑';
+      manageItemsBtn.title = 'Manage Items';
+      manageItemsBtn.style.marginLeft = '5px';
+      manageItemsBtn.style.padding = '2px 6px';
+      manageItemsBtn.style.fontSize = '12px';
+      manageItemsBtn.style.border = '1px solid #ccc';
+      manageItemsBtn.style.borderRadius = '3px';
+      manageItemsBtn.style.background = '#f8f9fa';
+      manageItemsBtn.style.cursor = 'pointer';
       
-      addButton.addEventListener('click', (e) => {
+      manageItemsBtn.addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent triggering parent events
-        showAddChildModal(node);
+        showManageItemsModal(node);
       });
       
-      header.appendChild(addButton);
+      header.appendChild(manageItemsBtn);
     }
     
     // Add click handler for expanding/collapsing
