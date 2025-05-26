@@ -145,7 +145,41 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-}); 
+// Function to find available port
+async function findAvailablePort(startPort) {
+  const net = require('net');
+  
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    
+    server.listen(startPort, () => {
+      const port = server.address().port;
+      server.close(() => resolve(port));
+    });
+    
+    server.on('error', () => {
+      resolve(findAvailablePort(startPort + 1));
+    });
+  });
+}
+
+// Start server with automatic port resolution
+async function startServer() {
+  try {
+    const availablePort = await findAvailablePort(PORT);
+    
+    if (availablePort !== PORT) {
+      console.log(`Port ${PORT} is busy, using port ${availablePort} instead`);
+    }
+    
+    app.listen(availablePort, () => {
+      console.log(`Server running on http://localhost:${availablePort}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Replace the existing app.listen call with:
+startServer(); 

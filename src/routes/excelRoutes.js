@@ -253,19 +253,25 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
     
     console.log(`Extracted ${rawData.length} rows of raw data`);
     
-    // Create response with headers and data
+    // Create response with headers and raw data only - no automatic hierarchy
     const response = {
       headers: rawData.length > 0 ? rawData[0] : [],
       data: rawData,
-      needsConfiguration: true
+      needsConfiguration: false, // Changed to false - we don't want automatic processing
+      isRawData: true, // Flag to indicate this is raw data for manual structure building
+      root: { 
+        type: 'root', 
+        children: [], 
+        level: -1 
+      } // Empty root structure for manual building
     };
     
     // Store in cache
-    console.log(`Storing processed data for sheet ${sheetIdNum} in cache`);
+    console.log(`Storing raw data for sheet ${sheetIdNum} in cache`);
     fileData.processedSheets[sheetIdNum] = response;
     
     // Return the data
-    console.log(`Sending response for sheet ${sheetIdNum}`);
+    console.log(`Sending raw data response for sheet ${sheetIdNum}`);
     return res.json({ data: response });
     
   } catch (error) {

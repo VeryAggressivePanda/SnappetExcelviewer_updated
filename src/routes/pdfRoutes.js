@@ -8,11 +8,29 @@ const router = express.Router();
 const tempDir = path.join(__dirname, '..', 'temp');
 fs.mkdir(tempDir, { recursive: true }).catch(console.error);
 
+// Helper function to truncate text with middle ellipsis
+function truncateMiddle(text, maxLength = 35) {
+  if (!text || text.length <= maxLength) return text;
+  
+  const start = Math.floor(maxLength / 2);
+  const end = Math.ceil(maxLength / 2);
+  
+  return text.substring(0, start) + '...' + text.substring(text.length - end);
+}
+
 // Function to generate node HTML
 function renderNode(node, level) {
+  // Make sure we're using the node's actual level rather than an incremented position
+  // This ensures negative levels are properly represented
+  const nodeLevel = node.level !== undefined ? node.level : level;
+  
+  // Handle negative levels by using absolute value for CSS class names
+  // but preserve the actual level in data attributes
+  const cssLevel = Math.abs(nodeLevel);
+  
   // Start node HTML with level-specific classes
-  let nodeHtml = `<div class="level-${level}-node${node.isEmpty ? ' level-' + level + '-empty' : ''}" 
-    data-level="${level}" 
+  let nodeHtml = `<div class="level-${cssLevel}-node${node.isEmpty ? ' level-' + cssLevel + '-empty' : ''}" 
+    data-level="${nodeLevel}" 
     data-column-name="${node.columnName || ''}" 
     data-column-index="${node.columnIndex || ''}"
     data-is-empty="${node.isEmpty ? 'true' : 'false'}">`;
@@ -21,35 +39,46 @@ function renderNode(node, level) {
   const isParent = node.children && node.children.length > 0;
   
   // Add header - for parent nodes, includes both column name AND cell value
-  nodeHtml += `<div class="level-${level}-header${node.isEmpty ? ' level-' + level + '-empty-header' : ''}">`;
+  nodeHtml += `<div class="level-${cssLevel}-header${node.isEmpty ? ' level-' + cssLevel + '-empty-header' : ''}">`;
   
   if (isParent) {
-    // For parent nodes: title shows both column name and cell value
-    nodeHtml += `<div class="level-${level}-title">
-      <span class="column-name">${node.columnName}:</span> <span class="cell-value">${node.value || ''}</span>
+    // For parent nodes: title shows both column name and cell value with middle ellipsis
+    const columnName = node.columnName || '';
+    const nodeValue = node.value || '';
+    
+    // Apply middle ellipsis to the value
+    const truncatedValue = truncateMiddle(nodeValue);
+    
+    // Add title attribute for tooltip on hover
+    const titleAttr = nodeValue !== truncatedValue ? 
+      `title="${columnName}: ${nodeValue}"` : '';
+    
+    nodeHtml += `<div class="level-${cssLevel}-title" ${titleAttr}>
+      <span class="column-name">${columnName}:</span> <span class="cell-value">${truncatedValue}</span>
     </div>`;
   } else {
     // For leaf nodes: title shows just column name
-    nodeHtml += `<div class="level-${level}-title">${node.columnName}</div>`;
+    nodeHtml += `<div class="level-${cssLevel}-title">${node.columnName}</div>`;
   }
   
   nodeHtml += `</div>`; // Close header
   
   // Add content section
-  nodeHtml += `<div class="level-${level}-content${node.isEmpty ? ' level-' + level + '-empty-content' : ''}">`;
+  nodeHtml += `<div class="level-${cssLevel}-content${node.isEmpty ? ' level-' + cssLevel + '-empty-content' : ''}">`;
   
   if (isParent) {
     // For parent nodes: content contains children
     if (node.children && node.children.length > 0) {
-      const childCountClass = `level-${level}-child-count-${node.children.length}`;
-      const layoutClass = level === 0 ? ' level-0-vertical-layout' : 
-                          level === 1 ? ' level-1-grid-layout' : '';
-      const manyChildrenClass = level === 1 && node.children.length > 3 ? ' level-1-many-children' : '';
+      const childCountClass = `level-${cssLevel}-child-count-${node.children.length}`;
+      const layoutClass = cssLevel === 0 ? ' level-0-vertical-layout' : 
+                        cssLevel === 1 ? ' level-1-grid-layout' : '';
+      const manyChildrenClass = cssLevel === 1 && node.children.length > 3 ? ' level-1-many-children' : '';
       
-      nodeHtml += `<div class="level-${level}-children ${childCountClass}${layoutClass}${manyChildrenClass}" data-child-count="${node.children.length}">`;
+      nodeHtml += `<div class="level-${cssLevel}-children ${childCountClass}${layoutClass}${manyChildrenClass}" data-child-count="${node.children.length}">`;
       
+      // Pass the node's actual level to children, not an incremented one
       node.children.forEach(child => {
-        nodeHtml += renderNode(child, level + 1);
+        nodeHtml += renderNode(child, nodeLevel + 1);
       });
       
       nodeHtml += `</div>`; // Close children container
@@ -59,7 +88,7 @@ function renderNode(node, level) {
     nodeHtml += node.value || '';
   }
   
-  nodeHtml += `</div>`; // Close content
+  nodeHtml += `</div>`;
   
   // Process properties for all levels (non-hierarchy columns)
   if (node.properties && node.properties.length > 0) {
@@ -68,11 +97,11 @@ function renderNode(node, level) {
     );
     
     if (filteredProperties.length > 0) {
-      nodeHtml += `<div class="level-${level}-properties">`;
+      nodeHtml += `<div class="level-${cssLevel}-properties">`;
       
       filteredProperties.forEach(prop => {
         const isEmpty = !prop.value || prop.value.trim() === '';
-        const propLevel = level + 1;
+        const propLevel = cssLevel + 1;
         
         // Create a property node
         nodeHtml += `<div class="level-${propLevel}-node${isEmpty ? ' level-' + propLevel + '-empty' : ''}" 
@@ -176,6 +205,22 @@ function generatePdfContent(data, title) {
       [class*="-title"] {
         font-weight: 500;
         flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+      }
+      
+      /* Cell value and column name styles */
+      .column-name {
+        font-weight: 600;
+        color: #166d9e;
+        margin-right: 0.25em;
+      }
+      
+      .cell-value {
+        font-weight: 500;
+        color: #333;
       }
       
       /* Level-0 (Course) styling */
@@ -215,7 +260,6 @@ function generatePdfContent(data, title) {
         flex-direction: column;
         width: 100%;
         padding: 0;
-        margin-left: 0.25rem;
         gap: 1rem;
       }
       
@@ -382,14 +426,6 @@ function generatePdfContent(data, title) {
         flex-basis: 100%;
       }
       
-      .level-1-child-count-2 > .level-2-node {
-        flex-basis: calc(50% - 0.5rem);
-      }
-      
-      .level-1-child-count-3 > .level-2-node {
-        flex-basis: calc(33.33% - 0.67rem);
-      }
-      
       /* Property styling based on data attributes */
       .level-0-property[data-column-name="Bron"],
       .level-1-property[data-column-name="Bron"],
@@ -526,18 +562,6 @@ function generatePdfContent(data, title) {
             flex-basis: 100%;
           }
         }
-      }
-      
-      /* Styles for column name and cell value spans in titles */
-      .column-name {
-        font-weight: 600;
-        color: #166d9e;
-        margin-right: 0.25em;
-      }
-      
-      .cell-value {
-        font-weight: 500;
-        color: #333;
       }
     </style>
   `;

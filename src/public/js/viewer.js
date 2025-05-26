@@ -70,14 +70,18 @@ document.addEventListener('DOMContentLoaded', function() {
     exportPdfButton.disabled = false;
     previewPdfButton.disabled = false;
     
-    // Get level-1 node values from active sheet data
+    // Get node values from active sheet data
     const sheetData = window.excelData.sheetsLoaded[activeSheetId];
     if (!sheetData || !sheetData.root || !sheetData.root.children) {
       return;
     }
     
-    // Get only level-1 nodes (first column)
-    const level1Nodes = sheetData.root.children.filter(node => node.columnIndex === 0);
+    // Get top-level nodes (level 0 nodes which are the root nodes in each tab)
+    const topLevelNodes = sheetData.root.children.filter(node => 
+      node.columnIndex === 0
+    );
+    
+    console.log("Top level nodes for export:", topLevelNodes.map(n => ({ value: n.value, level: n.level })));
     
     // Add default option
     const defaultOption = document.createElement('option');
@@ -85,8 +89,8 @@ document.addEventListener('DOMContentLoaded', function() {
     defaultOption.text = 'Select an item to export...';
     exportColumnSelect.appendChild(defaultOption);
     
-    // Add option for each level-1 node
-    level1Nodes.forEach(node => {
+    // Add option for each top-level node
+    topLevelNodes.forEach(node => {
       const option = document.createElement('option');
       option.value = node.value;
       option.text = node.value;
@@ -126,26 +130,38 @@ document.addEventListener('DOMContentLoaded', function() {
       const exportColumnSelect = document.getElementById('export-column');
       const selectedValue = exportColumnSelect.value;
       if (!selectedValue) {
-        alert('Please select a level-1 item to export');
+        alert('Please select an item to export');
         return;
       }
       
       // Get the data for the active sheet
       const sheetData = window.excelData.sheetsLoaded[activeSheetId];
       
-      // Filter the data by the selected level-1 value
+      // Filter the data by the selected top-level value
       let filteredData = { ...sheetData };
       if (selectedValue) {
-        // Only include the selected level-1 node and its children
+        // Get nodes that match the selected value
+        const matchingNodes = sheetData.root.children.filter(node => node.value === selectedValue);
+        
+        // Create a deep clone of the matching nodes to avoid modifying the original data
+        const clonedNodes = JSON.parse(JSON.stringify(matchingNodes));
+        
+        // Use the cloned nodes without level normalization to preserve negative levels
         filteredData = {
           ...sheetData,
           root: {
             ...sheetData.root,
-            children: sheetData.root.children.filter(node => 
-              node.value === selectedValue && node.columnIndex === 0
-            )
+            children: clonedNodes
           }
         };
+        
+        // Log what we're sending for debugging
+        console.log("Sending to PDF export:", {
+          selectedValue,
+          nodeCount: filteredData.root.children.length,
+          firstNode: filteredData.root.children[0],
+          levels: filteredData.root.children.map(n => ({ value: n.value, level: n.level }))
+        });
       }
       
       // Create a title for the PDF
@@ -214,26 +230,38 @@ document.addEventListener('DOMContentLoaded', function() {
       const exportColumnSelect = document.getElementById('export-column');
       const selectedValue = exportColumnSelect.value;
       if (!selectedValue) {
-        alert('Please select a level-1 item to preview');
+        alert('Please select an item to preview');
         return;
       }
       
       // Get the data for the active sheet
       const sheetData = window.excelData.sheetsLoaded[activeSheetId];
       
-      // Filter the data by the selected level-1 value
+      // Filter the data by the selected top-level value
       let filteredData = { ...sheetData };
       if (selectedValue) {
-        // Only include the selected level-1 node and its children
+        // Get nodes that match the selected value
+        const matchingNodes = sheetData.root.children.filter(node => node.value === selectedValue);
+        
+        // Create a deep clone of the matching nodes to avoid modifying the original data
+        const clonedNodes = JSON.parse(JSON.stringify(matchingNodes));
+        
+        // Use the cloned nodes without level normalization to preserve negative levels
         filteredData = {
           ...sheetData,
           root: {
             ...sheetData.root,
-            children: sheetData.root.children.filter(node => 
-              node.value === selectedValue && node.columnIndex === 0
-            )
+            children: clonedNodes
           }
         };
+        
+        // Log what we're sending for debugging
+        console.log("Sending to PDF preview:", {
+          selectedValue,
+          nodeCount: filteredData.root.children.length,
+          firstNode: filteredData.root.children[0],
+          levels: filteredData.root.children.map(n => ({ value: n.value, level: n.level }))
+        });
       }
       
       // Create a title for the preview
@@ -322,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
     exportButton.className = 'control-button';
     exportButton.textContent = 'Export to PDF';
     exportButton.addEventListener('click', () => {
-      exportPdf();
+      exportToPdf();
       document.body.removeChild(modal);
     });
     
@@ -336,6 +364,12 @@ document.addEventListener('DOMContentLoaded', function() {
     iframe.style.border = '1px solid #ddd';
     iframe.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
     iframe.style.backgroundColor = 'white';
+    
+    // Add A4 paper styling to make preview match PDF dimensions
+    iframe.style.maxWidth = '210mm';
+    iframe.style.margin = '0 auto';
+    iframe.style.padding = '1cm';
+    iframe.style.display = 'block';
     
     // Assemble the modal
     content.appendChild(closeButton);
@@ -353,6 +387,25 @@ document.addEventListener('DOMContentLoaded', function() {
       iframeDoc.open();
       iframeDoc.write(htmlContent);
       iframeDoc.close();
+      
+      // Fix any potential styling issues in the iframe
+      const iframeStyle = document.createElement('style');
+      iframeStyle.textContent = `
+        @page {
+          size: A4;
+          margin: 1cm;
+        }
+        body {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        .pdf-container {
+          width: 100%;
+          max-width: 100%;
+        }
+      `;
+      iframeDoc.head.appendChild(iframeStyle);
     }, 100);
   }
   
@@ -751,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         childNode = {
           id: nodeId,
-          value: childValue || `Empty ${headers[childColIndex]}`,
+          value: childValue || '', // Just use empty string instead of "Empty [column name]"
           columnName: headers[childColIndex] || `Column ${childColIndex+1}`,
           columnIndex: childColIndex,
           level: nodeLevel,
@@ -881,6 +934,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // If already loaded, return the cached data
     if (window.excelData.sheetsLoaded[sheetId]) {
       renderSheet(sheetId, window.excelData.sheetsLoaded[sheetId]);
+      populateExportColumnDropdown(); // Make sure dropdown is populated for already loaded sheets
       return;
     }
     
@@ -902,82 +956,41 @@ document.addEventListener('DOMContentLoaded', function() {
       // Cache the data
       window.excelData.sheetsLoaded[sheetId] = data.data;
       
-      // Process the data if it requires configuration
-      if (data.data.needsConfiguration) {
-        // Check if we have a saved configuration
-        const savedConfig = getSavedHierarchyConfiguration(fileId, sheetId);
-        console.log("Checking for saved configuration...");
+      // Check if this is raw data that needs manual structure building
+      if (data.data.isRawData) {
+        console.log("Received raw Excel data, enabling live editing mode...");
         
-        if (savedConfig) {
-          console.log("Using saved hierarchy configuration:", savedConfig);
-          const processedData = processExcelData(data.data, savedConfig);
-          window.excelData.sheetsLoaded[sheetId] = processedData;
-          renderSheet(sheetId, processedData);
-        } else {
-          // Instead of showing modal, use default hierarchy configuration (base template)
-          console.log("No saved configuration found, using default base template...");
-          
-          // Create default base template hierarchy (column b is child of column a, column c is child of column b,
-          // columns d, e, f, g, h are children of column c)
-          const defaultHierarchy = {};
-          
-          // If we have data, we can determine the number of columns
-          let columnCount = 0;
-          if (data.data && data.data.data && data.data.data.length > 0) {
-            columnCount = data.data.data[0].length;
-          }
-          
-          // Set up the default hierarchy: Column 0 is the root, others are children
-          defaultHierarchy[0] = null; // root
-          
-          // Determine if we have a Course column (check first row's first column)
-          const hasCourseColumn = data.data && data.data.headers && 
-                                 data.data.headers[0] && 
-                                 data.data.headers[0].toLowerCase().includes('course');
-          
-          // Set up hierarchy based on column structure
-          if (hasCourseColumn) {
-            // Course > Blok > Week > Les > Other columns
-            defaultHierarchy[0] = null; // Course is root
-            defaultHierarchy[1] = 0;    // Blok is child of Course
-            defaultHierarchy[2] = 1;    // Week is child of Blok
-            defaultHierarchy[3] = 2;    // Les is child of Week
-            
-            // All remaining columns are children of Les
-            for (let i = 4; i < columnCount; i++) {
-              defaultHierarchy[i] = 3;  // Other columns are children of Les
-            }
-          } else {
-            // Standard Blok > Week > Les > Other columns
-            defaultHierarchy[0] = null; // Blok is root
-            defaultHierarchy[1] = 0;    // Week is child of Blok
-            defaultHierarchy[2] = 1;    // Les is child of Week
-            
-            // All remaining columns are children of Les
-            for (let i = 3; i < columnCount; i++) {
-              defaultHierarchy[i] = 2;  // Other columns are children of Les
-            }
-          }
-          
-          console.log("Using default hierarchy configuration:", defaultHierarchy);
-          
-          // Process data with hierarchy
-          const processedData = processExcelData(data.data, defaultHierarchy);
-          window.excelData.sheetsLoaded[sheetId] = processedData;
-          
-          // Save hierarchy configuration for next time
-          saveHierarchyConfiguration(fileId + "-" + sheetId, defaultHierarchy);
-          
-          // Render the sheet
-          renderSheet(sheetId, processedData);
-        }
+        // Store the raw data for later use
+        if (!window.rawExcelData) window.rawExcelData = {};
+        window.rawExcelData[sheetId] = data.data.data;
+        
+        // Create an empty structure for manual building
+        const emptyStructure = {
+          headers: data.data.headers,
+          root: {
+            type: 'root',
+            children: [],
+            level: -1
+          },
+          isEditable: true,
+          rawData: data.data.data
+        };
+        
+        // Store the empty structure
+        window.excelData.sheetsLoaded[sheetId] = emptyStructure;
+        
+        // Render the empty sheet with live editing enabled
+        renderSheet(sheetId, emptyStructure);
       } else {
-        // Just render the data as is
+        // Legacy support for old processed data
         renderSheet(sheetId, data.data);
       }
       
       // Update the active sheet ID
       window.excelData.activeSheetId = sheetId;
+      
+      // Always populate the export column dropdown after loading data
+      populateExportColumnDropdown();
       
       return data.data;
     } catch (error) {
@@ -1150,30 +1163,64 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add controls bar to container
     hierarchyContainer.appendChild(controlsBar);
     
-    // Check if data is empty
+    // Check if data is empty or if this is a raw data sheet
     if (!sheetData.root.children || sheetData.root.children.length === 0) {
-      const emptyMessage = document.createElement('div');
-      emptyMessage.className = 'empty-data-message';
-      emptyMessage.textContent = 'No data available for this sheet.';
-      emptyMessage.style.padding = '20px';
-      emptyMessage.style.textAlign = 'center';
-      emptyMessage.style.color = '#666';
+      // Create a default starter node for building
+      const starterNode = {
+        id: `node-starter-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        value: 'Start Building',
+        columnName: '',
+        level: 0,
+        children: [],
+        properties: [],
+        isPlaceholder: true
+      };
       
-      hierarchyContainer.appendChild(emptyMessage);
-      content.appendChild(hierarchyContainer);
-      return;
+      sheetData.root.children = [starterNode];
+      
+      // Enable live editing for this sheet
+      if (window.enableLiveEditing) {
+        window.enableLiveEditing(sheetId);
+      }
+    }
+    
+    // Enable live editing mode for all sheets
+    sheetData.isEditable = true;
+    
+    // Enable live editing functionality
+    if (window.enableLiveEditing) {
+      window.enableLiveEditing(sheetId);
     }
     
     // Render each child of the root
     sheetData.root.children.forEach(child => {
-      content.appendChild(renderNode(child, 0, expandStateMap));
+      const nodeElement = renderNode(child, 0, expandStateMap);
+      if (nodeElement) {
+        hierarchyContainer.appendChild(nodeElement);
+      }
     });
     
     // Attach content to page
     content.appendChild(hierarchyContainer);
+    
+    // Apply layout styling after rendering
+    if (window.applyLayoutStyling) {
+      setTimeout(() => {
+        window.applyLayoutStyling();
+      }, 100);
+    }
   }
   
-  // Render a node and its children
+  // Helper function to truncate text with middle ellipsis
+  function truncateMiddle(text, maxLength = 35) {
+    if (!text || text.length <= maxLength) return text;
+    
+    const start = Math.floor(maxLength / 2);
+    const end = Math.ceil(maxLength / 2);
+    
+    return text.substring(0, start) + '...' + text.substring(text.length - end);
+  }
+  
   function renderNode(node, level, expandStateMap = {}) {
     if (!node) return null;
     
@@ -1228,13 +1275,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const title = document.createElement('div');
     title.className = `level-${cssLevel}-title`;
     
+    // Use normal ellipsis style for long text
+    title.style.overflow = 'hidden';
+    title.style.textOverflow = 'ellipsis';
+    title.style.whiteSpace = 'nowrap';
+    title.style.maxWidth = '100%';
+    
     // IMPORTANT: For parent nodes, show both column name AND value in the header
     // Check if node has children to determine if it's a parent
     const isParent = node.children && node.children.length > 0;
     
     if (isParent) {
-      // For parent nodes: title shows both column name and cell value
-      title.innerHTML = `<span class="column-name">${node.columnName}:</span> <span class="cell-value">${node.value || ''}</span>`;
+      // For parent nodes: title shows both column name and cell value with middle ellipsis
+      const columnName = node.columnName || '';
+      const nodeValue = node.value || '';
+      
+      // Apply middle ellipsis to the value, keep column name intact
+      const truncatedValue = truncateMiddle(nodeValue);
+      title.innerHTML = `<span class="column-name">${columnName}:</span> <span class="cell-value">${truncatedValue}</span>`;
+      
+      // Add tooltip with full text if truncated
+      if (nodeValue !== truncatedValue) {
+        title.title = `${columnName}: ${nodeValue}`;
+      }
     } else {
       // For leaf nodes: title shows just column name
       title.textContent = node.columnName;
@@ -1242,50 +1305,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     header.appendChild(title);
     
-    // Add Manage Items button for level-0 nodes (Blok) and level-_1 nodes (new top parent)
-    if (nodeLevel === 0 || nodeLevel === -1) {
-      const manageItemsBtn = document.createElement('button');
-      manageItemsBtn.className = 'manage-items-button';
-      manageItemsBtn.textContent = '☑';
-      manageItemsBtn.title = 'Manage Items';
-      manageItemsBtn.style.marginLeft = '5px';
-      manageItemsBtn.style.padding = '2px 6px';
-      manageItemsBtn.style.fontSize = '12px';
-      manageItemsBtn.style.border = '1px solid #ccc';
-      manageItemsBtn.style.borderRadius = '3px';
-      manageItemsBtn.style.background = '#f8f9fa';
-      manageItemsBtn.style.cursor = 'pointer';
-      
-      manageItemsBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering parent events
-        showManageItemsModal(node);
-      });
-      
-      header.appendChild(manageItemsBtn);
+    // Use the unified edit controls from live-editor.js
+    if (window.addEditControls) {
+      window.addEditControls(node, nodeEl, header);
+    } else {
+      // Fallback if live-editor.js is not loaded
+      console.warn('addEditControls not available, using fallback');
     }
     
-    // Add Manage Items button for Les nodes
-    // This handles both cases - Les at level 2 (original hierarchy) or level 3 (when Course is added)
-    if (node.columnName === 'Les') {
-      const manageItemsBtn = document.createElement('button');
-      manageItemsBtn.className = 'manage-items-button';
-      manageItemsBtn.textContent = '☑';
-      manageItemsBtn.title = 'Manage Items';
-      manageItemsBtn.style.marginLeft = '5px';
-      manageItemsBtn.style.padding = '2px 6px';
-      manageItemsBtn.style.fontSize = '12px';
-      manageItemsBtn.style.border = '1px solid #ccc';
-      manageItemsBtn.style.borderRadius = '3px';
-      manageItemsBtn.style.background = '#f8f9fa';
-      manageItemsBtn.style.cursor = 'pointer';
-      
-      manageItemsBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering parent events
-        showManageItemsModal(node);
-      });
-      
-      header.appendChild(manageItemsBtn);
-    }
+    // Manage Items button is now handled by addEditControls function
     
     // Add click handler for expanding/collapsing
     header.addEventListener('click', (e) => {
@@ -1311,18 +1339,23 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add class based on number of children to allow CSS targeting
       childrenContainer.classList.add(`level-${cssLevel}-child-count-${node.children.length}`);
       
-      // Add layout class specific to level
+      // Add layout class specific to level and number of children
       if (nodeLevel === -1) {
         childrenContainer.classList.add('level-_1-vertical-layout');
       } else if (nodeLevel === 0) {
         childrenContainer.classList.add('level-0-vertical-layout');
       } else if (nodeLevel === 1) {
-        childrenContainer.classList.add('level-1-grid-layout');
-        
-        // If there are many children, optimize the layout
-        if (node.children.length > 3) {
+        // Level 1 uses flexible layout based on child count
+        if (node.children.length === 1) {
+          childrenContainer.classList.add('level-1-single-child');
+        } else if (node.children.length === 2) {
+          childrenContainer.classList.add('level-1-two-children');
+        } else if (node.children.length === 3) {
+          childrenContainer.classList.add('level-1-three-children');
+        } else {
           childrenContainer.classList.add('level-1-many-children');
         }
+        childrenContainer.classList.add('level-1-flex-layout');
       } else if (nodeLevel === 2) {
         childrenContainer.classList.add('level-2-vertical-layout');
       } else if (nodeLevel === 3) {
@@ -2757,406 +2790,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Function to show modal for managing items
-  function showManageItemsModal(node) {
-    console.log("Show manage items modal for:", {
-      nodeId: node.id,
-      nodeValue: node.value,
-      nodeColumnName: node.columnName,
-      nodeLevel: node.level
-    });
-    
-    // Create modal container
-    const modal = document.createElement('div');
-    modal.className = 'manage-items-modal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    modal.style.display = 'flex';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
-    modal.style.zIndex = '1000';
-    
-    // Create content container
-    const content = document.createElement('div');
-    content.className = 'manage-items-modal-content';
-    content.style.backgroundColor = 'white';
-    content.style.padding = '20px';
-    content.style.borderRadius = '8px';
-    content.style.maxWidth = '600px';
-    content.style.width = '90%';
-    content.style.maxHeight = '80vh';
-    content.style.overflowY = 'auto';
-    
-    // Create header
-    const header = document.createElement('h2');
-    header.textContent = `Manage Items for: ${node.columnName} (${node.value})`;
-    header.style.marginBottom = '15px';
-    content.appendChild(header);
-    
-    // Create description
-    const description = document.createElement('p');
-    description.textContent = 'Check or uncheck items to show or hide them. Items from Excel that are not yet children can be added by checking them.';
-    description.style.marginBottom = '20px';
-    content.appendChild(description);
-    
-    // Get the active sheet ID
-    const activeSheetId = window.excelData.activeSheetId;
-    
-    // Get raw Excel data
-    let rawExcelData = getRawExcelData(activeSheetId);
-    
-    // Debug Excel data structure
-    console.log('Excel Data Structure:', {
-      windowExcelData: window.excelData ? 'exists' : 'missing',
-      activeSheetId: activeSheetId,
-      sheetsLoaded: window.excelData?.sheetsLoaded ? 'exists' : 'missing',
-      activeSheetLoaded: window.excelData?.sheetsLoaded?.[activeSheetId] ? 'exists' : 'missing',
-      rawDataFound: rawExcelData ? `found (${rawExcelData.length} rows)` : 'not found'
-    });
-    
-    // Create container for items
-    const itemsContainer = document.createElement('div');
-    itemsContainer.style.display = 'flex';
-    itemsContainer.style.flexDirection = 'column';
-    itemsContainer.style.gap = '10px';
-    
-    // Check if we have data
-    if (!rawExcelData || !Array.isArray(rawExcelData) || rawExcelData.length <= 1) {
-      const errorMessage = document.createElement('p');
-      errorMessage.textContent = 'No Excel data found. Please upload an Excel file first.';
-      errorMessage.style.color = 'red';
-      itemsContainer.appendChild(errorMessage);
-      content.appendChild(itemsContainer);
-      
-      // Add a close button
-      const closeButton = document.createElement('button');
-      closeButton.textContent = 'Close';
-      closeButton.style.marginTop = '20px';
-      closeButton.style.padding = '8px 16px';
-      closeButton.style.backgroundColor = '#f44336';
-      closeButton.style.color = 'white';
-      closeButton.style.border = 'none';
-      closeButton.style.borderRadius = '4px';
-      closeButton.style.cursor = 'pointer';
-      
-      closeButton.addEventListener('click', () => {
-        document.body.removeChild(modal);
-      });
-      
-      content.appendChild(closeButton);
-      modal.appendChild(content);
-      document.body.appendChild(modal);
-      return;
-    }
-    
-    // Get Excel coordinates to find the row
-    const excelCoordinates = node.excelCoordinates || { rowIndex: null };
-    console.log("Excel coordinates:", excelCoordinates);
-    
-    // Get headers row
-    const headers = rawExcelData[0];
-    console.log("Headers:", headers);
-    
-    // Find starting column index based on node level
-    // For level 0 (Blok), start from column 1 (Week)
-    // For level 2 (Les), start from column 3 (first content column)
-    let startColumnIndex = node.level === 0 ? 1 : 3;
-    
-    // Dictionary to group items by column
-    const columnGroups = {};
-    
-    // Process existing children
-    if (node.children && node.children.length > 0) {
-      console.log(`Processing ${node.children.length} existing children`);
-      
-      node.children.forEach(child => {
-        const colName = child.columnName || 'Unknown';
-        const colIndex = child.columnIndex || -1;
-        
-        // Initialize group if needed
-        if (!columnGroups[colName]) {
-          columnGroups[colName] = [];
-        }
-        
-        // Add to group
-        columnGroups[colName].push({
-          columnIndex: colIndex,
-          columnName: colName,
-          value: child.value,
-          isChecked: !child.hidden, // If not hidden, should be checked
-          exists: true,
-          nodeId: child.id,
-          fromExcel: false
-        });
-        
-        console.log(`Added existing child: ${colName} - ${child.value} (${child.hidden ? 'hidden' : 'visible'})`);
-      });
-    }
-    
-    // Get the appropriate row from Excel data based on node level and value
-    let rowIndex = null;
-    
-    if (excelCoordinates.rowIndex !== undefined && excelCoordinates.rowIndex !== null) {
-      // Use stored Excel coordinates if available
-      rowIndex = excelCoordinates.rowIndex;
-      console.log(`Using stored row index: ${rowIndex}`);
-    } else if (node.level === 0 && node.columnName === "Blok") {
-      // For Blok nodes, try to find by exact value in column 0
-      for (let i = 1; i < rawExcelData.length; i++) {
-        if (rawExcelData[i][0] === node.value) {
-          rowIndex = i;
-          console.log(`Found Blok row at index ${i} for value "${node.value}"`);
-          break;
-        }
-      }
-    } else if (node.level === 2 && node.columnName === "Les") {
-      // For Les nodes, try to extract Les number
-      const lesMatch = node.value.match(/Les\s+(\d+)/i);
-      if (lesMatch && lesMatch[1]) {
-        const lesNumber = parseInt(lesMatch[1]);
-        rowIndex = lesNumber;
-        console.log(`Using Les number to find row: Les ${lesNumber} -> row index ${rowIndex}`);
-      }
-    }
-    
-    // If we found a row, process it
-    if (rowIndex !== null && rowIndex >= 0 && rowIndex < rawExcelData.length) {
-      const targetRow = rawExcelData[rowIndex];
-      console.log(`Processing Excel row ${rowIndex}:`, targetRow);
-      
-      // Loop through the row, starting from the appropriate column
-      for (let i = startColumnIndex; i < targetRow.length; i++) {
-        const cellValue = targetRow[i];
-        
-        // Skip empty cells and hierarchy columns (0, 1, 2)
-        if (!cellValue || cellValue.toString().trim() === '' || i < startColumnIndex) continue;
-        
-        // Get column name from headers
-        const colName = headers[i] || `Column ${i+1}`;
-        
-        // Initialize group if needed
-        if (!columnGroups[colName]) {
-          columnGroups[colName] = [];
-        }
-        
-        // Check if this value already exists in the group
-        const existing = columnGroups[colName].some(item => 
-          item.columnIndex === i && item.value === cellValue
-        );
-        
-        // Only add if not already added as a child
-        if (!existing) {
-          // Add to group
-          columnGroups[colName].push({
-            columnIndex: i,
-            columnName: colName,
-            value: cellValue,
-            isChecked: false,
-            exists: false,
-            nodeId: null,
-            fromExcel: true
-          });
-        }
-      }
-    } else {
-      console.warn(`Could not find Excel row for ${node.columnName} ${node.value}`);
-    }
-    
-    // Sort column groups by column index for consistent display
-    const sortedColumnNames = Object.keys(columnGroups).sort((a, b) => {
-      const firstItemA = columnGroups[a][0];
-      const firstItemB = columnGroups[b][0];
-      return firstItemA.columnIndex - firstItemB.columnIndex;
-    });
-    
-    // Render each column group
-    sortedColumnNames.forEach(colName => {
-      const items = columnGroups[colName];
-      
-      if (!items || items.length === 0) return;
-      
-      // Create group header
-      const groupHeader = document.createElement('h3');
-      groupHeader.textContent = colName;
-      groupHeader.style.borderBottom = '1px solid #ddd';
-      groupHeader.style.paddingBottom = '5px';
-      groupHeader.style.marginTop = '20px';
-      groupHeader.style.marginBottom = '10px';
-      itemsContainer.appendChild(groupHeader);
-      
-      // Create items
-      items.forEach(item => {
-        const itemRow = document.createElement('div');
-        itemRow.style.display = 'flex';
-        itemRow.style.alignItems = 'center';
-        itemRow.style.padding = '8px';
-        itemRow.style.marginBottom = '5px';
-        itemRow.style.backgroundColor = item.isChecked ? '#e0f7fa' : '#f5f5f5';
-        itemRow.style.borderRadius = '4px';
-        
-        // Create checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = item.isChecked;
-        checkbox.dataset.columnIndex = item.columnIndex;
-        checkbox.dataset.columnName = item.columnName;
-        checkbox.dataset.value = item.value;
-        checkbox.dataset.exists = item.exists;
-        if (item.nodeId) {
-          checkbox.dataset.nodeId = item.nodeId;
-        }
-        
-        // Add label with source indicator
-        const label = document.createElement('label');
-        label.textContent = item.value + (item.fromExcel ? ' (from Excel)' : item.exists ? ' (existing)' : '');
-        label.style.marginLeft = '10px';
-        label.style.fontWeight = item.isChecked ? 'bold' : 'normal';
-        
-        // Update style on change
-        checkbox.addEventListener('change', () => {
-          itemRow.style.backgroundColor = checkbox.checked ? '#e0f7fa' : '#f5f5f5';
-          label.style.fontWeight = checkbox.checked ? 'bold' : 'normal';
-        });
-        
-        itemRow.appendChild(checkbox);
-        itemRow.appendChild(label);
-        itemsContainer.appendChild(itemRow);
-      });
-    });
-    
-    // Show message if no items
-    if (Object.keys(columnGroups).length === 0) {
-      const noItems = document.createElement('p');
-      noItems.textContent = 'No items found in Excel row or current children';
-      noItems.style.fontStyle = 'italic';
-      itemsContainer.appendChild(noItems);
-    }
-    
-    content.appendChild(itemsContainer);
-    
-    // Create buttons
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.justifyContent = 'space-between';
-    buttonContainer.style.marginTop = '20px';
-    
-    const cancelButton = document.createElement('button');
-    cancelButton.textContent = 'Cancel';
-    cancelButton.style.padding = '8px 16px';
-    
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save Changes';
-    saveButton.style.padding = '8px 16px';
-    saveButton.style.backgroundColor = '#2196F3';
-    saveButton.style.color = 'white';
-    saveButton.style.border = 'none';
-    saveButton.style.borderRadius = '4px';
-    
-    buttonContainer.appendChild(cancelButton);
-    buttonContainer.appendChild(saveButton);
-    content.appendChild(buttonContainer);
-    
-    // Add modal to document
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-    
-    // Cancel button handler
-    cancelButton.addEventListener('click', () => {
-      document.body.removeChild(modal);
-    });
-    
-    // Save button handler
-    saveButton.addEventListener('click', () => {
-      // Get all checkboxes
-      const checkboxes = content.querySelectorAll('input[type="checkbox"]');
-      console.log(`Processing ${checkboxes.length} checkboxes`);
-      let changesApplied = false;
-      
-      // Create children array if needed
-      if (!node.children) {
-        node.children = [];
-      }
-      
-      // Process each checkbox
-      checkboxes.forEach(cb => {
-        const colIndex = parseInt(cb.dataset.columnIndex);
-        const colName = cb.dataset.columnName;
-        const value = cb.dataset.value;
-        const checked = cb.checked;
-        const exists = cb.dataset.exists === "true";
-        const nodeId = cb.dataset.nodeId;
-        
-        if (exists) {
-          // Find existing child BY ID - more reliable than string matching
-          const childIndex = node.children.findIndex(child => child.id === nodeId);
-          if (childIndex >= 0) {
-            // Update visibility
-            const wasHidden = !!node.children[childIndex].hidden;
-            const shouldBeHidden = !checked;
-            
-            if (wasHidden !== shouldBeHidden) {
-              node.children[childIndex].hidden = shouldBeHidden;
-              changesApplied = true;
-              console.log(`Changed visibility of "${value}" to ${!shouldBeHidden}`);
-              
-              // Immediately apply visibility change to DOM
-              const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
-              if (nodeElement) {
-                nodeElement.style.display = shouldBeHidden ? 'none' : '';
-                console.log(`Updated DOM element display for ${nodeId} to ${shouldBeHidden ? 'none' : 'block'}`);
-              }
-            }
-          }
-        } else if (checked) {
-          // Add new child with a more consistent ID
-          const newNodeId = `node-${colIndex}-${value.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now().toString(36)}`;
-          const newNode = {
-            id: newNodeId,
-            columnName: colName,
-            columnIndex: colIndex,
-            value: value,
-            level: node.level + 1,
-            children: [],
-            // Copy parent coordinates but update column
-            excelCoordinates: {
-              ...node.excelCoordinates,
-              column: String.fromCharCode(65 + colIndex) // Convert to Excel column letter
-            },
-            hidden: false
-          };
-          
-          // Add directly to THIS parent node's children
-          node.children.push(newNode);
-          changesApplied = true;
-          console.log(`Added new child: ${colName} - ${value}`);
-        }
-      });
-      
-      // Close modal
-      document.body.removeChild(modal);
-      
-      // Always do a full refresh if new items were added (can't just update visibility)
-      if (changesApplied) {
-        // Get the root node and re-render
-        const activeSheetId = window.excelData.activeSheetId;
-        const rootNode = window.excelData.sheetsLoaded[activeSheetId].rootNode;
-        
-        // Store expand state
-        const expandStateMap = storeExpandState();
-        
-        // Clear and re-render the view
-        const container = document.getElementById('data-container');
-        if (container) {
-          container.innerHTML = '';
-          renderNode(rootNode, 0, expandStateMap);
-        }
-      }
-    });
-  }
+
+
   
   // Helper function to safely store and retrieve raw data
   function storeRawExcelData(sheetId, data) {
@@ -3296,12 +2931,12 @@ document.addEventListener('DOMContentLoaded', function() {
       style.textContent = `
         .level-_1-node {
           margin-bottom: 20px;
-          border: 1px solid #007bff;
+          border: 1px solid #34a3d7;
           border-radius: 5px;
           overflow: hidden;
         }
         .level-_1-header {
-          background-color: #007bff;
+          background-color: #34a3d7;
           color: white;
           padding: 8px 15px;
           display: flex;
@@ -3354,12 +2989,12 @@ document.addEventListener('DOMContentLoaded', function() {
       style.textContent = `
         .level-_1-node {
           margin-bottom: 20px;
-          border: 1px solid #007bff;
+          border: 1px solid #34a3d7;
           border-radius: 5px;
           overflow: hidden;
         }
         .level-_1-header {
-          background-color: #007bff;
+          background-color: #34a3d7;
           color: white;
           padding: 8px 15px;
           display: flex;
@@ -3435,6 +3070,77 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Function to add a child container
+  function addChildContainer(parentNode) {
+    const newNode = {
+      id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      value: 'New Container',
+      columnName: '',
+      level: parentNode.level + 1,
+      children: [],
+      properties: []
+    };
+    
+    if (!parentNode.children) {
+      parentNode.children = [];
+    }
+    
+    parentNode.children.push(newNode);
+    
+    // Re-render
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    renderSheet(activeSheetId, sheetData);
+  }
+  
+  // Function to add a sibling container
+  function addSiblingContainer(node) {
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    // Find parent
+    const parent = findParentNode(node.id) || sheetData.root;
+    
+    const newNode = {
+      id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      value: 'New Container',
+      columnName: '',
+      level: node.level,
+      children: [],
+      properties: []
+    };
+    
+    if (!parent.children) {
+      parent.children = [];
+    }
+    
+    // Insert after current node
+    const currentIndex = parent.children.findIndex(child => child.id === node.id);
+    parent.children.splice(currentIndex + 1, 0, newNode);
+    
+    // Re-render
+    renderSheet(activeSheetId, sheetData);
+  }
+  
+  // Function to delete a container
+  function deleteContainer(node) {
+    if (confirm(`Delete container "${node.value || node.columnName || 'New Container'}" and all its children?`)) {
+      const activeSheetId = window.excelData.activeSheetId;
+      const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+      
+      // Find parent and remove node
+      const parent = findParentNode(node.id) || sheetData.root;
+      if (parent && parent.children) {
+        parent.children = parent.children.filter(child => child.id !== node.id);
+      }
+      
+      // Re-render
+      renderSheet(activeSheetId, sheetData);
+    }
+  }
+  
+
+  
   // Function to initialize toolbar
   function initToolbar() {
     // Add event listeners for collapse/expand all buttons
@@ -3443,6 +3149,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (expandAllButton) {
       expandAllButton.addEventListener('click', () => toggleAllNodes(false));
+    }
+    
+    // Add event listener for build structure button
+    const buildStructureButton = document.getElementById('build-structure');
+    if (buildStructureButton) {
+      buildStructureButton.addEventListener('click', showStructureBuilder);
     }
     
     // Add Parent Level button
@@ -3460,5 +3172,410 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Function to show the structure builder modal
+  function showStructureBuilder() {
+    const activeSheetId = window.excelData.activeSheetId;
+    if (!activeSheetId) {
+      alert('Please select a sheet first');
+      return;
+    }
+    
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    if (!sheetData || !sheetData.headers) {
+      alert('No data available for this sheet');
+      return;
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'pdf-preview-modal';
+    
+    // Create content container
+    const content = document.createElement('div');
+    content.className = 'pdf-preview-content';
+    content.style.maxWidth = '900px';
+    content.style.width = '90%';
+    content.style.height = '80vh';
+    content.style.display = 'flex';
+    content.style.flexDirection = 'column';
+    
+    // Add close button
+    const closeButton = document.createElement('button');
+    closeButton.className = 'pdf-preview-close';
+    closeButton.innerHTML = '&times;';
+    closeButton.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    
+    // Add header
+    const header = document.createElement('h2');
+    header.textContent = 'Build Custom Structure';
+    header.style.marginBottom = '20px';
+    header.style.color = '#34a3d7';
+    
+    // Create main container with two panels
+    const mainContainer = document.createElement('div');
+    mainContainer.style.display = 'flex';
+    mainContainer.style.gap = '20px';
+    mainContainer.style.flex = '1';
+    mainContainer.style.overflow = 'hidden';
+    
+    // Left panel - Structure builder
+    const leftPanel = document.createElement('div');
+    leftPanel.style.flex = '1';
+    leftPanel.style.display = 'flex';
+    leftPanel.style.flexDirection = 'column';
+    leftPanel.style.borderRight = '1px solid #ddd';
+    leftPanel.style.paddingRight = '20px';
+    
+    const structureTitle = document.createElement('h3');
+    structureTitle.textContent = 'Structure';
+    structureTitle.style.marginBottom = '10px';
+    
+    const structureContainer = document.createElement('div');
+    structureContainer.id = 'custom-structure-container';
+    structureContainer.style.flex = '1';
+    structureContainer.style.overflow = 'auto';
+    structureContainer.style.border = '1px solid #ddd';
+    structureContainer.style.borderRadius = '4px';
+    structureContainer.style.padding = '10px';
+    structureContainer.style.backgroundColor = '#f9f9f9';
+    
+    // Add root container
+    const rootContainer = createStructureNode('Root', null, true);
+    structureContainer.appendChild(rootContainer);
+    
+    leftPanel.appendChild(structureTitle);
+    leftPanel.appendChild(structureContainer);
+    
+    // Right panel - Excel columns
+    const rightPanel = document.createElement('div');
+    rightPanel.style.flex = '1';
+    rightPanel.style.display = 'flex';
+    rightPanel.style.flexDirection = 'column';
+    
+    const columnsTitle = document.createElement('h3');
+    columnsTitle.textContent = 'Available Excel Columns';
+    columnsTitle.style.marginBottom = '10px';
+    
+    const columnsContainer = document.createElement('div');
+    columnsContainer.style.flex = '1';
+    columnsContainer.style.overflow = 'auto';
+    columnsContainer.style.border = '1px solid #ddd';
+    columnsContainer.style.borderRadius = '4px';
+    columnsContainer.style.padding = '10px';
+    columnsContainer.style.backgroundColor = '#f9f9f9';
+    
+    // Add columns from Excel
+    sheetData.headers.forEach((header, index) => {
+      if (!header) return;
+      
+      const columnItem = document.createElement('div');
+      columnItem.className = 'draggable-column';
+      columnItem.draggable = true;
+      columnItem.dataset.columnIndex = index;
+      columnItem.dataset.columnName = header;
+      columnItem.textContent = `${header} (Column ${index + 1})`;
+      columnItem.style.padding = '8px';
+      columnItem.style.margin = '5px 0';
+      columnItem.style.backgroundColor = '#e3f2fd';
+      columnItem.style.borderRadius = '4px';
+      columnItem.style.cursor = 'move';
+      columnItem.style.border = '1px solid #90caf9';
+      
+      // Add drag events
+      columnItem.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('columnIndex', index);
+        e.dataTransfer.setData('columnName', header);
+        columnItem.style.opacity = '0.5';
+      });
+      
+      columnItem.addEventListener('dragend', () => {
+        columnItem.style.opacity = '1';
+      });
+      
+      columnsContainer.appendChild(columnItem);
+    });
+    
+    rightPanel.appendChild(columnsTitle);
+    rightPanel.appendChild(columnsContainer);
+    
+    // Add panels to main container
+    mainContainer.appendChild(leftPanel);
+    mainContainer.appendChild(rightPanel);
+    
+    // Create buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'space-between';
+    buttonContainer.style.marginTop = '20px';
+    buttonContainer.style.paddingTop = '20px';
+    buttonContainer.style.borderTop = '1px solid #ddd';
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'control-button';
+    
+    const applyButton = document.createElement('button');
+    applyButton.textContent = 'Apply Structure';
+    applyButton.className = 'control-button';
+    applyButton.style.backgroundColor = '#34a3d7';
+    applyButton.style.color = 'white';
+    
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(applyButton);
+    
+    // Assemble modal
+    content.appendChild(closeButton);
+    content.appendChild(header);
+    content.appendChild(mainContainer);
+    content.appendChild(buttonContainer);
+    modal.appendChild(content);
+    
+    // Add to document
+    document.body.appendChild(modal);
+    
+    // Event handlers
+    cancelButton.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    
+    applyButton.addEventListener('click', () => {
+      const structure = extractStructure(rootContainer);
+      applyCustomStructure(structure);
+      document.body.removeChild(modal);
+    });
+  }
+  
+  // Helper function to create a structure node
+  function createStructureNode(name, columnInfo = null, isRoot = false) {
+    const node = document.createElement('div');
+    node.className = 'structure-node';
+    node.style.marginBottom = '10px';
+    
+    const header = document.createElement('div');
+    header.className = 'structure-node-header';
+    header.style.display = 'flex';
+    header.style.alignItems = 'center';
+    header.style.padding = '8px';
+    header.style.backgroundColor = isRoot ? '#34a3d7' : '#e0e0e0';
+    header.style.color = isRoot ? 'white' : 'black';
+    header.style.borderRadius = '4px';
+    header.style.marginBottom = '5px';
+    
+    const title = document.createElement('span');
+    title.textContent = name;
+    title.style.flex = '1';
+    
+    // Column selector
+    const columnSelect = document.createElement('select');
+    columnSelect.style.marginLeft = '10px';
+    columnSelect.style.padding = '4px';
+    columnSelect.style.borderRadius = '4px';
+    
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'No column';
+    columnSelect.appendChild(defaultOption);
+    
+    // Add Excel columns as options
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    if (sheetData && sheetData.headers) {
+      sheetData.headers.forEach((header, index) => {
+        if (!header) return;
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = header;
+        columnSelect.appendChild(option);
+      });
+    }
+    
+    if (columnInfo) {
+      columnSelect.value = columnInfo.columnIndex;
+    }
+    
+    // Add container button
+    const addButton = document.createElement('button');
+    addButton.textContent = '+ Add Container';
+    addButton.style.marginLeft = '10px';
+    addButton.style.padding = '4px 8px';
+    addButton.style.fontSize = '12px';
+    addButton.style.cursor = 'pointer';
+    
+    // Delete button (not for root)
+    if (!isRoot) {
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = '×';
+      deleteButton.style.marginLeft = '10px';
+      deleteButton.style.padding = '4px 8px';
+      deleteButton.style.fontSize = '16px';
+      deleteButton.style.cursor = 'pointer';
+      deleteButton.style.backgroundColor = '#f44336';
+      deleteButton.style.color = 'white';
+      deleteButton.style.border = 'none';
+      deleteButton.style.borderRadius = '4px';
+      
+      deleteButton.addEventListener('click', () => {
+        node.remove();
+      });
+      
+      header.appendChild(deleteButton);
+    }
+    
+    header.appendChild(title);
+    header.appendChild(columnSelect);
+    header.appendChild(addButton);
+    
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'structure-node-children';
+    childrenContainer.style.marginLeft = '20px';
+    childrenContainer.style.paddingLeft = '10px';
+    childrenContainer.style.borderLeft = '2px solid #ddd';
+    
+    // Make it a drop zone
+    childrenContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      childrenContainer.style.backgroundColor = '#e8f5e9';
+    });
+    
+    childrenContainer.addEventListener('dragleave', () => {
+      childrenContainer.style.backgroundColor = 'transparent';
+    });
+    
+    childrenContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      childrenContainer.style.backgroundColor = 'transparent';
+      
+      const columnIndex = e.dataTransfer.getData('columnIndex');
+      const columnName = e.dataTransfer.getData('columnName');
+      
+      if (columnIndex && columnName) {
+        const newNode = createStructureNode(`Container (${columnName})`, {
+          columnIndex: parseInt(columnIndex),
+          columnName: columnName
+        });
+        childrenContainer.appendChild(newNode);
+      }
+    });
+    
+    node.appendChild(header);
+    node.appendChild(childrenContainer);
+    
+    // Add container button handler
+    addButton.addEventListener('click', () => {
+      const newNode = createStructureNode('New Container');
+      childrenContainer.appendChild(newNode);
+    });
+    
+    // Store column info
+    node.dataset.columnIndex = columnInfo ? columnInfo.columnIndex : '';
+    node.dataset.columnName = columnInfo ? columnInfo.columnName : '';
+    
+    return node;
+  }
+  
+  // Helper function to extract structure from DOM
+  function extractStructure(node) {
+    const columnSelect = node.querySelector('.structure-node-header select');
+    const childrenContainer = node.querySelector('.structure-node-children');
+    const children = [];
+    
+    if (childrenContainer) {
+      const childNodes = childrenContainer.querySelectorAll(':scope > .structure-node');
+      childNodes.forEach(childNode => {
+        children.push(extractStructure(childNode));
+      });
+    }
+    
+    return {
+      columnIndex: columnSelect ? parseInt(columnSelect.value) : -1,
+      columnName: columnSelect && columnSelect.value ? 
+        columnSelect.options[columnSelect.selectedIndex].text : '',
+      children: children
+    };
+  }
+  
+  // Function to apply custom structure to the data
+  function applyCustomStructure(structure) {
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    
+    if (!sheetData) return;
+    
+    // Get raw Excel data
+    const rawData = getRawExcelData(activeSheetId);
+    if (!rawData) {
+      alert('No raw data available');
+      return;
+    }
+    
+    // Build new hierarchical structure based on custom structure
+    const newRoot = {
+      type: 'root',
+      children: [],
+      level: -1
+    };
+    
+    // Process each row of Excel data
+    rawData.slice(1).forEach((row, rowIndex) => {
+      if (row.every(cell => !cell)) return; // Skip empty rows
+      
+      // Create nodes based on structure
+      processStructureRow(structure, row, newRoot, 0, rowIndex + 1);
+    });
+    
+    // Update sheet data with new structure
+    sheetData.root = newRoot;
+    sheetData.customStructure = structure;
+    
+    // Re-render the sheet
+    renderSheet(activeSheetId, sheetData);
+  }
+  
+  // Helper function to process a row based on custom structure
+  function processStructureRow(structure, row, parentNode, level, rowIndex) {
+    if (structure.columnIndex === -1 || !structure.columnName) {
+      // This is just a container without data
+      // Process children with the same parent
+      structure.children.forEach(childStructure => {
+        processStructureRow(childStructure, row, parentNode, level, rowIndex);
+      });
+      return;
+    }
+    
+    const cellValue = row[structure.columnIndex] || '';
+    if (!cellValue && structure.children.length === 0) return; // Skip empty cells with no children
+    
+    // Find or create node
+    let node = parentNode.children.find(child => 
+      child.value === cellValue && 
+      child.columnIndex === structure.columnIndex
+    );
+    
+    if (!node) {
+      node = {
+        id: `node-${structure.columnIndex}-${cellValue}-${Date.now()}-${Math.random()}`,
+        type: 'item',
+        value: cellValue,
+        columnName: structure.columnName,
+        columnIndex: structure.columnIndex,
+        level: level,
+        children: [],
+        properties: [],
+        rowIndex: rowIndex
+      };
+      parentNode.children.push(node);
+    }
+    
+    // Process children
+    structure.children.forEach(childStructure => {
+      processStructureRow(childStructure, row, node, level + 1, rowIndex);
+    });
+  }
+  
   initialize();
+  
+  // Export functions for use by live-editor.js
+  window.renderSheet = renderSheet;
 }); 

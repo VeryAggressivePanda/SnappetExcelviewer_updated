@@ -1060,6 +1060,41 @@ footer {
   cursor: not-allowed;
 }
 
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.toolbar-button {
+  padding: 8px 16px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-family: 'AbeZeh', sans-serif;
+}
+
+.toolbar-button:hover {
+  background-color: #e0e0e0;
+  border-color: #bbb;
+}
+
+#build-structure {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+}
+
+#build-structure:hover {
+  background-color: #45a049;
+}
+
 .node-title {
   font-size: 1.2em;
   font-weight: 500;
@@ -1323,9 +1358,9 @@ footer {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin: 0;
-  flex: 1 1 calc(20% - 0.5rem);
+  flex: 1;
   min-width: 120px;
-  max-width: calc(20% - 0.5rem);
+  width: 100%;
 }
 
 .level-3-header {
@@ -1476,4 +1511,130 @@ footer {
 .cell-value {
   font-weight: 500;
   color: #333;
+}
+
+/* Live editing controls */
+.edit-controls {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.edit-controls button {
+  transition: all 0.2s;
+}
+
+.edit-controls button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.column-selector {
+  min-width: 120px;
+}
+
+/* Placeholder node styling */
+[data-node-id] .level-0-title:has-text("Start Building") {
+  color: #999;
+  font-style: italic;
+}
+
+/* New layout system - toggle between horizontal and vertical */
+
+/* Base layout classes */
+.layout-horizontal {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.layout-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* Horizontal layout variations */
+.layout-horizontal.layout-single-child > [class*="-node"] {
+  width: 100%;
+  flex: 1;
+}
+
+.layout-horizontal.layout-two-children > [class*="-node"] {
+  width: calc(50% - 5px);
+  flex: 1;
+}
+
+.layout-horizontal.layout-three-children > [class*="-node"] {
+  width: calc(33.333% - 7px);
+  flex: 1;
+}
+
+.layout-horizontal.layout-many-children > [class*="-node"] {
+  width: calc(25% - 8px);
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Override for level-3 nodes to always be full width in vertical layouts */
+.layout-vertical > .level-3-node {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: none !important;
+}
+
+/* Vertical layout - all children full width */
+.layout-vertical > [class*="-node"] {
+  width: 100%;
+  flex: none;
+}
+
+/* Layout toggle button styling */
+.layout-toggle-button {
+  transition: all 0.2s ease;
+}
+
+.layout-toggle-button:hover {
+  background: #ff9800 !important;
+  color: white !important;
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .layout-horizontal.layout-three-children,
+  .layout-horizontal.layout-many-children {
+    flex-direction: column;
+  }
+  
+  .layout-horizontal.layout-three-children > [class*="-node"],
+  .layout-horizontal.layout-many-children > [class*="-node"] {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-horizontal {
+    flex-direction: column;
+  }
+  
+  .layout-horizontal > [class*="-node"] {
+    width: 100% !important;
+  }
+}
+
+/* Starter container styling */
+.starter-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 2px dashed #34a3d7 !important;
+  transition: all 0.3s ease;
+}
+
+.starter-container:hover {
+  border-color: #2980b9 !important;
+  background: linear-gradient(135deg, #e8f4f8 0%, #b8d4e3 100%);
 } 
