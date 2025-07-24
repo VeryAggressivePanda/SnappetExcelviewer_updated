@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> - <%= filename %></title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/styles/styles.css">
 </head>
 <body data-file-id="<%= fileId %>">
   <div class="container viewer-container">
@@ -108,7 +108,16 @@
       sheetsLoaded: {} // All sheets will be loaded via JS
     };
   </script>
-  <script src="/js/viewer.js"></script>
-  <script src="/js/live-editor.js"></script>
+  <!-- Load modular viewer components -->
+  <script src="/modules/viewer/core.js"></script>
+  <script src="/modules/viewer/export.js"></script>
+  <script src="/modules/viewer/data-processing.js"></script>
+  <script src="/modules/viewer/sheet-management.js"></script>
+  <script src="/modules/viewer/node-renderer.js"></script>
+  <script src="/modules/viewer/ui-controls.js"></script>
+  <script src="/modules/viewer/node-management.js"></script>
+  <script src="/modules/viewer/structure-builder.js"></script>
+  <script src="/modules/viewer.js"></script>
+  <script src="/modules/live-editor.js"></script>
 </body>
 </html> 

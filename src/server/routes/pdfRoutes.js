@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 const router = express.Router();
 
 // Ensure temp directory exists
-const tempDir = path.join(__dirname, '..', 'temp');
+const tempDir = path.join(__dirname, '../../temp');
 fs.mkdir(tempDir, { recursive: true }).catch(console.error);
 
 // Helper function to truncate text with middle ellipsis
@@ -42,23 +42,42 @@ function renderNode(node, level) {
   nodeHtml += `<div class="level-${cssLevel}-header${node.isEmpty ? ' level-' + cssLevel + '-empty-header' : ''}">`;
   
   if (isParent) {
-    // For parent nodes: title shows both column name and cell value with middle ellipsis
+    // For parent nodes: only show title if node has a meaningful specific value
     const columnName = node.columnName || '';
     const nodeValue = node.value || '';
     
-    // Apply middle ellipsis to the value
-    const truncatedValue = truncateMiddle(nodeValue);
+    // Check if this is a meaningful value (not just column name, "New Container", or empty)
+    const isMeaningfulValue = nodeValue && 
+                             nodeValue.trim() !== '' && 
+                             nodeValue !== columnName && 
+                             nodeValue !== 'New Container' &&
+                             nodeValue !== 'Container';
     
-    // Add title attribute for tooltip on hover
-    const titleAttr = nodeValue !== truncatedValue ? 
-      `title="${columnName}: ${nodeValue}"` : '';
-    
-    nodeHtml += `<div class="level-${cssLevel}-title" ${titleAttr}>
-      <span class="column-name">${columnName}:</span> <span class="cell-value">${truncatedValue}</span>
-    </div>`;
+    if (isMeaningfulValue) {
+      // Node has a meaningful specific value - show just the value (like "Week 1", "Les 1", etc.)
+      const truncatedValue = truncateMiddle(nodeValue);
+      
+      // Add title attribute for tooltip on hover
+      const titleAttr = nodeValue !== truncatedValue ? 
+        `title="${nodeValue}"` : '';
+      
+      nodeHtml += `<div class="level-${cssLevel}-title" ${titleAttr}>
+        <span class="cell-value">${truncatedValue}</span>
+      </div>`;
+    } else {
+      // Node has no meaningful value - hide the title but keep the header structure
+      nodeHtml += `<div class="level-${cssLevel}-title" style="display: none;"></div>`;
+    }
   } else {
-    // For leaf nodes: title shows just column name
-    nodeHtml += `<div class="level-${cssLevel}-title">${node.columnName}</div>`;
+    // For leaf nodes: show the actual value if it exists, otherwise show column name
+    const nodeValue = node.value || '';
+    const columnName = node.columnName || '';
+    
+    if (nodeValue && nodeValue.trim() !== '') {
+      nodeHtml += `<div class="level-${cssLevel}-title">${nodeValue}</div>`;
+    } else {
+      nodeHtml += `<div class="level-${cssLevel}-title">${columnName}</div>`;
+    }
   }
   
   nodeHtml += `</div>`; // Close header

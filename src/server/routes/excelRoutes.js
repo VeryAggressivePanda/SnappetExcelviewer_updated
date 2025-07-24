@@ -9,7 +9,7 @@ const router = express.Router();
 // Set up multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads');
+    const uploadDir = path.join(__dirname, '../../uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -111,10 +111,10 @@ router.post('/upload', upload.single('excelFile'), async (req, res) => {
         name: worksheet.name
       });
       
-      // Process the first sheet data for quick loading (not used in new approach)
-      if (sheetsMeta.length === 1) {
-        sheetsData[sheetId] = processWorksheet(worksheet);
-      }
+      // DISABLED: No auto-processing during upload - let user build manually
+      // if (sheetsMeta.length === 1) {
+      //   sheetsData[sheetId] = processWorksheet(worksheet);
+      // }
     });
     
     // If no valid sheets were found
@@ -169,6 +169,9 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
     const fileData = excelCache.get(fileId);
     console.log(`File found in cache, loaded data for ${fileData.originalName}`);
     
+    // Always process fresh data for manual structure building
+    // (Don't return cached hierarchical data - we want raw data for manual setup)
+    
     // Get the worksheet
     const worksheet = fileData.workbook.getWorksheet(sheetIdNum);
     if (!worksheet) {
@@ -201,7 +204,7 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
       });
     }
     
-    // Extract raw data for column configuration
+    // Extract raw data for processing
     const rawData = [];
     let maxColumns = 0;
     
@@ -253,12 +256,12 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
     
     console.log(`Extracted ${rawData.length} rows of raw data`);
     
-    // Create response with headers and raw data only - no automatic hierarchy
+    // Return RAW DATA for manual structure building (not auto-processed hierarchy)
     const response = {
       headers: rawData.length > 0 ? rawData[0] : [],
-      data: rawData,
-      needsConfiguration: false, // Changed to false - we don't want automatic processing
-      isRawData: true, // Flag to indicate this is raw data for manual structure building
+      data: rawData, // Raw data for manual structure building
+      isRawData: true, // Flag indicating this needs manual configuration
+      needsConfiguration: true, // Flag for manual setup
       root: { 
         type: 'root', 
         children: [], 
@@ -266,11 +269,11 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
       } // Empty root structure for manual building
     };
     
-    // Store in cache
+    // Store in cache (without processing)
     console.log(`Storing raw data for sheet ${sheetIdNum} in cache`);
     fileData.processedSheets[sheetIdNum] = response;
     
-    // Return the data
+    // Return the raw data for manual building
     console.log(`Sending raw data response for sheet ${sheetIdNum}`);
     return res.json({ data: response });
     
@@ -366,17 +369,22 @@ function processWorksheet(worksheet) {
     };
   }
   
-  // Second pass: build hierarchical structure
-  const hierarchicalData = {
+  // DISABLED: No auto-hierarchy building - return raw data for manual structure building
+  const rawDataResponse = {
     headers: headers,
-    root: buildHierarchy(rawRows.slice(1), headers)
+    data: rawRows, // Raw data for manual structure building
+    isRawData: true,
+    needsConfiguration: true,
+    root: { 
+      type: 'root', 
+      children: [], 
+      level: -1 
+    } // Empty root structure for manual building
   };
   
-  // Verify data structure before returning
-  console.log(`Hierarchical data created with ${hierarchicalData.headers.length} headers and root node`);
-  console.log(`Root has ${hierarchicalData.root.children ? hierarchicalData.root.children.length : 0} children`);
+  console.log(`Raw data prepared with ${headers.length} headers and ${rawRows.length} rows`);
   
-  return hierarchicalData;
+  return rawDataResponse;
 }
 
 // Function to build a hierarchical structure from flat data

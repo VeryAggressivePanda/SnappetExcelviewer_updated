@@ -10,17 +10,18 @@ const PORT = process.env.PORT || 3001;
 
 // Set up EJS as the view engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '../views'));
 
 // Middleware
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../client')));
+app.use('/assets', express.static(path.join(__dirname, '../assets')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Set up multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, 'uploads');
+    const uploadDir = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -66,7 +67,7 @@ const storage = multer.diskStorage({
 
 // Also add a routine to periodically clean up old files
 const cleanupUploadDirectory = () => {
-  const uploadDir = path.join(__dirname, 'uploads');
+  const uploadDir = path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadDir)) return;
   
   try {
@@ -140,7 +141,7 @@ app.use('/', excelRouter);
 app.use('/pdf', pdfRouter);
 
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }

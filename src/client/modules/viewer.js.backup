@@ -981,7 +981,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Render the empty sheet with live editing enabled
         renderSheet(sheetId, emptyStructure);
-      } else {
+          } else {
         // Legacy support for old processed data
         renderSheet(sheetId, data.data);
       }
@@ -1249,6 +1249,8 @@ document.addEventListener('DOMContentLoaded', function() {
     nodeEl.setAttribute('data-column-index', node.columnIndex || '');
     nodeEl.setAttribute('data-is-empty', node.isEmpty ? 'true' : 'false');
     nodeEl.setAttribute('data-node-id', node.id || '');
+    nodeEl.setAttribute('data-is-template', node.isTemplate ? 'true' : 'false');
+    nodeEl.setAttribute('data-is-duplicate', node.isDuplicate ? 'true' : 'false');
     
     // Set initial collapse state based on level and expandStateMap
     const shouldBeExpanded = expandStateMap[node.id] !== undefined ? 
@@ -1286,21 +1288,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const isParent = node.children && node.children.length > 0;
     
     if (isParent) {
-      // For parent nodes: title shows both column name and cell value with middle ellipsis
+      // For parent nodes: only show title if node has a meaningful specific value
       const columnName = node.columnName || '';
       const nodeValue = node.value || '';
       
-      // Apply middle ellipsis to the value, keep column name intact
+      // Check if this is a meaningful value (not just column name, "New Container", or empty)
+      const isMeaningfulValue = nodeValue && 
+                               nodeValue.trim() !== '' && 
+                               nodeValue !== columnName && 
+                               nodeValue !== 'New Container' &&
+                               nodeValue !== 'Container';
+      
+          if (isMeaningfulValue) {
+      // Node has a meaningful specific value - show just the value (like "Week 1", "Les 1", etc.)
       const truncatedValue = truncateMiddle(nodeValue);
-      title.innerHTML = `<span class="column-name">${columnName}:</span> <span class="cell-value">${truncatedValue}</span>`;
+      
+      // Add template indicator if this is a template
+      const templateIndicator = node.isTemplate ? ' 🏗️' : '';
+      
+      title.innerHTML = `<span class="cell-value">${truncatedValue}</span>${templateIndicator}`;
       
       // Add tooltip with full text if truncated
       if (nodeValue !== truncatedValue) {
-        title.title = `${columnName}: ${nodeValue}`;
+        title.title = nodeValue;
       }
     } else {
-      // For leaf nodes: title shows just column name
-      title.textContent = node.columnName;
+      // Node has no meaningful value - hide the title but keep the div structure
+      title.style.display = 'none';
+      title.innerHTML = ''; // Clear content but keep the element
+    }
+    } else {
+      // For leaf nodes: show the actual value if it exists, otherwise show column name
+      const nodeValue = node.value || '';
+      const columnName = node.columnName || '';
+      
+      // Add template indicator if this is a template
+      const templateIndicator = node.isTemplate ? ' 🏗️' : '';
+      
+      if (nodeValue && nodeValue.trim() !== '') {
+        title.textContent = nodeValue + templateIndicator;
+      } else {
+        title.textContent = columnName + templateIndicator;
+      }
     }
     
     header.appendChild(title);
@@ -2293,8 +2322,14 @@ document.addEventListener('DOMContentLoaded', function() {
     return expandStateMap;
   }
   
-  // Function to add a new child node and preserve expand/collapse state
+  // Function to add a new child node and preserve expand/collapse state (TEMPLATE AWARE)
   function addNode(parentNode, newNode) {
+    // Check if this is a duplicate - only templates can be modified
+    if (parentNode.isDuplicate) {
+      alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+      return;
+    }
+    
     if (!parentNode.children) {
       parentNode.children = [];
     }
@@ -2304,6 +2339,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add the new node to the parent
     parentNode.children.push(newNode);
+    
+    // Apply template replication if this is a template
+    if (parentNode.isTemplate) {
+      applyTemplateReplicationToAllDuplicates(parentNode);
+    }
     
     // Re-render with preserved expand state
     const activeSheetId = window.excelData.activeSheetId;
@@ -3070,72 +3110,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Function to add a child container
+  // Function to add a child container (REDIRECTED TO LIVE EDITOR)
   function addChildContainer(parentNode) {
-    const newNode = {
-      id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      value: 'New Container',
-      columnName: '',
-      level: parentNode.level + 1,
-      children: [],
-      properties: []
-    };
-    
-    if (!parentNode.children) {
-      parentNode.children = [];
+    // Use the template-aware version from live-editor.js
+    if (window.addChildContainer) {
+      window.addChildContainer(parentNode);
+    } else {
+      console.error('Live editor addChildContainer not available');
     }
-    
-    parentNode.children.push(newNode);
-    
-    // Re-render
-    const activeSheetId = window.excelData.activeSheetId;
-    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
-    renderSheet(activeSheetId, sheetData);
   }
   
-  // Function to add a sibling container
+  // Function to add a sibling container (REDIRECTED TO LIVE EDITOR)
   function addSiblingContainer(node) {
-    const activeSheetId = window.excelData.activeSheetId;
-    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
-    
-    // Find parent
-    const parent = findParentNode(node.id) || sheetData.root;
-    
-    const newNode = {
-      id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      value: 'New Container',
-      columnName: '',
-      level: node.level,
-      children: [],
-      properties: []
-    };
-    
-    if (!parent.children) {
-      parent.children = [];
+    // Use the template-aware version from live-editor.js
+    if (window.addSiblingContainer) {
+      window.addSiblingContainer(node);
+    } else {
+      console.error('Live editor addSiblingContainer not available');
     }
-    
-    // Insert after current node
-    const currentIndex = parent.children.findIndex(child => child.id === node.id);
-    parent.children.splice(currentIndex + 1, 0, newNode);
-    
-    // Re-render
-    renderSheet(activeSheetId, sheetData);
   }
   
-  // Function to delete a container
+  // Function to delete a container (REDIRECTED TO LIVE EDITOR)
   function deleteContainer(node) {
-    if (confirm(`Delete container "${node.value || node.columnName || 'New Container'}" and all its children?`)) {
-      const activeSheetId = window.excelData.activeSheetId;
-      const sheetData = window.excelData.sheetsLoaded[activeSheetId];
-      
-      // Find parent and remove node
-      const parent = findParentNode(node.id) || sheetData.root;
-      if (parent && parent.children) {
-        parent.children = parent.children.filter(child => child.id !== node.id);
-      }
-      
-      // Re-render
-      renderSheet(activeSheetId, sheetData);
+    // Use the template-aware version from live-editor.js
+    if (window.deleteContainer) {
+      window.deleteContainer(node);
+    } else {
+      console.error('Live editor deleteContainer not available');
     }
   }
   

@@ -3,20 +3,36 @@ description:
 globs: 
 alwaysApply: true
 ---
-
-# Explanation
-
-- Import the excel from the project into a webpage, performance is important so convert when needed.
-- Use node.js
-- I want to be able to customize design styling of the content. 
-- Make tabs for every spreadsheet-tab in the excel file.
-- Don't use tables but use html5 flexbox.
-- Don't skip columns when reading in data. Empty cells should also be displayed.
-- Every column in the excel is a separate class. Column 1 is class level-1, column 2 is class level-2 etcetera.
-- Every level class consists of 2 children: a header div and a content div. These are called the name of the class + header, or + content. For example level-1-header and level-1-content. The header title of the excel goes in the header, and the data of the specific cell goes in the content. 
-- Important: even if the cell is empty, it still is participating, just empty in the final result.
-- Every column except the first can be a child of the one left of it. If one column has multiple children, they are shown in row in the full width of the parent div. 
-- Important! if the level-x class is a parent of another, the data from the cells go into the level-x header, and the content has the designated children. 
-- The pdf-export should only have level-1 options to choose from. 
-- THe pdf layout should strive to look the same as the webpage. It should have the same structure, flex column and row layout. 
-- If the content doesnt fit inside the pdf, the content must responsively adjust so that it will fit. Flexbox will make sure of it.
+Template Systeem - Excel Viewer
+Concept Overview
+Het template systeem zorgt voor uniforme structuren met contextuele data uit Excel bestanden.
+Hoe het werkt
+1. Template Parent (Eerste Node)
+De eerste node die wordt aangemaakt uit een kolom wordt de template/master
+Deze node heeft een speciale status: 🏗️ template indicator
+Alle aanpassingen aan deze node worden automatisch gekopieerd naar alle andere nodes
+2. Duplicate Parents (Sibling Nodes)
+Alle andere nodes uit dezelfde kolom zijn duplicates van de template
+Ze volgen exact dezelfde structuur als de template
+Ze kunnen niet individueel worden aangepast
+3. Structuur Replicatie
+Structuurwijzigingen aan de template worden automatisch toegepast op alle duplicates:
+Child toevoegen → Alle duplicates krijgen dezelfde child
+Layout wijzigen → Alle duplicates krijgen dezelfde layout
+Kolom toewijzen → Alle duplicates krijgen dezelfde kolom-structuur
+4. Contextuele Data Populatie
+Data wordt per duplicate contextueel ingevuld uit Excel:
+Template (Blok 1) + Week child → Vult weeks uit Excel rijen waar Blok = "Blok 1"
+Duplicate (Blok 2) + Week child → Vult weeks uit Excel rijen waar Blok = "Blok 2"
+Voorbeeld
+Apply
+D
+Template actie: Bij Blok 1 (🏗️) voeg "Week" child toe
+Resultaat:
+Blok 1 (Template): Week children → "Week 1", "Week 2"
+Blok 2 (Duplicate): Week children → "Week 3", "Week 4"
+Belangrijke Principes
+Eén template, alle duplicates volgen
+Structuur is universeel, data is contextueel
+Alleen template kan worden aangepast
+Automatische replicatie naar alle siblings

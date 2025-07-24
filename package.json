@@ -1,13 +1,19 @@
 {
   "name": "excel-viewer",
   "version": "1.0.0",
-  "description": "Excel file viewer with customizable styling",
-  "main": "src/index.js",
+  "description": "Excel file viewer with hierarchical visualization and template system",
+  "main": "src/server/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "build": "echo 'No build step required for this Express.js application'"
+    "start": "node src/server/index.js",
+    "dev": "nodemon src/server/index.js",
+    "build": "node tools/build.js",
+    "test": "echo 'Tests to be implemented'",
+    "lint": "echo 'Linting to be implemented'",
+    "clean": "node tools/clean.js"
   },
+  "keywords": ["excel", "viewer", "hierarchical", "template", "pdf", "export"],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "ejs": "^3.1.9",
     "exceljs": "^4.3.0",
@@ -18,5 +24,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
