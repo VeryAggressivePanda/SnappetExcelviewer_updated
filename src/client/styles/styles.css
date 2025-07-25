@@ -1390,9 +1390,14 @@ footer {
   padding: 0.5rem;
 }
 
-/* Expand/collapse functionality */
+/* Expand/collapse functionality - for ALL levels */
+.level-_1-expand-button,
 .level-0-expand-button,
-.level-1-expand-button {
+.level-1-expand-button,
+.level-2-expand-button,
+.level-3-expand-button,
+.level-4-expand-button,
+.level-5-expand-button {
   width: 20px;
   height: 20px;
   position: relative;
@@ -1401,39 +1406,76 @@ footer {
   flex-shrink: 0;
 }
 
+.level-_1-expand-button::before,
+.level-_1-expand-button::after,
 .level-0-expand-button::before,
 .level-0-expand-button::after,
 .level-1-expand-button::before,
-.level-1-expand-button::after {
+.level-1-expand-button::after,
+.level-2-expand-button::before,
+.level-2-expand-button::after,
+.level-3-expand-button::before,
+.level-3-expand-button::after,
+.level-4-expand-button::before,
+.level-4-expand-button::after,
+.level-5-expand-button::before,
+.level-5-expand-button::after {
   content: '';
   position: absolute;
   background-color: #333;
   transition: transform 0.2s ease;
 }
 
+.level-_1-expand-button::before,
 .level-0-expand-button::before,
-.level-1-expand-button::before {
+.level-1-expand-button::before,
+.level-2-expand-button::before,
+.level-3-expand-button::before,
+.level-4-expand-button::before,
+.level-5-expand-button::before {
   width: 2px;
   height: 12px;
   top: 4px;
   left: 9px;
 }
 
+.level-_1-expand-button::after,
 .level-0-expand-button::after,
-.level-1-expand-button::after {
+.level-1-expand-button::after,
+.level-2-expand-button::after,
+.level-3-expand-button::after,
+.level-4-expand-button::after,
+.level-5-expand-button::after {
   width: 12px;
   height: 2px;
   top: 9px;
   left: 4px;
 }
 
-.level-0-collapsed .level-0-children,
-.level-1-collapsed .level-1-children {
-  display: none;
+/* Hide children when collapsed - universeel voor alle levels */
+[class*="level-"][class*="-collapsed"] > [class*="level-"][class*="-children"] {
+  display: none !important;
 }
 
+/* (optioneel) Specifieke regels voor bestaande levels behouden voor fallback/overgang */
+.level-_1-collapsed .level-_1-children,
+.level-0-collapsed .level-0-children,
+.level-1-collapsed .level-1-children,
+.level-2-collapsed .level-2-children,
+.level-3-collapsed .level-3-children,
+.level-4-collapsed .level-4-children,
+.level-5-collapsed .level-5-children {
+  display: none !important;
+}
+
+/* Rotate expand button when expanded */
+.level-_1-node:not(.level-_1-collapsed) .level-_1-expand-button::before,
 .level-0-node:not(.level-0-collapsed) .level-0-expand-button::before,
-.level-1-node:not(.level-1-collapsed) .level-1-expand-button::before {
+.level-1-node:not(.level-1-collapsed) .level-1-expand-button::before,
+.level-2-node:not(.level-2-collapsed) .level-2-expand-button::before,
+.level-3-node:not(.level-3-collapsed) .level-3-expand-button::before,
+.level-4-node:not(.level-4-collapsed) .level-4-expand-button::before,
+.level-5-node:not(.level-5-collapsed) .level-5-expand-button::before {
   transform: rotate(90deg);
 }
 

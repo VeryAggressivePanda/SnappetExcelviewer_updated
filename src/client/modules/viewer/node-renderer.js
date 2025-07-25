@@ -50,10 +50,18 @@ function renderNode(node, level, expandStateMap = {}) {
     header.classList.add(`level-${cssLevel}-empty-header`);
   }
   
-  // Add expand button for level _1, 0 and 1
-  if (nodeLevel < 2 || nodeLevel === -1) {
+  // Add expand button for ALL parent nodes (nodes with children)
+  const hasChildren = node.children && node.children.length > 0;
+  if (hasChildren) {
     const expandBtn = document.createElement('div');
     expandBtn.className = `level-${cssLevel}-expand-button`;
+    
+    // Add click handler directly to the expand button
+    expandBtn.addEventListener('click', (e) => {
+      nodeEl.classList.toggle(`level-${cssLevel}-collapsed`);
+      e.stopPropagation();
+    });
+    
     header.appendChild(expandBtn);
   }
   
@@ -74,15 +82,14 @@ function renderNode(node, level, expandStateMap = {}) {
   const columnName = node.columnName || '';
   const templateIndicator = node.isTemplate ? ' 🏗️' : '';
   
-  if (columnName && columnName.trim() !== '' && columnName !== 'New Container' && columnName !== 'Container') {
-    // Show column name as title
-    title.textContent = columnName + templateIndicator;
-    title.style.display = 'block';
-  } else {
-    // No valid column name - hide title
-    title.style.display = 'none';
-    title.innerHTML = '';
+  // Toon altijd de waarde uit de data als hoofdlabel
+  title.textContent = (node.value || '') + templateIndicator;
+
+  // (optioneel) Tooltip met kolomnaam
+  if (columnName && columnName.trim() !== '') {
+    title.title = columnName;
   }
+  title.style.display = 'block';
   
   header.appendChild(title);
   
@@ -96,9 +103,11 @@ function renderNode(node, level, expandStateMap = {}) {
   
   // Manage Items button is now handled by addEditControls function
   
-  // Add click handler for expanding/collapsing
+  // Add click handler for expanding/collapsing - only if clicked on header itself, not on controls
   header.addEventListener('click', (e) => {
-    if (nodeLevel < 3 || nodeLevel === -1) { // Allow clicking for hierarchy elements
+    // Only handle click if it's on the header itself or title, not on edit controls or expand button
+    if ((e.target === header || e.target.classList.contains(`level-${cssLevel}-title`)) && 
+        (node.children && node.children.length > 0)) {
       nodeEl.classList.toggle(`level-${cssLevel}-collapsed`);
       e.stopPropagation();
     }
