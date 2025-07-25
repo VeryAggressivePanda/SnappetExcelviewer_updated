@@ -3,6 +3,20 @@
  * Verantwoordelijk voor: PDF generation, preview modal, export filtering
  */
 
+// Utility: Remove parent references recursively from node tree
+function stripParentReferences(node) {
+  if (Array.isArray(node)) {
+    node.forEach(stripParentReferences);
+    return;
+  }
+  if (node && typeof node === 'object') {
+    delete node.parent;
+    if (Array.isArray(node.children)) {
+      node.children.forEach(stripParentReferences);
+    }
+  }
+}
+
 // Function to handle PDF export
 async function exportToPdf() {
   try {
@@ -40,6 +54,11 @@ async function exportToPdf() {
         }
       };
       
+      // Strip parent references vóór export/preview
+      stripParentReferences(clonedNodes);
+      // Debug: check of parent-property is verwijderd
+      console.log("Na strippen, parent in eerste node?", 'parent' in clonedNodes[0]);
+      
       // Log what we're sending for debugging
       console.log("Sending to PDF export:", {
         selectedValue,
@@ -59,13 +78,20 @@ async function exportToPdf() {
     exportPdfButton.disabled = true;
     
     // Send data to server for PDF generation
+    // Create a clean copy WITHOUT parent references - guaranteed to work
+    const cleanData = JSON.parse(JSON.stringify(filteredData.root.children, (key, value) => {
+      if (key === 'parent') return undefined;
+      return value;
+    }));
+    console.log("PDF Export - Clean data created, no parent refs:", !cleanData.some(n => 'parent' in n));
+    
     const response = await fetch('/pdf/generate-pdf', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        html: JSON.stringify(filteredData.root.children),
+        html: JSON.stringify(cleanData),
         filename: pdfTitle
       })
     });
@@ -141,6 +167,11 @@ function previewPdf() {
         }
       };
       
+      // Strip parent references vóór export/preview
+      stripParentReferences(clonedNodes);
+      // Debug: check of parent-property is verwijderd
+      console.log("Na strippen, parent in eerste node?", 'parent' in clonedNodes[0]);
+      
       // Log what we're sending for debugging
       console.log("Sending to PDF preview:", {
         selectedValue,
@@ -155,13 +186,20 @@ function previewPdf() {
     const previewTitle = `${sheetTitle} - ${selectedValue}`;
     
     // Request the exact PDF HTML from server to maintain 100% consistency with PDF
+    // Create a clean copy WITHOUT parent references - guaranteed to work
+    const cleanData = JSON.parse(JSON.stringify(filteredData.root.children, (key, value) => {
+      if (key === 'parent') return undefined;
+      return value;
+    }));
+    console.log("PDF Preview - Clean data created, no parent refs:", !cleanData.some(n => 'parent' in n));
+    
     fetch('/pdf/preview-html', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        html: JSON.stringify(filteredData.root.children),
+        html: JSON.stringify(cleanData),
         filename: previewTitle
       })
     })
