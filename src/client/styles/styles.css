@@ -965,11 +965,11 @@ footer {
   flex: 1 !important;
 }
 
-.pdf-section .layout-horizontal.layout-many-children > [class*="-node"] {
-  width: calc(25% - 6px) !important;
-  flex: 1 !important;
-  min-width: 150px !important;
-}
+  .pdf-section .layout-horizontal.layout-many-children > [class*="-node"] {
+    width: calc(25% - 6px) !important;
+    flex: 1 !important;
+    /* min-width: 150px !important; */
+  }
 
 /* PDF Vertical layout - all children full width */
 .pdf-section .layout-vertical > [class*="-node"] {
@@ -1151,7 +1151,7 @@ footer {
   .layout-horizontal.layout-many-children > [class*="-node"] {
     width: calc(25% - 5px) !important;
     flex: 1 !important;
-    min-width: 120px !important;
+    /* min-width: 120px !important; */
   }
 
   /* Print Vertical layout - all children full width */
@@ -1488,7 +1488,7 @@ footer {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin: 0;
   flex: 1;
-  min-width: 120px;
+  /* min-width: 120px; */
   width: 100%;
   overflow: visible;
 }
@@ -1536,7 +1536,7 @@ footer {
   border-radius: 4px;
   margin: 0.25rem;
   padding: 0.4rem;
-  min-width: 120px;
+  /* min-width: 120px; */
   flex: 1;
   width: 100%;
   overflow: visible;
