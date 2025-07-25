@@ -166,8 +166,9 @@ function renderNode(node, level) {
 
 // Function to generate PDF content
 function generatePdfContent(data, title) {
-  // Define CSS styles with column-specific styles
+  // Link to external PDF CSS file
   const styles = `
+    <link rel="stylesheet" href="/styles/pdfexport.css">
     <style>
       /* Base styles */
       body {
