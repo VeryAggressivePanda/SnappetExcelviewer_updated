@@ -304,10 +304,16 @@ function addElementDirectly(columnIndex, elementName) {
   }
   
   activeNode.children.push(newNode);
-  
+
+  // --- AUTO-EXPAND PARENT ---
+  const expandStateMap = {};
+  if (activeNode.id) {
+    expandStateMap[activeNode.id] = true;
+  }
+
   // Re-render sheet (should be available from other modules)
   if (window.ExcelViewerSheetManager && window.ExcelViewerSheetManager.renderSheet) {
-    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData, undefined);
+    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData, expandStateMap);
   }
 }
 
