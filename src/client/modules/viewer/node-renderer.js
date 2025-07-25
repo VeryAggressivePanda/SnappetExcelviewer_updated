@@ -15,14 +15,18 @@ function renderNode(node, level, expandStateMap = {}) {
   // Use the node's own level if it has one, otherwise use the passed level
   const nodeLevel = node.level !== undefined ? node.level : level;
   
-  const nodeEl = document.createElement('div');
+    const nodeEl = document.createElement('div');
   
   // Use level-specific class names
   // Support negative levels by using _1, _2, etc. instead of -1, -2 for CSS compatibility
   const cssLevel = nodeLevel < 0 ? `_${Math.abs(nodeLevel)}` : nodeLevel;
-  nodeEl.className = `level-${cssLevel}-node`;
   
-  if (node.isEmpty) {
+  // Determine if this node should be considered empty
+  const isReallyEmpty = determineIfNodeIsEmpty(node);
+  
+  nodeEl.className = `level-${cssLevel}-node`;
+
+  if (isReallyEmpty) {
     nodeEl.classList.add(`level-${cssLevel}-empty`);
   }
   
@@ -30,7 +34,7 @@ function renderNode(node, level, expandStateMap = {}) {
   nodeEl.setAttribute('data-level', nodeLevel);
   nodeEl.setAttribute('data-column-name', node.columnName || '');
   nodeEl.setAttribute('data-column-index', node.columnIndex || '');
-  nodeEl.setAttribute('data-is-empty', node.isEmpty ? 'true' : 'false');
+  nodeEl.setAttribute('data-is-empty', isReallyEmpty ? 'true' : 'false');
   nodeEl.setAttribute('data-node-id', node.id || '');
   nodeEl.setAttribute('data-is-template', node.isTemplate ? 'true' : 'false');
   nodeEl.setAttribute('data-is-duplicate', node.isDuplicate ? 'true' : 'false');
@@ -51,7 +55,7 @@ function renderNode(node, level, expandStateMap = {}) {
   // Node header - contains column title AND cell data if this is a parent node
   const header = document.createElement('div');
   header.className = `level-${cssLevel}-header`;
-  if (node.isEmpty) {
+  if (isReallyEmpty) {
     header.classList.add(`level-${cssLevel}-empty-header`);
   }
   
@@ -83,15 +87,22 @@ function renderNode(node, level, expandStateMap = {}) {
   // Check if node has children to determine if it's a parent
   const isParent = node.children && node.children.length > 0;
   
-  // 🔧 FIX: Title should ALWAYS be the column name (if available)
+  // 🔧 FIX: Title behavior based on node type
   const columnName = node.columnName || '';
   const templateIndicator = node.isTemplate ? ' - master' : '';
   
-  // Toon altijd de waarde uit de data als hoofdlabel
-  title.textContent = (node.value || '') + templateIndicator;
+  // For parent nodes with children: use content (value) as title
+  // For other nodes: use column name as title
+  let displayText;
+  if (isParent && node.value && node.value.trim() !== '') {
+    displayText = node.value;
+  } else {
+    displayText = columnName || (node.value && node.value.trim() !== '' ? node.value : 'Untitled');
+  }
+  title.textContent = displayText + templateIndicator;
 
-  // (optioneel) Tooltip met kolomnaam
-  if (columnName && columnName.trim() !== '') {
+  // Tooltip with additional info if needed
+  if (columnName && columnName.trim() !== '' && node.value && node.value.trim() !== '') {
     title.title = columnName;
   }
   title.style.display = 'block';
@@ -172,7 +183,7 @@ function renderNode(node, level, expandStateMap = {}) {
     // For leaf nodes: content contains cell value
     content.textContent = node.value || '';
     
-    if (node.isEmpty) {
+    if (isReallyEmpty) {
       content.classList.add(`level-${cssLevel}-empty-content`);
     }
   }
@@ -228,6 +239,45 @@ function renderNode(node, level, expandStateMap = {}) {
   }
   
   return nodeEl;
+}
+
+// Function to intelligently determine if a node is really empty
+function determineIfNodeIsEmpty(node) {
+  // If explicitly marked as empty, respect that
+  if (node.isEmpty === true) {
+    return true;
+  }
+  
+  // Check if the node has meaningful content
+  const hasValue = node.value && node.value.trim() !== '';
+  const hasChildren = node.children && node.children.length > 0;
+  const hasNonEmptyProperties = node.properties && 
+    node.properties.some(prop => prop.value && prop.value.trim() !== '');
+  
+  // A node is empty if:
+  // 1. It has no value AND no children AND no non-empty properties
+  // 2. OR it only has a column name as value (like "Werkblad") but no actual content
+  if (!hasValue && !hasChildren && !hasNonEmptyProperties) {
+    return true;
+  }
+  
+  // Special case: if the node's value is just the column name and has no other content
+  // This catches cases like "Werkblad" nodes with empty content
+  if (hasValue && node.columnName && 
+      node.value.trim() === node.columnName.trim() && 
+      !hasChildren && !hasNonEmptyProperties) {
+    return true;
+  }
+  
+  // If it's a parent node, check if all children are empty
+  if (hasChildren) {
+    const allChildrenEmpty = node.children.every(child => determineIfNodeIsEmpty(child));
+    if (allChildrenEmpty && !hasValue && !hasNonEmptyProperties) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 // Show modal to add a child element
@@ -639,5 +689,6 @@ function showAddChildElementModal(parentNode, parentLevel) {
 // Export functions for other modules
 window.ExcelViewerNodeRenderer = {
   renderNode,
-  showAddChildElementModal
+  showAddChildElementModal,
+  determineIfNodeIsEmpty
 }; 

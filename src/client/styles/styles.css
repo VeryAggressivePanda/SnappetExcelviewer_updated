@@ -957,6 +957,29 @@ footer {
   gap: 10px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+
+.toolbar-checkbox:hover {
+  background-color: #e9e9e9;
+}
+
+.toolbar-checkbox input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
 }
 
 .toolbar-button {
@@ -1165,7 +1188,7 @@ footer {
   flex-direction: column;
   width: 100%;
   padding: 0;
-  margin-left: 0.25rem;
+  /* margin-left: 0.25rem; */
   gap: 1rem;
 }
 
@@ -1205,6 +1228,25 @@ footer {
   gap: 0.5rem;
 }
 
+/* Level 1 children - automatic equal width distribution */
+.level-1-children > [class*="-node"] {
+  flex: 1;
+  
+}
+
+/* Ensure flex layout for level-1 */
+.level-1-flex-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.level-1-flex-layout > [class*="-node"] {
+  flex: 1;
+ 
+}
+
 /* Level 2 node styles */
 .level-2-node {
   display: flex;
@@ -1242,6 +1284,12 @@ footer {
   width: 100%;
   gap: 0.5rem;
   padding: 0.5rem 0;
+}
+
+/* Level 2 children - automatic equal width distribution */
+.level-2-children > [class*="-node"] {
+  flex: 1;
+  min-width: 200px;
 }
 
 /* Level 3 node styles */
@@ -1284,6 +1332,12 @@ footer {
   width: 100%;
   gap: 0.5rem;
   padding: 0.5rem 0;
+}
+
+/* Level 3 children - automatic equal width distribution */
+.level-3-children > [class*="-node"] {
+  flex: 1;
+  min-width: 200px;
 }
 
 /* Level 4+ node and children styles */
@@ -1364,6 +1418,18 @@ footer {
   width: 100%;
   gap: 0.4rem;
   padding: 0.4rem 0;
+}
+
+/* Level 4+ children - automatic equal width distribution */
+.level-4-children > [class*="-node"],
+.level-5-children > [class*="-node"],
+.level-6-children > [class*="-node"],
+.level-7-children > [class*="-node"],
+.level-8-children > [class*="-node"],
+.level-9-children > [class*="-node"],
+.level-10-children > [class*="-node"] {
+  flex: 1;
+  min-width: 150px;
 }
 
 /* Properties styling */
@@ -2209,6 +2275,43 @@ footer {
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
+}
+
+/* Hide empty cells when hide-empty-cells class is applied to body */
+.hide-empty-cells .level-0-empty,
+.hide-empty-cells .level-1-empty,
+.hide-empty-cells .level-2-empty,
+.hide-empty-cells .level-3-empty,
+.hide-empty-cells .level-4-empty,
+.hide-empty-cells .level-_1-empty,
+.hide-empty-cells .level-_2-empty {
+  display: none !important;
+}
+
+/* Also hide individual empty content and properties */
+.hide-empty-cells .level-0-empty-content,
+.hide-empty-cells .level-1-empty-content,
+.hide-empty-cells .level-2-empty-content,
+.hide-empty-cells .level-3-empty-content,
+.hide-empty-cells .level-4-empty-content,
+.hide-empty-cells .level-_1-empty-content,
+.hide-empty-cells .level-_2-empty-content {
+  display: none !important;
+}
+
+.hide-empty-cells .level-0-empty-header,
+.hide-empty-cells .level-1-empty-header,
+.hide-empty-cells .level-2-empty-header,
+.hide-empty-cells .level-3-empty-header,
+.hide-empty-cells .level-4-empty-header,
+.hide-empty-cells .level-_1-empty-header,
+.hide-empty-cells .level-_2-empty-header {
+  display: none !important;
+}
+
+/* Hide empty property containers entirely */
+.hide-empty-cells [class*="level-"][class*="-empty"] {
+  display: none !important;
 }
 
  

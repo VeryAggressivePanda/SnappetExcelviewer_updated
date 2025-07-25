@@ -873,7 +873,7 @@ function getUsedColumnsInHierarchy(node) {
   const sheetData = window.excelData.sheetsLoaded[activeSheetId];
   const usedColumns = [];
   
-  // Traverse up the hierarchy to find all used column indices
+  // 1. Traverse up the hierarchy to find all used column indices in parent chain
   let currentNode = node;
   while (currentNode && currentNode.level >= 0) {
     const parent = findParentInStructure(sheetData.root, currentNode.id);
@@ -883,7 +883,41 @@ function getUsedColumnsInHierarchy(node) {
     currentNode = parent;
   }
   
-  return usedColumns;
+  // 2. Check sibling nodes on the same level (template system consideration)
+  const parent = findParentInStructure(sheetData.root, node.id);
+  if (parent && parent.children) {
+    parent.children.forEach(sibling => {
+      if (sibling.id !== node.id && (sibling.columnIndex || sibling.columnIndex === 0)) {
+        usedColumns.push(sibling.columnIndex);
+      }
+    });
+  }
+  
+  // 3. Check children of current node (already used columns by children)
+  function collectChildrenColumns(nodeToCheck) {
+    if (nodeToCheck.children) {
+      nodeToCheck.children.forEach(child => {
+        if (child.columnIndex || child.columnIndex === 0) {
+          usedColumns.push(child.columnIndex);
+        }
+        // Recursively check grandchildren
+        collectChildrenColumns(child);
+      });
+    }
+  }
+  collectChildrenColumns(node);
+  
+  // 4. If this node is part of template system, check template structure
+  // If the current node is a duplicate, check what the template uses
+  if (node.isDuplicate && node.templateId) {
+    const templateNode = findNodeById(node.templateId);
+    if (templateNode) {
+      collectChildrenColumns(templateNode);
+    }
+  }
+  
+  // Remove duplicates and return
+  return [...new Set(usedColumns)];
 }
 
 // REMOVED: Duplicate function - using improved version above

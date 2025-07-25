@@ -5,7 +5,7 @@
 
 // DOM Elements - alleen declareren, vullen in initialize
 let tabButtons, sheetContents, fontSizeSelect, themeSelect, cellPaddingSelect;
-let showGridCheckbox, exportColumnSelect, previewPdfButton, exportPdfButton;
+let showGridCheckbox, showEmptyCellsCheckbox, exportColumnSelect, previewPdfButton, exportPdfButton;
 let collapseAllButton, expandAllButton;
 
 // Global data store - preserve existing properties but ensure all required properties exist
@@ -55,6 +55,7 @@ function initializeDOMElements() {
   themeSelect = document.getElementById('theme');
   cellPaddingSelect = document.getElementById('cell-padding');
   showGridCheckbox = document.getElementById('show-grid');
+  showEmptyCellsCheckbox = document.getElementById('show-empty-cells');
   exportColumnSelect = document.getElementById('export-column');
   previewPdfButton = document.getElementById('preview-pdf');
   exportPdfButton = document.getElementById('export-pdf');
@@ -149,6 +150,7 @@ window.ExcelViewerCore = {
     themeSelect,
     cellPaddingSelect,
     showGridCheckbox,
+    showEmptyCellsCheckbox,
     exportColumnSelect,
     previewPdfButton,
     exportPdfButton,

@@ -113,6 +113,12 @@ async function exportToPdf() {
     const cleanDataString = safeStringify(cleanData);
     console.log("[PDF EXPORT] Clean data safe-stringified:", cleanDataString);
     
+    // Get empty cells visibility setting
+    const { showEmptyCellsCheckbox } = window.ExcelViewerCore.getDOMElements();
+    const showEmptyCells = showEmptyCellsCheckbox ? showEmptyCellsCheckbox.checked : true;
+    
+    console.log('[PDF EXPORT] Frontend sending showEmptyCells:', showEmptyCells);
+
     let response;
     try {
       response = await fetch('/pdf/generate-pdf', {
@@ -122,7 +128,8 @@ async function exportToPdf() {
         },
         body: JSON.stringify({
           html: cleanDataString, // Stuur als string
-          filename: pdfTitle
+          filename: pdfTitle,
+          showEmptyCells: showEmptyCells
         })
       });
     } catch (fetchErr) {
@@ -237,6 +244,12 @@ function previewPdf() {
     const previewTitle = `${sheetTitle} - ${selectedValue}`;
     
     // Request the exact PDF HTML from server to maintain 100% consistency with PDF
+    // Get empty cells visibility setting
+    const { showEmptyCellsCheckbox } = window.ExcelViewerCore.getDOMElements();
+    const showEmptyCells = showEmptyCellsCheckbox ? showEmptyCellsCheckbox.checked : true;
+    
+    console.log('[PDF PREVIEW] Frontend sending showEmptyCells:', showEmptyCells);
+
     // Gebruik deepCloneWithoutParent en safeStringify om circular structure errors te voorkomen
     const cleanData = deepCloneWithoutParent(filteredData.root.children);
     const cleanDataString = safeStringify(cleanData);
@@ -249,7 +262,8 @@ function previewPdf() {
       },
       body: JSON.stringify({
         html: cleanDataString,
-        filename: previewTitle
+        filename: previewTitle,
+        showEmptyCells: showEmptyCells
       })
     })
     .then(response => {

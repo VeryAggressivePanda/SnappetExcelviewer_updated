@@ -56,6 +56,7 @@ function initialize() {
     themeSelect, 
     cellPaddingSelect, 
     showGridCheckbox,
+    showEmptyCellsCheckbox,
     exportPdfButton,
     previewPdfButton
   } = window.ExcelViewerCore.getDOMElements();
@@ -75,6 +76,7 @@ function initialize() {
   themeSelect.addEventListener('change', applyStyles);
   cellPaddingSelect.addEventListener('change', applyStyles);
   showGridCheckbox.addEventListener('change', applyStyles);
+  showEmptyCellsCheckbox.addEventListener('change', toggleEmptyCells);
   
   // Initialize export controls
   exportPdfButton.addEventListener('click', exportToPdf);
@@ -101,11 +103,42 @@ function initialize() {
   
   // Apply initial styles
   applyStyles();
+  
+  // Apply initial empty cells visibility
+  toggleEmptyCells();
+}
+
+// Function to toggle empty cells visibility
+function toggleEmptyCells() {
+  const { showEmptyCellsCheckbox } = window.ExcelViewerCore.getDOMElements();
+  
+  // Load saved preference if not triggered by user interaction
+  if (arguments.length === 0) {
+    const savedPreference = localStorage.getItem('showEmptyCells');
+    if (savedPreference !== null) {
+      showEmptyCellsCheckbox.checked = savedPreference === 'true';
+    }
+  }
+  
+  const showEmpty = showEmptyCellsCheckbox.checked;
+  
+  console.log('Toggling empty cells visibility:', showEmpty ? 'show' : 'hide');
+  
+  // Add or remove class from document body to control empty cell visibility
+  if (showEmpty) {
+    document.body.classList.remove('hide-empty-cells');
+  } else {
+    document.body.classList.add('hide-empty-cells');
+  }
+  
+  // Save preference to localStorage
+  localStorage.setItem('showEmptyCells', showEmpty.toString());
 }
 
 // Export functions for other modules
 window.ExcelViewerUIControls = {
   applyStyles,
   toggleAllNodes,
+  toggleEmptyCells,
   initialize
 }; 

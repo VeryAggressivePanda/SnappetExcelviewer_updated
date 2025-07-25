@@ -18,6 +18,45 @@ function truncateMiddle(text, maxLength = 35) {
   return text.substring(0, start) + '...' + text.substring(text.length - end);
 }
 
+// Function to intelligently determine if a node is really empty (same as frontend)
+function determineIfNodeIsEmpty(node) {
+  // If explicitly marked as empty, respect that
+  if (node.isEmpty === true) {
+    return true;
+  }
+  
+  // Check if the node has meaningful content
+  const hasValue = node.value && node.value.trim() !== '';
+  const hasChildren = node.children && node.children.length > 0;
+  const hasNonEmptyProperties = node.properties && 
+    node.properties.some(prop => prop.value && prop.value.trim() !== '');
+  
+  // A node is empty if:
+  // 1. It has no value AND no children AND no non-empty properties
+  // 2. OR it only has a column name as value (like "Werkblad") but no actual content
+  if (!hasValue && !hasChildren && !hasNonEmptyProperties) {
+    return true;
+  }
+  
+  // Special case: if the node's value is just the column name and has no other content
+  // This catches cases like "Werkblad" nodes with empty content
+  if (hasValue && node.columnName && 
+      node.value.trim() === node.columnName.trim() && 
+      !hasChildren && !hasNonEmptyProperties) {
+    return true;
+  }
+  
+  // If it's a parent node, check if all children are empty
+  if (hasChildren) {
+    const allChildrenEmpty = node.children.every(child => determineIfNodeIsEmpty(child));
+    if (allChildrenEmpty && !hasValue && !hasNonEmptyProperties) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 // Function to generate node HTML
 function renderNode(node, level) {
   // Make sure we're using the node's actual level rather than an incremented position
@@ -28,18 +67,26 @@ function renderNode(node, level) {
   // but preserve the actual level in data attributes
   const cssLevel = Math.abs(nodeLevel);
   
+  // Determine if this node should be considered empty
+  const isReallyEmpty = determineIfNodeIsEmpty(node);
+  
+  // Debug logging for empty detection
+  if (isReallyEmpty) {
+    console.log(`[PDF DEBUG] Node "${node.value || node.columnName}" marked as empty`);
+  }
+  
   // Start node HTML with level-specific classes
-  let nodeHtml = `<div class="level-${cssLevel}-node${node.isEmpty ? ' level-' + cssLevel + '-empty' : ''}" 
+  let nodeHtml = `<div class="level-${cssLevel}-node${isReallyEmpty ? ' level-' + cssLevel + '-empty' : ''}" 
     data-level="${nodeLevel}" 
     data-column-name="${node.columnName || ''}" 
     data-column-index="${node.columnIndex || ''}"
-    data-is-empty="${node.isEmpty ? 'true' : 'false'}">`;
+    data-is-empty="${isReallyEmpty ? 'true' : 'false'}">`;
   
   // Check if node has children to determine if it's a parent
   const isParent = node.children && node.children.length > 0;
   
   // Add header - for parent nodes, includes both column name AND cell value
-  nodeHtml += `<div class="level-${cssLevel}-header${node.isEmpty ? ' level-' + cssLevel + '-empty-header' : ''}">`;
+  nodeHtml += `<div class="level-${cssLevel}-header${isReallyEmpty ? ' level-' + cssLevel + '-empty-header' : ''}">`;
   
   if (isParent) {
     // For parent nodes: only show title if node has a meaningful specific value
@@ -83,29 +130,39 @@ function renderNode(node, level) {
   nodeHtml += `</div>`; // Close header
   
   // Add content section
-  nodeHtml += `<div class="level-${cssLevel}-content${node.isEmpty ? ' level-' + cssLevel + '-empty-content' : ''}">`;
+  nodeHtml += `<div class="level-${cssLevel}-content${isReallyEmpty ? ' level-' + cssLevel + '-empty-content' : ''}">`;
   
   if (isParent) {
     // For parent nodes: content contains children
     if (node.children && node.children.length > 0) {
-      // Determine layout based on child count and level
-      let layoutClass = 'layout-horizontal';
+      // Determine layout based on node's layoutMode property (like in normal viewer)
+      let layoutClass = 'layout-horizontal'; // Default
       let childCountClass = '';
       
-      if (node.children.length === 1) {
-        childCountClass = 'layout-single-child';
-      } else if (node.children.length === 2) {
-        childCountClass = 'layout-two-children';
-      } else if (node.children.length === 3) {
-        childCountClass = 'layout-three-children';
-      } else if (node.children.length > 3) {
-        childCountClass = 'layout-many-children';
+      // Use node's layoutMode if it exists, otherwise use default logic
+      if (node.layoutMode) {
+        layoutClass = `layout-${node.layoutMode}`;
+      } else {
+        // Default behavior: use horizontal layout unless level 0 with many children
+        layoutClass = 'layout-horizontal';
+        
+        // Only apply vertical layout to level 0 if there are many children (> 3)
+        if (cssLevel === 0 && node.children.length > 3) {
+          layoutClass = 'layout-vertical';
+        }
       }
       
-      // Level 0 should typically use vertical layout for better PDF formatting
-      if (cssLevel === 0) {
-        layoutClass = 'layout-vertical';
-        childCountClass = ''; // Reset for vertical layout
+      // Set child count classes for horizontal layouts only
+      if (layoutClass === 'layout-horizontal') {
+        if (node.children.length === 1) {
+          childCountClass = 'layout-single-child';
+        } else if (node.children.length === 2) {
+          childCountClass = 'layout-two-children';
+        } else if (node.children.length === 3) {
+          childCountClass = 'layout-three-children';
+        } else if (node.children.length > 3) {
+          childCountClass = 'layout-many-children';
+        }
       }
       
       nodeHtml += `<div class="level-${cssLevel}-children ${layoutClass} ${childCountClass}" data-child-count="${node.children.length}">`;
@@ -165,7 +222,7 @@ function renderNode(node, level) {
 }
 
 // Function to generate PDF content
-function generatePdfContent(data, title) {
+function generatePdfContent(data, title, showEmptyCells = true) {
   // Link to external PDF CSS file
   const styles = `
     <link rel="stylesheet" href="/styles/pdfexport.css">
@@ -647,8 +704,40 @@ function generatePdfContent(data, title) {
           }
         }
       }
+      
+      /* Hide empty cells when hide-empty-cells class is applied to body */
+      .hide-empty-cells .level-0-node.level-0-empty,
+      .hide-empty-cells .level-1-node.level-1-empty,
+      .hide-empty-cells .level-2-node.level-2-empty,
+      .hide-empty-cells .level-3-node.level-3-empty,
+      .hide-empty-cells .level-4-node.level-4-empty,
+      .hide-empty-cells .level-_1-node.level-_1-empty,
+      .hide-empty-cells .level-_2-node.level-_2-empty {
+        display: none !important;
+      }
+      
+      /* More specific: hide nodes that have both level class AND empty class */
+      .hide-empty-cells [class*="level-"][class*="-node"][class*="-empty"] {
+        display: none !important;
+      }
+      
+      /* Hide empty content and headers specifically */
+      .hide-empty-cells [class*="level-"][class*="-empty-content"],
+      .hide-empty-cells [class*="level-"][class*="-empty-header"] {
+        display: none !important;
+      }
+      
+      /* Catch-all for any element with empty in class name */
+      .hide-empty-cells [class*="-empty"] {
+        display: none !important;
+      }
     </style>
   `;
+  
+  // Determine body class based on showEmptyCells setting
+  const bodyClass = showEmptyCells ? '' : ' class="hide-empty-cells"';
+  
+  console.log('[PDF DEBUG] Body class will be:', bodyClass);
   
   // Start HTML document
   let html = `
@@ -660,7 +749,7 @@ function generatePdfContent(data, title) {
       <title>${title}</title>
       ${styles}
     </head>
-    <body>
+    <body${bodyClass}>
       <div class="pdf-container">
         <div class="pdf-title-and-content">
           <h1 class="pdf-title">${title}</h1>
@@ -689,7 +778,9 @@ function generatePdfContent(data, title) {
 // PDF generation endpoint
 router.post('/generate-pdf', async (req, res) => {
   try {
-    const { html, filename } = req.body;
+    const { html, filename, showEmptyCells = true } = req.body;
+    
+    console.log('[PDF DEBUG] showEmptyCells parameter:', showEmptyCells);
     
     if (!html || !filename) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -709,7 +800,8 @@ router.post('/generate-pdf', async (req, res) => {
     
     // Parse the data and generate HTML with styles
     const data = JSON.parse(html);
-    const fullHtml = generatePdfContent(data, filename);
+    console.log('[PDF DEBUG] Processing', data.length, 'nodes for PDF generation');
+    const fullHtml = generatePdfContent(data, filename, showEmptyCells);
     
     await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
     
@@ -751,7 +843,9 @@ router.post('/generate-pdf', async (req, res) => {
 // HTML preview endpoint - returns exact same HTML that would be used for PDF
 router.post('/preview-html', (req, res) => {
   try {
-    const { html, filename } = req.body;
+    const { html, filename, showEmptyCells = true } = req.body;
+    
+    console.log('[PDF PREVIEW DEBUG] showEmptyCells parameter:', showEmptyCells);
     
     if (!html || !filename) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -759,7 +853,8 @@ router.post('/preview-html', (req, res) => {
 
     // Parse the data and generate HTML with styles - exactly the same as PDF
     const data = JSON.parse(html);
-    const fullHtml = generatePdfContent(data, filename);
+    console.log('[PDF PREVIEW DEBUG] Processing', data.length, 'nodes for preview generation');
+    const fullHtml = generatePdfContent(data, filename, showEmptyCells);
     
     // Send the HTML
     res.send(fullHtml);
