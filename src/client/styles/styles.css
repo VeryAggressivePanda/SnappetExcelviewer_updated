@@ -951,29 +951,29 @@ footer {
 
 /* PDF Horizontal layout variations */
 .pdf-section .layout-horizontal.layout-single-child > [class*="-node"] {
-  width: 100% !important;
+  /* width: 100% !important; */
   flex: 1 !important;
 }
 
 .pdf-section .layout-horizontal.layout-two-children > [class*="-node"] {
-  width: calc(50% - 4px) !important;
+  /* width: calc(50% - 4px) !important; */
   flex: 1 !important;
 }
 
 .pdf-section .layout-horizontal.layout-three-children > [class*="-node"] {
-  width: calc(33.333% - 6px) !important;
+  /* width: calc(33.333% - 6px) !important; */
   flex: 1 !important;
 }
 
   .pdf-section .layout-horizontal.layout-many-children > [class*="-node"] {
-    width: calc(25% - 6px) !important;
+    /* width: calc(25% - 6px) !important; */
     flex: 1 !important;
     /* min-width: 150px !important; */
   }
 
 /* PDF Vertical layout - all children full width */
 .pdf-section .layout-vertical > [class*="-node"] {
-  width: 100% !important;
+  /* width: 100% !important; */
   flex: none !important;
 }
 
