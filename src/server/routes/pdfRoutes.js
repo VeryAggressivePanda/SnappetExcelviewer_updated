@@ -88,12 +88,27 @@ function renderNode(node, level) {
   if (isParent) {
     // For parent nodes: content contains children
     if (node.children && node.children.length > 0) {
-      const childCountClass = `level-${cssLevel}-child-count-${node.children.length}`;
-      const layoutClass = cssLevel === 0 ? ' level-0-vertical-layout' : 
-                        cssLevel === 1 ? ' level-1-grid-layout' : '';
-      const manyChildrenClass = cssLevel === 1 && node.children.length > 3 ? ' level-1-many-children' : '';
+      // Determine layout based on child count and level
+      let layoutClass = 'layout-horizontal';
+      let childCountClass = '';
       
-      nodeHtml += `<div class="level-${cssLevel}-children ${childCountClass}${layoutClass}${manyChildrenClass}" data-child-count="${node.children.length}">`;
+      if (node.children.length === 1) {
+        childCountClass = 'layout-single-child';
+      } else if (node.children.length === 2) {
+        childCountClass = 'layout-two-children';
+      } else if (node.children.length === 3) {
+        childCountClass = 'layout-three-children';
+      } else if (node.children.length > 3) {
+        childCountClass = 'layout-many-children';
+      }
+      
+      // Level 0 should typically use vertical layout for better PDF formatting
+      if (cssLevel === 0) {
+        layoutClass = 'layout-vertical';
+        childCountClass = ''; // Reset for vertical layout
+      }
+      
+      nodeHtml += `<div class="level-${cssLevel}-children ${layoutClass} ${childCountClass}" data-child-count="${node.children.length}">`;
       
       // Pass the node's actual level to children, not an incremented one
       node.children.forEach(child => {
