@@ -402,16 +402,21 @@ function addNode(parentNode, newNode) {
   if (!parentNode.children) {
     parentNode.children = [];
   }
-  
+
   // Store expand state before modifying the DOM
-  storeExpandState();
-  
+  const expandStateMap = storeExpandState();
+
   // ADD PARENT REFERENCE to new node
   newNode.parent = parentNode;
-  
+
   // Add the new node to the parent
   parentNode.children.push(newNode);
-  
+
+  // --- AUTO-EXPAND PARENT ---
+  if (parentNode.id) {
+    expandStateMap[parentNode.id] = true;
+  }
+
   // Mark parent as GLOBAL template if it has nodes of same type anywhere (use live-editor function)
   if (window.markGlobalTemplatesOfType) {
     const activeSheetId = window.excelData.activeSheetId;
@@ -419,17 +424,17 @@ function addNode(parentNode, newNode) {
     const rootNode = sheetData.root;
     window.markGlobalTemplatesOfType(rootNode, parentNode.columnName, parentNode.columnIndex);
   }
-  
+
   // Global template replication: copy structure to ALL nodes of same type
   if (parentNode.isTemplate && window.applyGlobalTemplateReplication) {
     window.applyGlobalTemplateReplication(parentNode);
   } else {
     console.log('🔧 SMART: Template replication with contextual Excel data');
-    // Re-render with preserved expand state
+    // Re-render with preserved expand state, but force parent expanded
     const activeSheetId = window.excelData.activeSheetId;
     const sheetData = window.excelData.sheetsLoaded[activeSheetId];
     if (window.ExcelViewerSheetManager && window.ExcelViewerSheetManager.renderSheet) {
-      window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData);
+      window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData, expandStateMap);
     }
   }
 }

@@ -179,7 +179,7 @@ function saveCurrentHierarchyConfiguration() {
 }
 
 // Function to render a sheet with preserved state and TEMPLATE SETUP
-function renderSheet(sheetId, sheetData) {
+function renderSheet(sheetId, sheetData, externalExpandStateMap) {
   if (!sheetData) {
     console.error('No sheet data provided for rendering');
     return;
@@ -192,9 +192,8 @@ function renderSheet(sheetId, sheetData) {
     window.ExcelViewerNodeManager.identifyAndMarkGlobalTemplates(sheetData.root);
   }
   
-  // Store current expand state before re-rendering
-  const expandStateMap = window.ExcelViewerNodeManager ? 
-    window.ExcelViewerNodeManager.storeExpandState() : {};
+  // Store current expand state before re-rendering, unless an external map is provided
+  const expandStateMap = externalExpandStateMap || (window.ExcelViewerNodeManager ? window.ExcelViewerNodeManager.storeExpandState() : {});
   
   // Find the correct sheet content container
   const tabContent = document.getElementById(`sheet-${sheetId}`);
