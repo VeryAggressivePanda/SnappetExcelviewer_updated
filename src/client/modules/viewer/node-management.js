@@ -307,7 +307,7 @@ function addElementDirectly(columnIndex, elementName) {
   
   // Re-render sheet (should be available from other modules)
   if (window.ExcelViewerSheetManager && window.ExcelViewerSheetManager.renderSheet) {
-    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData);
+    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData, undefined);
   }
 }
 

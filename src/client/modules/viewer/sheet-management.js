@@ -49,7 +49,7 @@ async function loadSheetData(sheetId) {
     
     // If already loaded, return the cached data
     if (window.excelData.sheetsLoaded[sheetId]) {
-      renderSheet(sheetId, window.excelData.sheetsLoaded[sheetId]);
+      renderSheet(sheetId, window.excelData.sheetsLoaded[sheetId], undefined);
       if (window.ExcelViewerCore && window.ExcelViewerCore.populateExportColumnDropdown) {
         window.ExcelViewerCore.populateExportColumnDropdown();
       }
@@ -108,7 +108,7 @@ async function loadSheetData(sheetId) {
     window.excelData.activeSheetId = sheetId;
     
     // Render the sheet
-    renderSheet(sheetId, window.excelData.sheetsLoaded[sheetId]);
+    renderSheet(sheetId, window.excelData.sheetsLoaded[sheetId], undefined);
     
     // Always populate the export column dropdown after loading data
     if (window.ExcelViewerCore && window.ExcelViewerCore.populateExportColumnDropdown) {

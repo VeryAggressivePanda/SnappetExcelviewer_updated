@@ -609,7 +609,7 @@ function addParentLevel() {
   
   // Re-render the sheet with the updated hierarchy
   if (window.ExcelViewerSheetManager && window.ExcelViewerSheetManager.renderSheet) {
-    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData);
+    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData, undefined);
   }
   
   console.log("Parent level added successfully with proper hierarchy levels");
@@ -1131,7 +1131,7 @@ function applyCustomStructure(structure) {
   
   // Re-render the sheet
   if (window.ExcelViewerSheetManager && window.ExcelViewerSheetManager.renderSheet) {
-    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData);
+    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData, undefined);
   }
 }
 
