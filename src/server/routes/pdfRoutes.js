@@ -429,9 +429,8 @@ function generatePdfContent(data, title) {
         border-radius: 4px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         margin: 0;
-        flex: 1;
-        /* min-width: 120px; */
-        /* max-width: calc(20% - 0.5rem); */
+        
+       
       }
       
       .level-3-header {
@@ -490,49 +489,6 @@ function generatePdfContent(data, title) {
       }
       
       /* Layout classes */
-      .layout-horizontal {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 6px !important;
-        align-items: stretch !important;
-      }
-
-      .layout-vertical {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 6px !important;
-        align-items: stretch !important;
-      }
-
-      /* Layout variations */
-      .layout-horizontal.layout-single-child > [class*="-node"] {
-        width: 100% !important;
-        flex: 1 !important;
-      }
-
-      .layout-horizontal.layout-two-children > [class*="-node"] {
-        width: calc(50% - 3px) !important;
-        flex: 1 !important;
-      }
-
-      .layout-horizontal.layout-three-children > [class*="-node"] {
-        width: calc(33.333% - 4px) !important;
-        flex: 1 !important;
-      }
-
-      .layout-horizontal.layout-many-children > [class*="-node"] {
-        width: calc(25% - 5px) !important;
-        flex: 1 !important;
-      }
-
-      /* Vertical layout - all children full width */
-      .layout-vertical > [class*="-node"] {
-        width: 100% !important;
-        flex: none !important;
-      }
-      
-      /* Legacy layout classes for backward compatibility */
       .level-0-vertical-layout {
         display: flex;
         flex-direction: column;
