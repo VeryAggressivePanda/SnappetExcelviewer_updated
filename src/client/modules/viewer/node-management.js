@@ -305,6 +305,9 @@ function addElementDirectly(columnIndex, elementName) {
   
   activeNode.children.push(newNode);
 
+  // --- FORCEER EXPANDED STATE OP PARENT ---
+  activeNode.forceExpanded = true;
+
   // --- AUTO-EXPAND PARENT ---
   const expandStateMap = {};
   if (activeNode.id) {
@@ -417,6 +420,9 @@ function addNode(parentNode, newNode) {
 
   // Add the new node to the parent
   parentNode.children.push(newNode);
+
+  // --- FORCEER EXPANDED STATE OP PARENT ---
+  parentNode.forceExpanded = true;
 
   // --- AUTO-EXPAND PARENT ---
   if (parentNode.id) {

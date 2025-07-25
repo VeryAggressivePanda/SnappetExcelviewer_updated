@@ -36,8 +36,13 @@ function renderNode(node, level, expandStateMap = {}) {
   nodeEl.setAttribute('data-is-duplicate', node.isDuplicate ? 'true' : 'false');
   
   // Set initial collapse state based on level and expandStateMap
-  const shouldBeExpanded = expandStateMap[node.id] !== undefined ? 
+  let shouldBeExpanded = expandStateMap[node.id] !== undefined ? 
     expandStateMap[node.id] : (nodeLevel >= 2);
+  if (node.forceExpanded) {
+    shouldBeExpanded = true;
+    // Reset na render zodat het eenmalig is
+    node.forceExpanded = false;
+  }
   
   if (!shouldBeExpanded) {
     nodeEl.classList.add(`level-${cssLevel}-collapsed`);
