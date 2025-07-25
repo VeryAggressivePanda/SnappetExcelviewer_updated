@@ -31,12 +31,17 @@ function toggleAllNodes(collapse) {
   
   const nodes = sheetContent.querySelectorAll('[class*="-node"]');
   nodes.forEach(node => {
-    const header = node.querySelector('[class*="-header"]');
-    if (header) {
+    const level = parseInt(node.getAttribute('data-level') || '0');
+    const cssLevel = level < 0 ? `_${Math.abs(level)}` : level;
+    const collapsedClass = `level-${cssLevel}-collapsed`;
+    
+    // Only collapse/expand nodes that have children
+    const hasChildren = node.querySelector('[class*="-children"]');
+    if (hasChildren) {
       if (collapse) {
-        node.classList.add('level-0-collapsed');
+        node.classList.add(collapsedClass);
       } else {
-        node.classList.remove('level-0-collapsed');
+        node.classList.remove(collapsedClass);
       }
     }
   });

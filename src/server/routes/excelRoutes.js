@@ -256,17 +256,19 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
     
     console.log(`Extracted ${rawData.length} rows of raw data`);
     
-    // Return RAW DATA for manual structure building (not auto-processed hierarchy)
+    // Build hierarchy from the raw data
+    const headers = rawData.length > 0 ? rawData[0] : [];
+    const dataRows = rawData.slice(1); // Skip header row
+    const hierarchy = buildHierarchy(dataRows, headers);
+    
+    // Return both raw data AND hierarchy, and set root for frontend compatibility
     const response = {
-      headers: rawData.length > 0 ? rawData[0] : [],
+      headers: headers,
       data: rawData, // Raw data for manual structure building
       isRawData: true, // Flag indicating this needs manual configuration
       needsConfiguration: true, // Flag for manual setup
-      root: { 
-        type: 'root', 
-        children: [], 
-        level: -1 
-      } // Empty root structure for manual building
+      hierarchy: hierarchy, // Built hierarchy structure
+      root: hierarchy      // For legacy frontend compatibility
     };
     
     // Store in cache (without processing)
@@ -536,14 +538,34 @@ function buildHierarchy(rows, headers) {
         }
         currentNodes.les = lesNode;
         
-        // Add all columns after Les as properties, including empty ones
+        // Add all columns after Les as CHILDREN, not properties
         // Start from the column after Les
         for (let i = hierarchyColumns.les.index + 1; i < headers.length; i++) {
           if (headers[i]) { // Only add if there's a header for this column
+            const contentValue = row[i] || '';
+            
+            // Create a child node for each content column
+            let contentChild = lesNode.children.find(child => 
+              child.columnName === headers[i]
+            );
+            
+            if (!contentChild) {
+              contentChild = {
+                type: 'item',
+                value: contentValue,
+                columnName: headers[i],
+                level: 4, // Level 4 since Les is level 3
+                children: [],
+                properties: []
+              };
+              lesNode.children.push(contentChild);
+            }
+            
+            // Also add as property for backwards compatibility
             lesNode.properties.push({
               column: i,
               columnName: headers[i],
-              value: row[i] || '' // Include empty values
+              value: contentValue
             });
           }
         }

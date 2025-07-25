@@ -410,12 +410,17 @@ function addChildContainer(parentNode) {
   
   parentNode.children.push(newNode);
   
-  // Mark parent as template if it has siblings of same column
-  markAsTemplateIfNeeded(parentNode);
+  // Get root to do global template marking
+  const activeSheetId = window.excelData.activeSheetId;
+  const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+  const rootNode = sheetData.root;
+  
+  // Mark parent as GLOBAL template if it has nodes of same type anywhere in tree
+  markGlobalTemplatesOfType(rootNode, parentNode.columnName, parentNode.columnIndex);
   
   // Template replication if this is a template
   if (parentNode.isTemplate) {
-          applySmartTemplateReplication(parentNode);
+    applyGlobalTemplateReplication(parentNode);
   } else {
     // Just re-render normally for now
     const activeSheetId = window.excelData.activeSheetId;
@@ -461,12 +466,15 @@ function addSiblingContainer(node) {
   
   console.log('🏗️ Sibling added');
   
-  // Mark original node as template if it has siblings of same column
-  markAsTemplateIfNeeded(node);
+  // Get root to do global template marking
+  const rootNode = sheetData.root;
+  
+  // Mark original node as GLOBAL template if it has nodes of same type anywhere in tree
+  markGlobalTemplatesOfType(rootNode, node.columnName, node.columnIndex);
   
   // Unified replication if the original node is a template
   if (node.isTemplate) {
-          applySmartTemplateReplication(node);
+          applyGlobalTemplateReplication(node);
   } else {
     // Re-render normally
     if (window.renderSheet) {
@@ -685,8 +693,8 @@ function createAutoSiblings(node, values) {
   
   // Check if parent is a template and trigger replication
   if (parent && parent.isTemplate) {
-    console.log('🔄 Parent is template - triggering replication after sibling creation');
-    applySmartTemplateReplication(parent);
+    console.log('🔄 Parent is template - triggering GLOBAL replication after sibling creation');
+    applyGlobalTemplateReplication(parent);
   } else {
     // Regular re-render
     if (window.renderSheet) {
@@ -1468,18 +1476,23 @@ function createMultipleColumnContainers(parentNode, selectedColumns) {
       parentValue: realTemplateParent.parent ? realTemplateParent.parent.value : 'NO PARENT'
     });
     
-    // Mark real template parent as template if needed
-    markAsTemplateIfNeeded(realTemplateParent);
+    // Get root to do global template marking
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    const rootNode = sheetData.root;
     
-    console.log('🔍 DEBUG: After markAsTemplateIfNeeded:', {
+    // Mark real template parent as GLOBAL template if needed
+    markGlobalTemplatesOfType(rootNode, realTemplateParent.columnName, realTemplateParent.columnIndex);
+    
+    console.log('🔍 DEBUG: After markGlobalTemplatesOfType:', {
       isTemplate: realTemplateParent.isTemplate,
       isDuplicate: realTemplateParent.isDuplicate
     });
     
     // Apply template replication if real parent is template
     if (realTemplateParent.isTemplate) {
-      console.log('🔄 Real template parent - replicating new children to all duplicates');
-      applySmartTemplateReplication(realTemplateParent);
+      console.log('🔄 Real template parent - replicating new children to ALL nodes of same type');
+      applyGlobalTemplateReplication(realTemplateParent);
     } else {
       console.log('⚠️ Real parent is NOT template - no replication');
       // Re-render with proper styling
@@ -1539,9 +1552,14 @@ function toggleNodeLayout(node) {
   
   console.log(`✅ Layout updated visually to ${node.layoutMode} for ${node.value}`);
   
-  // If this is a template, apply the same layout change to all duplicates
+  // If this is a template, apply the same layout change to ALL nodes of same type
   if (node.isTemplate) {
-    const duplicates = findDuplicatesOfTemplate(node.id);
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    const rootNode = sheetData.root;
+    const allNodesOfType = findAllNodesOfType(rootNode, node.columnName, node.columnIndex);
+    const duplicates = allNodesOfType.filter(n => n !== node);
+    
     duplicates.forEach(duplicate => {
       duplicate.layoutMode = node.layoutMode;
       
@@ -1623,8 +1641,18 @@ window.deleteContainer = deleteContainer;
 window.assignColumnToNode = assignColumnToNode;
 window.assignSpecificValueToNode = assignSpecificValueToNode;
 window.findParentInStructure = findParentInStructure;
-window.markAsTemplateIfNeeded = markAsTemplateIfNeeded;
-window.applySmartTemplateReplication = applySmartTemplateReplication;
+window.markGlobalTemplatesOfType = markGlobalTemplatesOfType;
+window.applyGlobalTemplateReplication = applyGlobalTemplateReplication;
+window.findAllNodesOfType = findAllNodesOfType;
+
+// Export as module for structure-builder to avoid conflicts
+window.ExcelViewerLiveEditor = {
+  addChildContainer,
+  addSiblingContainer,
+  deleteContainer,
+  assignColumnToNode,
+  assignSpecificValueToNode
+};
 
 // SIMPLE template replication - when template changes, copy to all duplicates
 function applySimpleTemplateReplication(templateNode) {
@@ -1707,77 +1735,95 @@ function populateWithSimpleData(duplicateNode) {
   }
 } 
 
-// NEW: Helper function to mark node as template if it has siblings
-function markAsTemplateIfNeeded(node) {
-  if (!node.parent || !node.parent.children) return;
+// GLOBAL: Helper function to find ALL nodes of the same type across the entire tree
+function findAllNodesOfType(rootNode, columnName, columnIndex) {
+  const allNodes = [];
   
-  // Count siblings with same column
-  const sameCOlumnSiblings = node.parent.children.filter(sibling => 
-    sibling.columnName === node.columnName && 
-    sibling.columnIndex === node.columnIndex &&
-    sibling.id !== node.id
-  );
-  
-  if (sameCOlumnSiblings.length > 0) {
-    // Find the first node with this column and mark it as template
-    const firstNode = node.parent.children.find(child => 
-      child.columnName === node.columnName && 
-      child.columnIndex === node.columnIndex
-    );
-    
-    if (firstNode && !firstNode.isTemplate) {
-      firstNode.isTemplate = true;
-      console.log(`🏗️ Marked "${firstNode.value}" as template due to siblings`);
-      
-      // Mark others as duplicates
-      sameCOlumnSiblings.forEach(sibling => {
-        sibling.isDuplicate = true;
-        sibling.templateId = firstNode.id;
-      });
+  function traverse(node) {
+    if (node.columnName === columnName && node.columnIndex === columnIndex) {
+      allNodes.push(node);
     }
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(traverse);
+    }
+  }
+  
+  traverse(rootNode);
+  return allNodes;
+}
+
+// GLOBAL: Mark templates and duplicates based on TYPE (columnName + columnIndex) across entire tree
+function markGlobalTemplatesOfType(rootNode, columnName, columnIndex) {
+  const allNodesOfType = findAllNodesOfType(rootNode, columnName, columnIndex);
+  
+  if (allNodesOfType.length <= 1) return; // No templates needed for single nodes
+  
+  // First node becomes the template
+  const template = allNodesOfType[0];
+  template.isTemplate = true;
+  template.isDuplicate = false;
+  console.log(`🏗️ GLOBAL: Marked "${template.value}" (${columnName}) as GLOBAL template`);
+  
+  // All others become duplicates
+  allNodesOfType.slice(1).forEach(duplicate => {
+    duplicate.isDuplicate = true;
+    duplicate.isTemplate = false;
+    duplicate.templateId = template.id;
+    console.log(`📋 GLOBAL: Marked "${duplicate.value}" (${columnName}) as GLOBAL duplicate`);
+  });
+}
+
+// Helper function to mark existing nodes as complete if they have column assignments
+function markExistingNodesAsComplete(rootNode) {
+  if (!rootNode) return;
+  
+  // If node has columnIndex but no isIncomplete flag, it's complete
+  if (rootNode.columnIndex !== undefined && rootNode.columnIndex !== null && rootNode.isIncomplete === undefined) {
+    rootNode.isIncomplete = false;
+  }
+  
+  // If node has no columnIndex and no isIncomplete flag, it's incomplete
+  if ((rootNode.columnIndex === undefined || rootNode.columnIndex === null) && rootNode.isIncomplete === undefined) {
+    rootNode.isIncomplete = true;
+  }
+  
+  // Recursively process children
+  if (rootNode.children && rootNode.children.length > 0) {
+    rootNode.children.forEach(child => markExistingNodesAsComplete(child));
   }
 }
 
-// 🔧 SMART TEMPLATE REPLICATION: Copy STRUCTURE but use CONTEXTUAL Excel data
-function applySmartTemplateReplication(templateNode) {
-  console.log('🔧 SMART template replication for:', templateNode.value);
+// 🔧 GLOBAL TEMPLATE REPLICATION: Copy STRUCTURE to ALL nodes of same TYPE across entire tree
+function applyGlobalTemplateReplication(templateNode) {
+  console.log('🔧 GLOBAL template replication for:', templateNode.value, templateNode.columnName);
   
   if (!templateNode.isTemplate) {
     console.log('❌ Node is not marked as template, skipping replication');
     return;
   }
   
-  // Find all duplicates using both methods for compatibility
-  let duplicates = [];
+  // Get root node to search entire tree
+  const activeSheetId = window.excelData.activeSheetId;
+  const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+  const rootNode = sheetData.root;
   
-  // Method 1: Using templateId (new way)
-  if (templateNode.id) {
-    duplicates = findDuplicatesOfTemplate(templateNode.id);
-  }
+  // Find ALL nodes of the same type (columnName + columnIndex) across entire tree
+  const allNodesOfType = findAllNodesOfType(rootNode, templateNode.columnName, templateNode.columnIndex);
+  const duplicates = allNodesOfType.filter(node => node !== templateNode);
   
-  // Method 2: Using parent + columnName (old way) as fallback
-  if (duplicates.length === 0 && templateNode.parent) {
-    duplicates = templateNode.parent.children.filter(node => 
-      node !== templateNode && 
-      node.columnName === templateNode.columnName &&
-      node.columnIndex === templateNode.columnIndex &&
-      node.isDuplicate
-    );
-  }
-  
-  console.log(`Found ${duplicates.length} duplicates to replicate structure to`);
+  console.log(`🌍 GLOBAL: Found ${duplicates.length} duplicates across entire tree to replicate structure to`);
   
   // For each duplicate: copy the ACTIONS but with their own Excel context
   duplicates.forEach(duplicate => {
-    console.log(`🔧 Replicating structure to duplicate: ${duplicate.value}`);
+    console.log(`🔧 GLOBAL: Replicating structure to duplicate: ${duplicate.value} in ${getNodePath(duplicate)}`);
     
     // Copy the template's children STRUCTURE (columnIndex/columnName assignments)
     templateNode.children.forEach(templateChild => {
-      console.log(`  📋 Copying action: assign column ${templateChild.columnName} (${templateChild.columnIndex})`);
+      console.log(`  📋 GLOBAL: Copying action: assign column ${templateChild.columnName} (${templateChild.columnIndex})`);
       
       // Skip nodes that don't have column assignments yet
       if (templateChild.columnIndex === undefined || templateChild.columnIndex === null) {
-        console.log(`  ⏭️ Skipping child without column assignment: ${templateChild.value}`);
+        console.log(`  ⏭️ GLOBAL: Skipping child without column assignment: ${templateChild.value}`);
         return;
       }
       
@@ -1789,7 +1835,7 @@ function applySmartTemplateReplication(templateNode) {
       if (!existingChild) {
         // Apply the same column assignment action to this duplicate
         // But let it use its own Excel context to determine what values to create
-        console.log(`  ➕ Applying column assignment to duplicate "${duplicate.value}"`);
+        console.log(`  ➕ GLOBAL: Applying column assignment to duplicate "${duplicate.value}"`);
         
         // Temporarily create a placeholder child and assign the column
         const placeholderChild = {
@@ -1808,18 +1854,46 @@ function applySmartTemplateReplication(templateNode) {
         // Now assign the column - this will use the duplicate's context to get the right Excel values
         assignColumnToNode(placeholderChild, templateChild.columnIndex, true);
       } else {
-        console.log(`  ⏭️ Duplicate already has column ${templateChild.columnName} assigned`);
+        console.log(`  ⏭️ GLOBAL: Duplicate already has column ${templateChild.columnName} assigned`);
+      }
+      
+      // ALSO copy any existing children structure from template child to duplicate child
+      if (templateChild.children && templateChild.children.length > 0) {
+        const targetChild = duplicate.children.find(child => 
+          child.columnIndex === templateChild.columnIndex
+        );
+        if (targetChild && (!targetChild.children || targetChild.children.length === 0)) {
+          console.log(`  🔄 GLOBAL: Copying ${templateChild.children.length} children from template to duplicate`);
+          targetChild.children = JSON.parse(JSON.stringify(templateChild.children));
+          // Update parent references
+          targetChild.children.forEach(grandchild => {
+            grandchild.parent = targetChild;
+          });
+        }
       }
     });
   });
   
   // Re-render to show the changes
-  const activeSheetId = window.excelData.activeSheetId;
-  const sheetData = window.excelData.sheetsLoaded[activeSheetId];
-  if (window.renderSheet) {
+  if (window.ExcelViewerSheetManager && window.ExcelViewerSheetManager.renderSheet) {
+    window.ExcelViewerSheetManager.renderSheet(activeSheetId, sheetData);
+  } else if (window.renderSheet) {
     window.renderSheet(activeSheetId, sheetData);
   }
   applyFlexboxStyling();
+}
+
+// Helper function to get node path for debugging
+function getNodePath(node) {
+  const path = [];
+  let current = node;
+  while (current && current.parent) {
+    if (current.value && current.columnName) {
+      path.unshift(`${current.columnName}:${current.value}`);
+    }
+    current = current.parent;
+  }
+  return path.join(' → ');
 }
 
 // 🚫 REMOVED: No more template cloning - each node reads Excel directly

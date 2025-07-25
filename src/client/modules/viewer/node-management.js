@@ -412,14 +412,17 @@ function addNode(parentNode, newNode) {
   // Add the new node to the parent
   parentNode.children.push(newNode);
   
-  // Mark parent as template if it has siblings (use live-editor function)
-  if (window.markAsTemplateIfNeeded) {
-    window.markAsTemplateIfNeeded(parentNode);
+  // Mark parent as GLOBAL template if it has nodes of same type anywhere (use live-editor function)
+  if (window.markGlobalTemplatesOfType) {
+    const activeSheetId = window.excelData.activeSheetId;
+    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+    const rootNode = sheetData.root;
+    window.markGlobalTemplatesOfType(rootNode, parentNode.columnName, parentNode.columnIndex);
   }
   
-  // Smart template replication: copy structure but use contextual Excel data
-  if (parentNode.isTemplate && window.applySmartTemplateReplication) {
-    window.applySmartTemplateReplication(parentNode);
+  // Global template replication: copy structure to ALL nodes of same type
+  if (parentNode.isTemplate && window.applyGlobalTemplateReplication) {
+    window.applyGlobalTemplateReplication(parentNode);
   } else {
     console.log('🔧 SMART: Template replication with contextual Excel data');
     // Re-render with preserved expand state
@@ -490,40 +493,45 @@ function updateParentReferences(node, parent = null) {
   }
 }
 
-// Helper function to find and mark templates in existing data structures
-function identifyAndMarkTemplates(rootNode) {
-  if (!rootNode || !rootNode.children) return;
+// GLOBAL: Helper function to find and mark templates across entire tree by type
+function identifyAndMarkGlobalTemplates(rootNode) {
+  if (!rootNode) return;
   
-  // Group children by column
-  const columnGroups = {};
-  rootNode.children.forEach(child => {
-    const key = `${child.columnName}-${child.columnIndex}`;
-    if (!columnGroups[key]) {
-      columnGroups[key] = [];
+  // Collect ALL nodes across entire tree grouped by type (columnName + columnIndex)
+  const globalTypeGroups = {};
+  
+  function collectAllNodes(node) {
+    if (node.columnName && node.columnIndex !== undefined) {
+      const key = `${node.columnName}-${node.columnIndex}`;
+      if (!globalTypeGroups[key]) {
+        globalTypeGroups[key] = [];
+      }
+      globalTypeGroups[key].push(node);
     }
-    columnGroups[key].push(child);
-  });
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(collectAllNodes);
+    }
+  }
   
-  // Mark templates and duplicates
-  Object.values(columnGroups).forEach(group => {
-    if (group.length > 1) {
-      // First node becomes template
-      const template = group[0];
+  collectAllNodes(rootNode);
+  
+  // Mark templates and duplicates globally
+  Object.entries(globalTypeGroups).forEach(([key, nodes]) => {
+    if (nodes.length > 1) {
+      // First node becomes GLOBAL template
+      const template = nodes[0];
       template.isTemplate = true;
-      console.log(`🏗️ Marked "${template.value}" as template`);
+      template.isDuplicate = false;
+      console.log(`🏗️ GLOBAL: Marked "${template.value}" (${template.columnName}) as GLOBAL template`);
       
-      // Rest become duplicates
-      group.slice(1).forEach(duplicate => {
+      // Rest become GLOBAL duplicates
+      nodes.slice(1).forEach(duplicate => {
         duplicate.isDuplicate = true;
+        duplicate.isTemplate = false;
         duplicate.templateId = template.id;
-        console.log(`📋 Marked "${duplicate.value}" as duplicate of template`);
+        console.log(`📋 GLOBAL: Marked "${duplicate.value}" (${duplicate.columnName}) as GLOBAL duplicate`);
       });
     }
-  });
-  
-  // Recursively process children
-  rootNode.children.forEach(child => {
-    identifyAndMarkTemplates(child);
   });
 }
 
@@ -538,5 +546,5 @@ window.ExcelViewerNodeManager = {
   addNode,
   deleteNode,
   updateParentReferences,
-  identifyAndMarkTemplates
+  identifyAndMarkGlobalTemplates
 }; 

@@ -3,6 +3,45 @@
  * Verantwoordelijk voor: Sheet data loading, configuration saving, sheet rendering
  */
 
+// Auto-detect hierarchy from Excel headers
+function detectAutomaticHierarchy(headers) {
+  console.log('🔍 Detecting automatic hierarchy from headers:', headers);
+  
+  if (!headers || !Array.isArray(headers)) {
+    console.log('❌ No valid headers found for auto-detection');
+    return null;
+  }
+  
+  const hierarchy = {};
+  
+  // Look for standard column patterns
+  const blokIndex = headers.findIndex(h => h && h.toLowerCase().includes('blok'));
+  const weekIndex = headers.findIndex(h => h && h.toLowerCase().includes('week'));
+  const lesIndex = headers.findIndex(h => h && h.toLowerCase().includes('les'));
+  
+  console.log('🔍 Found column indices:', { blokIndex, weekIndex, lesIndex });
+  
+  if (blokIndex >= 0 && weekIndex >= 0 && lesIndex >= 0) {
+    // Standard hierarchy: Blok → Week → Les
+    hierarchy[blokIndex] = null; // Top level
+    hierarchy[weekIndex] = blokIndex; // Week is child of Blok
+    hierarchy[lesIndex] = weekIndex; // Les is child of Week
+    
+    console.log('✅ Auto-detected standard hierarchy: Blok → Week → Les');
+    return hierarchy;
+  } else if (weekIndex >= 0 && lesIndex >= 0) {
+    // Simple hierarchy: Week → Les
+    hierarchy[weekIndex] = null; // Top level
+    hierarchy[lesIndex] = weekIndex; // Les is child of Week
+    
+    console.log('✅ Auto-detected simple hierarchy: Week → Les');
+    return hierarchy;
+  } else {
+    console.log('❌ Could not auto-detect standard hierarchy');
+    return null;
+  }
+}
+
 // Function to load sheet data with TEMPLATE SETUP
 async function loadSheetData(sheetId) {
   try {
@@ -33,19 +72,35 @@ async function loadSheetData(sheetId) {
     // Store the raw data directly for manual structure building
     window.excelData.sheetsLoaded[sheetId] = apiResponse.data;
     
-    // Check if this is raw data that needs manual structure building
+    // Check if this is raw data - just set up empty structure for manual column selection
     const sheetData = window.excelData.sheetsLoaded[sheetId];
     if (sheetData.isRawData || sheetData.needsConfiguration) {
-      console.log('Raw data detected - setting up for manual structure building');
-      // Don't process raw data automatically - let user build manually
+      console.log('Raw data detected - setting up empty structure for manual column selection via existing UI');
+      
+      // Create an empty structure for manual building via existing column selectors
+      sheetData.root = {
+        type: 'root',
+        children: [{
+          id: `node-starter-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          value: 'Start Building',
+          columnName: '',
+          level: 0,
+          children: [],
+          properties: [],
+          isPlaceholder: true
+        }],
+        level: -1
+      };
+      sheetData.isRawData = false;
+      sheetData.isEditable = true;
     } else if (sheetData && sheetData.root && sheetData.root.children && sheetData.root.children.length > 0) {
       console.log(`Found existing hierarchical data with ${sheetData.root.children.length} top-level nodes`);
       
-      // Set up parent references and template markings for the loaded data
+      // Set up parent references and GLOBAL template markings for the loaded data
       if (window.ExcelViewerNodeManager) {
-        console.log('🔄 Setting up parent references and template markings for loaded data...');
+        console.log('🔄 Setting up parent references and GLOBAL template markings for loaded data...');
         window.ExcelViewerNodeManager.updateParentReferences(sheetData.root);
-        window.ExcelViewerNodeManager.identifyAndMarkTemplates(sheetData.root);
+        window.ExcelViewerNodeManager.identifyAndMarkGlobalTemplates(sheetData.root);
       }
     }
     
@@ -130,11 +185,11 @@ function renderSheet(sheetId, sheetData) {
     return;
   }
   
-  // Initialize parent references and template markings for the hierarchy
+  // Initialize parent references and GLOBAL template markings for the hierarchy
   if (sheetData.root && window.ExcelViewerNodeManager) {
-    console.log('🔄 Setting up parent references and template markings...');
+    console.log('🔄 Setting up parent references and GLOBAL template markings...');
     window.ExcelViewerNodeManager.updateParentReferences(sheetData.root);
-    window.ExcelViewerNodeManager.identifyAndMarkTemplates(sheetData.root);
+    window.ExcelViewerNodeManager.identifyAndMarkGlobalTemplates(sheetData.root);
   }
   
   // Store current expand state before re-rendering

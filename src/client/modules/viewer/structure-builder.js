@@ -707,9 +707,9 @@ function updateLevels(node) {
 
 // Function to add a child container (REDIRECTED TO LIVE EDITOR)
 function addChildContainer(parentNode) {
-  // Use the template-aware version from live-editor.js
-  if (window.addChildContainer) {
-    window.addChildContainer(parentNode);
+  // Use the template-aware version from live-editor.js directly
+  if (window.ExcelViewerLiveEditor && window.ExcelViewerLiveEditor.addChildContainer) {
+    window.ExcelViewerLiveEditor.addChildContainer(parentNode);
   } else {
     console.error('Live editor addChildContainer not available');
   }
@@ -717,9 +717,9 @@ function addChildContainer(parentNode) {
 
 // Function to add a sibling container (REDIRECTED TO LIVE EDITOR)
 function addSiblingContainer(node) {
-  // Use the template-aware version from live-editor.js
-  if (window.addSiblingContainer) {
-    window.addSiblingContainer(node);
+  // Use the template-aware version from live-editor.js directly
+  if (window.ExcelViewerLiveEditor && window.ExcelViewerLiveEditor.addSiblingContainer) {
+    window.ExcelViewerLiveEditor.addSiblingContainer(node);
   } else {
     console.error('Live editor addSiblingContainer not available');
   }
@@ -727,9 +727,9 @@ function addSiblingContainer(node) {
 
 // Function to delete a container (REDIRECTED TO LIVE EDITOR)
 function deleteContainer(node) {
-  // Use the template-aware version from live-editor.js
-  if (window.deleteContainer) {
-    window.deleteContainer(node);
+  // Use the template-aware version from live-editor.js directly
+  if (window.ExcelViewerLiveEditor && window.ExcelViewerLiveEditor.deleteContainer) {
+    window.ExcelViewerLiveEditor.deleteContainer(node);
   } else {
     console.error('Live editor deleteContainer not available');
   }
@@ -1180,11 +1180,11 @@ function processStructureRow(structure, row, parentNode, level, rowIndex) {
 function applyTemplateReplicationToAllDuplicates(templateNode) {
   console.log('🔧 SMART template replication (fallback) for:', templateNode.value);
   
-  // Call the main smart replication function if available
-  if (window.applySmartTemplateReplication) {
-    window.applySmartTemplateReplication(templateNode);
+  // Call the main GLOBAL replication function if available
+  if (window.applyGlobalTemplateReplication) {
+    window.applyGlobalTemplateReplication(templateNode);
   } else {
-    console.log('⚠️ Main smart replication function not available');
+    console.log('⚠️ Main GLOBAL replication function not available');
   }
 }
 
