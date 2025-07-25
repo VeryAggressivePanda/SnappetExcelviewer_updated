@@ -58,6 +58,8 @@
 }
 
 body {
+  width: 70vw;
+  margin: 0 auto;
   font-family: 'AbeZeh', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.6;
   color: var(--text-color);
@@ -1378,6 +1380,96 @@ footer {
   font-size: 0.9rem;
 }
 
+/* Level 3+ children containers */
+.level-3-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* Level 4+ node and children styles */
+.level-4-node,
+.level-5-node,
+.level-6-node,
+.level-7-node,
+.level-8-node,
+.level-9-node,
+.level-10-node {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(52, 163, 215, 0.2);
+  border-radius: 4px;
+  margin: 0.25rem;
+  padding: 0.4rem;
+  min-width: 120px;
+  flex: 1;
+  width: 100%;
+  overflow: visible;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+
+
+.level-4-header,
+.level-5-header,
+.level-6-header,
+.level-7-header,
+.level-8-header,
+.level-9-header,
+.level-10-header {
+  background-color: rgba(52, 163, 215, 0.05);
+  padding: 0.4rem;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.1);
+  border-radius: 3px 3px 0 0;
+}
+
+.level-4-title,
+.level-5-title,
+.level-6-title,
+.level-7-title,
+.level-8-title,
+.level-9-title,
+.level-10-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #166d9e;
+}
+
+.level-4-content,
+.level-5-content,
+.level-6-content,
+.level-7-content,
+.level-8-content,
+.level-9-content,
+.level-10-content {
+  padding: 0.4rem;
+  color: #333;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.level-4-children,
+.level-5-children,
+.level-6-children,
+.level-7-children,
+.level-8-children,
+.level-9-children,
+.level-10-children {
+  display: flex;
+  flex-direction: row; /* default */
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+}
+
 /* Properties styling */
 .level-0-properties,
 .level-1-properties,
@@ -1397,7 +1489,12 @@ footer {
 .level-2-expand-button,
 .level-3-expand-button,
 .level-4-expand-button,
-.level-5-expand-button {
+.level-5-expand-button,
+.level-6-expand-button,
+.level-7-expand-button,
+.level-8-expand-button,
+.level-9-expand-button,
+.level-10-expand-button {
   width: 20px;
   height: 20px;
   position: relative;
@@ -1419,7 +1516,17 @@ footer {
 .level-4-expand-button::before,
 .level-4-expand-button::after,
 .level-5-expand-button::before,
-.level-5-expand-button::after {
+.level-5-expand-button::after,
+.level-6-expand-button::before,
+.level-6-expand-button::after,
+.level-7-expand-button::before,
+.level-7-expand-button::after,
+.level-8-expand-button::before,
+.level-8-expand-button::after,
+.level-9-expand-button::before,
+.level-9-expand-button::after,
+.level-10-expand-button::before,
+.level-10-expand-button::after {
   content: '';
   position: absolute;
   background-color: #333;
@@ -1432,7 +1539,12 @@ footer {
 .level-2-expand-button::before,
 .level-3-expand-button::before,
 .level-4-expand-button::before,
-.level-5-expand-button::before {
+.level-5-expand-button::before,
+.level-6-expand-button::before,
+.level-7-expand-button::before,
+.level-8-expand-button::before,
+.level-9-expand-button::before,
+.level-10-expand-button::before {
   width: 2px;
   height: 12px;
   top: 4px;
@@ -1445,7 +1557,12 @@ footer {
 .level-2-expand-button::after,
 .level-3-expand-button::after,
 .level-4-expand-button::after,
-.level-5-expand-button::after {
+.level-5-expand-button::after,
+.level-6-expand-button::after,
+.level-7-expand-button::after,
+.level-8-expand-button::after,
+.level-9-expand-button::after,
+.level-10-expand-button::after {
   width: 12px;
   height: 2px;
   top: 9px;
@@ -1464,7 +1581,12 @@ footer {
 .level-2-collapsed .level-2-children,
 .level-3-collapsed .level-3-children,
 .level-4-collapsed .level-4-children,
-.level-5-collapsed .level-5-children {
+.level-5-collapsed .level-5-children,
+.level-6-collapsed .level-6-children,
+.level-7-collapsed .level-7-children,
+.level-8-collapsed .level-8-children,
+.level-9-collapsed .level-9-children,
+.level-10-collapsed .level-10-children {
   display: none !important;
 }
 
@@ -1532,7 +1654,7 @@ footer {
 
 /* Level content base styles */
 [class*="-content"] {
-  padding: 0.5rem;
+  padding: 0.5rem !important;
   word-break: break-word;
 }
 
@@ -1944,7 +2066,7 @@ footer {
 }
 
 .multiselect-apply-btn {
-  background-color: #4caf50 !important;
+  background-color: #34a3d7 !important;
   color: white !important;
   border: none !important;
   padding: 10px 20px !important;
@@ -2006,14 +2128,14 @@ footer {
 
 /* Template system styling */
 [data-node-id][data-is-template="true"] {
-  border: 2px solid #4caf50 !important;
+  border: 2px solid #34a3d7 !important;
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.3) !important;
 }
 
 [data-node-id][data-is-template="true"] .level-0-header,
 [data-node-id][data-is-template="true"] .level-1-header,
 [data-node-id][data-is-template="true"] .level-2-header {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05)) !important;
+  background: linear-gradient(135deg, #34a3d720, #79bddd20) !important;
 }
 
 [data-node-id][data-is-duplicate="true"] {
@@ -2067,12 +2189,12 @@ footer {
 }
 
 .multiselect-button:hover {
-  border-color: #4caf50 !important;
+  border-color: #34a3d7 !important;
 }
 
 .multiselect-button:focus {
   outline: none !important;
-  border-color: #4caf50 !important;
+  border-color: #34a3d7 !important;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
 }
 
@@ -2193,17 +2315,4 @@ footer {
   gap: 8px !important;
 }
 
-/* Override default layouts when layout mode is applied */
-.layout-horizontal.level-0-vertical-layout,
-.layout-horizontal.level-1-vertical-layout,
-.layout-horizontal.level-2-vertical-layout,
-.layout-horizontal.level-3-vertical-layout {
-  flex-direction: row !important;
-}
-
-.layout-vertical.level-0-horizontal-layout,
-.layout-vertical.level-1-horizontal-layout,
-.layout-vertical.level-2-horizontal-layout,
-.layout-vertical.level-3-horizontal-layout {
-  flex-direction: column !important;
-} 
+ 

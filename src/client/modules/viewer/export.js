@@ -17,6 +17,34 @@ function stripParentReferences(node) {
   }
 }
 
+// Helper die ALTIJD alle parent-references verwijdert, diep recursief
+function deepCloneWithoutParent(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(deepCloneWithoutParent);
+  } else if (obj && typeof obj === 'object') {
+    const clone = {};
+    for (const key in obj) {
+      if (key !== 'parent') {
+        clone[key] = deepCloneWithoutParent(obj[key]);
+      }
+    }
+    return clone;
+  }
+  return obj;
+}
+
+// Helper die circular references detecteert en vervangt
+function safeStringify(obj) {
+  const seen = new WeakSet();
+  return JSON.stringify(obj, function(key, value) {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) return "[Circular]";
+      seen.add(value);
+    }
+    return value;
+  });
+}
+
 // Function to handle PDF export
 async function exportToPdf() {
   try {
@@ -43,7 +71,7 @@ async function exportToPdf() {
       const matchingNodes = sheetData.root.children.filter(node => node.value === selectedValue);
       
       // Create a deep clone of the matching nodes to avoid modifying the original data
-      const clonedNodes = JSON.parse(JSON.stringify(matchingNodes));
+      const clonedNodes = deepCloneWithoutParent(matchingNodes);
       
       // Use the cloned nodes without level normalization to preserve negative levels
       filteredData = {
@@ -60,7 +88,7 @@ async function exportToPdf() {
       console.log("Na strippen, parent in eerste node?", 'parent' in clonedNodes[0]);
       
       // Log what we're sending for debugging
-      console.log("Sending to PDF export:", {
+      console.log("[PDF EXPORT] Sending to PDF export:", {
         selectedValue,
         nodeCount: filteredData.root.children.length,
         firstNode: filteredData.root.children[0],
@@ -77,27 +105,41 @@ async function exportToPdf() {
     exportPdfButton.textContent = 'Generating...';
     exportPdfButton.disabled = true;
     
-    // Send data to server for PDF generation
-    // Create a clean copy WITHOUT parent references - guaranteed to work
-    const cleanData = JSON.parse(JSON.stringify(filteredData.root.children, (key, value) => {
-      if (key === 'parent') return undefined;
-      return value;
-    }));
-    console.log("PDF Export - Clean data created, no parent refs:", !cleanData.some(n => 'parent' in n));
+    // Verwijder parent-references diep uit de hele boom (begin bij root!)
+    stripParentReferences(filteredData.root);
+    // Gebruik deepCloneWithoutParent om gegarandeerd alle parent-references te strippen
+    const cleanData = deepCloneWithoutParent(filteredData.root.children);
+    console.log("DEBUG: Data vóór safeStringify", cleanData);
+    const cleanDataString = safeStringify(cleanData);
+    console.log("[PDF EXPORT] Clean data safe-stringified:", cleanDataString);
     
-    const response = await fetch('/pdf/generate-pdf', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        html: JSON.stringify(cleanData),
-        filename: pdfTitle
-      })
-    });
+    let response;
+    try {
+      response = await fetch('/pdf/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          html: cleanDataString, // Stuur als string
+          filename: pdfTitle
+        })
+      });
+    } catch (fetchErr) {
+      console.error('[PDF EXPORT] Fetch error:', fetchErr);
+      alert(`Error contacting server: ${fetchErr.message}`);
+      exportPdfButton.textContent = originalText;
+      exportPdfButton.disabled = false;
+      return;
+    }
     
     if (!response.ok) {
-      throw new Error(`PDF generation failed: ${response.statusText}`);
+      let errorText = await response.text();
+      console.error(`[PDF EXPORT] PDF generation failed: ${response.statusText}`, errorText);
+      alert(`PDF generation failed: ${response.statusText}\n${errorText}`);
+      exportPdfButton.textContent = originalText;
+      exportPdfButton.disabled = false;
+      return;
     }
     
     // Reset button state
@@ -105,7 +147,15 @@ async function exportToPdf() {
     exportPdfButton.disabled = false;
     
     // Get the PDF as a blob
-    const blob = await response.blob();
+    let blob;
+    try {
+      blob = await response.blob();
+      console.log('[PDF EXPORT] PDF blob received:', blob);
+    } catch (blobErr) {
+      console.error('[PDF EXPORT] Error reading PDF blob:', blobErr);
+      alert(`Error reading PDF blob: ${blobErr.message}`);
+      return;
+    }
     
     // Create a URL for the blob
     const url = URL.createObjectURL(blob);
@@ -120,9 +170,10 @@ async function exportToPdf() {
     // Clean up
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    console.log('[PDF EXPORT] PDF download triggered.');
     
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error('[PDF EXPORT] Error generating PDF:', error);
     alert(`Error generating PDF: ${error.message}`);
     const { exportPdfButton } = window.ExcelViewerCore.getDOMElements();
     exportPdfButton.textContent = 'Export to PDF';
@@ -156,7 +207,7 @@ function previewPdf() {
       const matchingNodes = sheetData.root.children.filter(node => node.value === selectedValue);
       
       // Create a deep clone of the matching nodes to avoid modifying the original data
-      const clonedNodes = JSON.parse(JSON.stringify(matchingNodes));
+      const clonedNodes = deepCloneWithoutParent(matchingNodes);
       
       // Use the cloned nodes without level normalization to preserve negative levels
       filteredData = {
@@ -186,12 +237,10 @@ function previewPdf() {
     const previewTitle = `${sheetTitle} - ${selectedValue}`;
     
     // Request the exact PDF HTML from server to maintain 100% consistency with PDF
-    // Create a clean copy WITHOUT parent references - guaranteed to work
-    const cleanData = JSON.parse(JSON.stringify(filteredData.root.children, (key, value) => {
-      if (key === 'parent') return undefined;
-      return value;
-    }));
-    console.log("PDF Preview - Clean data created, no parent refs:", !cleanData.some(n => 'parent' in n));
+    // Gebruik deepCloneWithoutParent en safeStringify om circular structure errors te voorkomen
+    const cleanData = deepCloneWithoutParent(filteredData.root.children);
+    const cleanDataString = safeStringify(cleanData);
+    console.log("[PDF PREVIEW] Clean data safe-stringified:", cleanDataString);
     
     fetch('/pdf/preview-html', {
       method: 'POST',
@@ -199,7 +248,7 @@ function previewPdf() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        html: JSON.stringify(cleanData),
+        html: cleanDataString,
         filename: previewTitle
       })
     })

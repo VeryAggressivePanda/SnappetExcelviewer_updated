@@ -404,7 +404,7 @@ function storeExpandState() {
 function addNode(parentNode, newNode) {
   // Check if this is a duplicate - only templates can be modified
   if (parentNode.isDuplicate) {
-    alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+    alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
     return;
   }
   
@@ -455,13 +455,13 @@ function addNode(parentNode, newNode) {
 function deleteNode(parentNode, nodeToDelete) {
   // Check if this is a duplicate - only templates can be modified
   if (nodeToDelete.isDuplicate) {
-    alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+    alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
     return;
   }
   
   // Check if this is a template - warn about deleting template
   if (nodeToDelete.isTemplate) {
-    if (!confirm(`⚠️ This is a TEMPLATE node (🏗️). Deleting it will affect ALL duplicate nodes.\n\nDelete template "${nodeToDelete.value || nodeToDelete.columnName || 'New Container'}" and all its children?`)) {
+    if (!confirm(`⚠️ This is a TEMPLATE node (- master). Deleting it will affect ALL duplicate nodes.\n\nDelete template "${nodeToDelete.value || nodeToDelete.columnName || 'New Container'}" and all its children?`)) {
       return;
     }
   } else {
@@ -539,7 +539,7 @@ function identifyAndMarkGlobalTemplates(rootNode) {
       const template = nodes[0];
       template.isTemplate = true;
       template.isDuplicate = false;
-      console.log(`🏗️ GLOBAL: Marked "${template.value}" (${template.columnName}) as GLOBAL template`);
+      console.log(`- master GLOBAL: Marked "${template.value}" (${template.columnName}) as GLOBAL template`);
       
       // Rest become GLOBAL duplicates
       nodes.slice(1).forEach(duplicate => {

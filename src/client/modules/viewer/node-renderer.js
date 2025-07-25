@@ -85,7 +85,7 @@ function renderNode(node, level, expandStateMap = {}) {
   
   // 🔧 FIX: Title should ALWAYS be the column name (if available)
   const columnName = node.columnName || '';
-  const templateIndicator = node.isTemplate ? ' 🏗️' : '';
+  const templateIndicator = node.isTemplate ? ' - master' : '';
   
   // Toon altijd de waarde uit de data als hoofdlabel
   title.textContent = (node.value || '') + templateIndicator;

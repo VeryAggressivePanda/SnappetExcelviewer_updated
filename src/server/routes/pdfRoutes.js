@@ -176,14 +176,55 @@ function generatePdfContent(data, title) {
       
       /* PDF title styles */
       .pdf-title {
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #34a3d7;
-        text-align: left;
-        text-indent: 0.5rem;
-        margin: 0;
-        padding: 0.5rem;
-        page-break-after: avoid;
+        font-size: 1.4em !important;
+        font-weight: bold !important;
+        color: #34a3d7 !important;
+        text-align: left !important;
+        margin: 0 0 1rem 0 !important;
+        padding: 0.75rem 1.5rem !important;
+        background-color: rgba(52, 163, 215, 0.1) !important;
+        border-radius: 25px !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        display: block !important;
+        width: fit-content !important;
+        box-sizing: border-box !important;
+      }
+      
+      /* Make sure h1.pdf-title specifically gets these styles */
+      h1.pdf-title {
+        font-size: 1.4em !important;
+        font-weight: bold !important;
+        color: #34a3d7 !important;
+        margin: 0 0 1rem 0 !important;
+        padding: 0.75rem 1.5rem !important;
+        background-color: rgba(52, 163, 215, 0.1) !important;
+        border-radius: 25px !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+        display: block !important;
+        width: fit-content !important;
+        box-sizing: border-box !important;
+      }
+      
+      /* New wrapper container to keep title and content together */
+      .pdf-title-and-content {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+        display: block !important;
+        width: 100% !important;
+      }
+      
+      /* Ensure pdf-content section flows correctly after title */
+      .pdf-content {
+        page-break-before: avoid !important;
+        display: block !important;
+      }
+      
+      /* Make the first content element stick with title */
+      .pdf-section {
+        page-break-before: avoid !important;
+        display: block !important;
       }
       
       .pdf-section {
@@ -246,9 +287,18 @@ function generatePdfContent(data, title) {
       .level-0-node {
         background-color: #ffffff;
         border-radius: 8px;
-        page-break-inside: avoid;
         box-shadow: 0 3px 7px rgba(51, 51, 51, 0.2);
         margin: .5rem 0;
+      }
+      
+      /* Only apply page break avoidance to level-0 nodes that are NOT the first one */
+      .level-0-node:not(:first-of-type) {
+        page-break-inside: avoid;
+      }
+      
+      /* The first level-0 node should flow with the title */
+      .level-0-node:first-of-type {
+        page-break-before: avoid !important;
       }
       
       .level-0-header {
@@ -597,9 +647,10 @@ function generatePdfContent(data, title) {
     </head>
     <body>
       <div class="pdf-container">
-        <h1 class="pdf-title">${title}</h1>
-        <div class="pdf-content">
-          <div class="pdf-section">
+        <div class="pdf-title-and-content">
+          <h1 class="pdf-title">${title}</h1>
+          <div class="pdf-content">
+            <div class="pdf-section">
   `;
   
   // Render the data as hierarchical nodes
@@ -609,6 +660,7 @@ function generatePdfContent(data, title) {
   
   // Close HTML
   html += `
+            </div>
           </div>
         </div>
       </div>

@@ -1304,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const truncatedValue = truncateMiddle(nodeValue);
       
       // Add template indicator if this is a template
-      const templateIndicator = node.isTemplate ? ' 🏗️' : '';
+      const templateIndicator = node.isTemplate ? ' - master' : '';
       
       title.innerHTML = `<span class="cell-value">${truncatedValue}</span>${templateIndicator}`;
       
@@ -1323,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const columnName = node.columnName || '';
       
       // Add template indicator if this is a template
-      const templateIndicator = node.isTemplate ? ' 🏗️' : '';
+      const templateIndicator = node.isTemplate ? ' - master' : '';
       
       if (nodeValue && nodeValue.trim() !== '') {
         title.textContent = nodeValue + templateIndicator;

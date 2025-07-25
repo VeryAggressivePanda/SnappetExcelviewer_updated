@@ -255,8 +255,8 @@ function addEditControls(node, nodeEl, header) {
     });
   }
   
-  // Layout toggle option
-  if (node.children && node.children.length > 0) {
+  // Layout toggle option (available for ALL nodes, not just those with children)
+  if (!node.isPlaceholder) {
     const currentLayout = node.layoutMode || 'horizontal';
     const newLayout = currentLayout === 'horizontal' ? 'vertical' : 'horizontal';
     const layoutIcon = currentLayout === 'horizontal' ? '⬇️' : '➡️';
@@ -383,7 +383,7 @@ function addEditControls(node, nodeEl, header) {
 function addChildContainer(parentNode) {
   // Check if this is a duplicate - only templates can be modified
   if (parentNode.isDuplicate) {
-    alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+    alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
     return;
   }
   
@@ -442,7 +442,7 @@ function addChildContainer(parentNode) {
 function addSiblingContainer(node) {
   // Check if this is a duplicate - only templates can be modified
   if (node.isDuplicate) {
-    alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+    alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
     return;
   }
   
@@ -471,7 +471,7 @@ function addSiblingContainer(node) {
   const currentIndex = parent.children.findIndex(child => child.id === node.id);
   parent.children.splice(currentIndex + 1, 0, newNode);
   
-  console.log('🏗️ Sibling added');
+  console.log('- master Sibling added');
   
   // Get root to do global template marking
   const rootNode = sheetData.root;
@@ -495,13 +495,13 @@ function addSiblingContainer(node) {
 function deleteContainer(node) {
   // Check if this is a duplicate - only templates can be modified
   if (node.isDuplicate) {
-    alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+    alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
     return;
   }
   
   // Check if this is a template - warn about deleting template
   if (node.isTemplate) {
-    if (!confirm(`⚠️ This is a TEMPLATE node (🏗️). Deleting it will affect ALL duplicate nodes.\n\nDelete template "${node.value || node.columnName || 'New Container'}" and all its children?`)) {
+    if (!confirm(`⚠️ This is a TEMPLATE node (- master). Deleting it will affect ALL duplicate nodes.\n\nDelete template "${node.value || node.columnName || 'New Container'}" and all its children?`)) {
       return;
     }
   } else {
@@ -1520,7 +1520,7 @@ function createMultipleColumnContainers(parentNode, selectedColumns) {
 function toggleNodeLayout(node) {
   // Check if this is a duplicate - only templates can be modified
   if (node.isDuplicate) {
-    alert('🚫 This is a duplicate node. Please modify the template (🏗️) instead.');
+    alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
     return;
   }
   
@@ -1537,24 +1537,48 @@ function toggleNodeLayout(node) {
     return;
   }
   
-  // Find the children container within this node
-  const childrenContainer = nodeElement.querySelector('.node-children, .level-0-children, .level-1-children, .level-2-children, .level-3-children');
+  // Find the children container within this node - ALL LEVELS
+  let childrenContainer = nodeElement.querySelector('.node-children, .level-0-children, .level-1-children, .level-2-children, .level-3-children, .level-4-children, .level-5-children, .level-6-children, .level-7-children, .level-8-children, .level-9-children, .level-10-children');
+  
+  // If no children container exists, create one for future use
   if (!childrenContainer) {
-    console.error('Could not find children container for layout toggle');
-    return;
+    console.log(`Creating children container for layout toggle on ${node.value}`);
+    
+    // Create children container based on node level
+    const nodeLevel = Math.abs(node.level || 0);
+    childrenContainer = document.createElement('div');
+    childrenContainer.className = `level-${nodeLevel}-children`;
+    
+    // Find the content area to append the children container
+    const contentArea = nodeElement.querySelector(`.level-${nodeLevel}-content, .node-content`);
+    if (contentArea) {
+      contentArea.appendChild(childrenContainer);
+    } else {
+      // Fallback: append to the node element itself
+      nodeElement.appendChild(childrenContainer);
+    }
+    
+    // Initialize children array if it doesn't exist
+    if (!node.children) {
+      node.children = [];
+    }
   }
   
-  // Update the layout class directly (no full re-render!)
-  childrenContainer.classList.remove('layout-horizontal', 'layout-vertical');
-  childrenContainer.classList.add(`layout-${node.layoutMode}`);
+  // This logic is now handled below, so remove this duplicate
   
-  // Also update the layout mode class on the container
+  // Remove ALL layout classes - both old and new
+  childrenContainer.classList.remove('layout-horizontal', 'layout-vertical');
+  // Remove old level-specific layout classes
+  for (let i = 0; i <= 10; i++) {
+    childrenContainer.classList.remove(`level-${i}-horizontal-layout`);
+    childrenContainer.classList.remove(`level-${i}-vertical-layout`);
+  }
+  
+  // Add only the new simple layout class
   if (node.layoutMode === 'vertical') {
-    childrenContainer.classList.remove('level-0-horizontal-layout', 'level-1-horizontal-layout', 'level-2-horizontal-layout');
-    childrenContainer.classList.add(`level-${node.level || 0}-vertical-layout`);
+    childrenContainer.classList.add('layout-vertical');
   } else {
-    childrenContainer.classList.remove('level-0-vertical-layout', 'level-1-vertical-layout', 'level-2-vertical-layout');
-    childrenContainer.classList.add(`level-${node.level || 0}-horizontal-layout`);
+    childrenContainer.classList.add('layout-horizontal');
   }
   
   console.log(`✅ Layout updated visually to ${node.layoutMode} for ${node.value}`);
@@ -1769,7 +1793,7 @@ function markGlobalTemplatesOfType(rootNode, columnName, columnIndex) {
   const template = allNodesOfType[0];
   template.isTemplate = true;
   template.isDuplicate = false;
-  console.log(`🏗️ GLOBAL: Marked "${template.value}" (${columnName}) as GLOBAL template`);
+  console.log(`- master GLOBAL: Marked "${template.value}" (${columnName}) as GLOBAL template`);
   
   // All others become duplicates
   allNodesOfType.slice(1).forEach(duplicate => {
