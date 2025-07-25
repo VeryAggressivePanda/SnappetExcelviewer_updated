@@ -409,6 +409,13 @@ function addChildContainer(parentNode) {
   }
   
   parentNode.children.push(newNode);
+
+  // FORCEER EXPANDED STATE OP PARENT DIRECT NA ADD CHILD
+  const parentNodeEl = document.querySelector(`[data-node-id='${parentNode.id}']`);
+  if (parentNodeEl) {
+    const level = parentNodeEl.getAttribute('data-level') || parentNode.level || 0;
+    parentNodeEl.classList.remove(`level-${level}-collapsed`);
+  }
   
   // Get root to do global template marking
   const activeSheetId = window.excelData.activeSheetId;
