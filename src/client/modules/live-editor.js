@@ -34,195 +34,41 @@ function addEditControls(node, nodeEl, header) {
   editControls.style.marginLeft = 'auto';
   editControls.style.position = 'relative';
   
-  // Add multiselect column selector if node doesn't have data yet
+  // Add simple column selector button if node doesn't have data yet
   if (!node.columnIndex && node.columnIndex !== 0 && !node.isPlaceholder) {
-    const multiselectContainer = document.createElement('div');
-    multiselectContainer.className = 'multiselect-container';
-    multiselectContainer.style.position = 'relative';
-    multiselectContainer.style.display = 'inline-block';
-    multiselectContainer.style.marginRight = '5px';
+    const selectColumnBtn = document.createElement('button');
+    selectColumnBtn.className = 'select-column-button';
+    selectColumnBtn.textContent = '☑ Select Column';
+    selectColumnBtn.style.padding = '4px 8px';
+    selectColumnBtn.style.fontSize = '12px';
+    selectColumnBtn.style.border = '2px solid var(--primary-blue)';
+    selectColumnBtn.style.borderRadius = '1rem';
+    selectColumnBtn.style.background = 'var(--light-blue-bg)';
+    selectColumnBtn.style.color = 'var(--primary-blue)';
+    selectColumnBtn.style.cursor = 'pointer';
+    selectColumnBtn.style.fontWeight = '500';
+    selectColumnBtn.style.transition = 'all 0.2s ease';
+    selectColumnBtn.style.fontFamily = 'AbeZeh, sans-serif';
     
-    // Create the dropdown button
-    const dropdownButton = document.createElement('button');
-    dropdownButton.className = 'multiselect-button';
-    dropdownButton.textContent = '☑ Select column...';
-    dropdownButton.style.padding = '4px 8px';
-    dropdownButton.style.fontSize = '12px';
-    dropdownButton.style.border = '1px solid #ccc';
-    dropdownButton.style.borderRadius = '3px';
-    dropdownButton.style.background = 'white';
-    dropdownButton.style.cursor = 'pointer';
-    dropdownButton.style.minWidth = '140px';
-    dropdownButton.style.textAlign = 'left';
-    
-    // Create the dropdown content
-    const dropdownContent = document.createElement('div');
-    dropdownContent.className = 'multiselect-dropdown';
-    dropdownContent.style.display = 'none';
-    dropdownContent.style.position = 'absolute';
-    dropdownContent.style.top = '100%';
-    dropdownContent.style.left = '0';
-    dropdownContent.style.right = '0';
-    dropdownContent.style.background = 'white';
-    dropdownContent.style.border = '1px solid #ccc';
-    dropdownContent.style.borderTop = 'none';
-    dropdownContent.style.borderRadius = '0 0 3px 3px';
-    dropdownContent.style.maxHeight = '200px';
-    dropdownContent.style.overflowY = 'auto';
-    dropdownContent.style.zIndex = '1000';
-    dropdownContent.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-    
-    // Get available columns
-    const activeSheetId = window.excelData.activeSheetId;
-    const sheetData = window.excelData.sheetsLoaded[activeSheetId];
-    const selectedColumns = [];
-    
-    if (sheetData && sheetData.headers) {
-      const usedColumns = getUsedColumnsInHierarchy(node);
-      
-      sheetData.headers.forEach((header, index) => {
-        if (!header) return;
-        
-        const checkboxWrapper = document.createElement('div');
-        checkboxWrapper.style.padding = '6px 8px';
-        checkboxWrapper.style.display = 'flex';
-        checkboxWrapper.style.alignItems = 'center';
-        checkboxWrapper.style.cursor = 'pointer';
-        checkboxWrapper.style.borderBottom = '1px solid #f0f0f0';
-        
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = index;
-        checkbox.style.marginRight = '8px';
-        
-        const label = document.createElement('label');
-        label.style.cursor = 'pointer';
-        label.style.flex = '1';
-        label.style.fontSize = '12px';
-        
-        if (usedColumns.includes(index)) {
-          label.textContent = `${header} (already used)`;
-          label.style.color = '#999';
-          label.style.fontStyle = 'italic';
-          checkbox.disabled = true;
-          checkboxWrapper.style.opacity = '0.5';
-        } else {
-          label.textContent = header;
-          label.style.color = '#333';
-        }
-        
-        // Add hover effect
-        if (!checkbox.disabled) {
-          checkboxWrapper.addEventListener('mouseenter', () => {
-            checkboxWrapper.style.backgroundColor = '#f8f9fa';
-          });
-          checkboxWrapper.addEventListener('mouseleave', () => {
-            checkboxWrapper.style.backgroundColor = 'transparent';
-          });
-        }
-        
-        // Handle checkbox change
-        checkbox.addEventListener('change', (e) => {
-          e.stopPropagation();
-          if (checkbox.checked) {
-            selectedColumns.push({
-              index: parseInt(checkbox.value),
-              name: header
-            });
-          } else {
-            const idx = selectedColumns.findIndex(col => col.index === parseInt(checkbox.value));
-            if (idx > -1) selectedColumns.splice(idx, 1);
-          }
-          
-          // Update button text
-          if (selectedColumns.length === 0) {
-            dropdownButton.textContent = '☑ Select column...';
-          } else if (selectedColumns.length === 1) {
-            dropdownButton.textContent = `☑ ${selectedColumns[0].name}`;
-          } else {
-            dropdownButton.textContent = `☑ ${selectedColumns.length} columns selected`;
-          }
-        });
-        
-        // Allow clicking on wrapper to toggle checkbox
-        checkboxWrapper.addEventListener('click', (e) => {
-          if (e.target !== checkbox && !checkbox.disabled) {
-            checkbox.checked = !checkbox.checked;
-            checkbox.dispatchEvent(new Event('change'));
-          }
-        });
-        
-        checkboxWrapper.appendChild(checkbox);
-        checkboxWrapper.appendChild(label);
-        dropdownContent.appendChild(checkboxWrapper);
-      });
-    }
-    
-    // Add Apply button
-    const applyButton = document.createElement('div');
-    applyButton.className = 'apply-button-container';
-    applyButton.style.padding = '8px';
-    applyButton.style.borderTop = '1px solid #ddd';
-    applyButton.style.background = '#f8f9fa';
-    
-    const applyBtn = document.createElement('button');
-    applyBtn.textContent = 'Apply Selection';
-    applyBtn.style.width = '100%';
-    applyBtn.style.padding = '6px 12px';
-    applyBtn.style.fontSize = '12px';
-    applyBtn.style.border = '1px solid #4caf50';
-    applyBtn.style.borderRadius = '3px';
-    applyBtn.style.background = '#4caf50';
-    applyBtn.style.color = 'white';
-    applyBtn.style.cursor = 'pointer';
-    
-    applyBtn.addEventListener('click', (e) => {
+    selectColumnBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (selectedColumns.length === 0) {
-        alert('Please select at least one column');
-        return;
-      }
-      
-      // Hide dropdown
-      dropdownContent.style.display = 'none';
-      
-      if (selectedColumns.length === 1) {
-        // Single column - use existing functionality
-        assignColumnToNode(node, selectedColumns[0].index);
-      } else {
-        // Multiple columns - create child containers
-        createMultipleColumnContainers(node, selectedColumns);
-      }
+      showColumnSelectionArea(node);
     });
     
-    applyButton.appendChild(applyBtn);
-    dropdownContent.appendChild(applyButton);
-    
-    // Toggle dropdown on button click
-    dropdownButton.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isVisible = dropdownContent.style.display === 'block';
-      
-      // Hide all other dropdowns
-      document.querySelectorAll('.multiselect-dropdown').forEach(dropdown => {
-        dropdown.style.display = 'none';
-      });
-      
-      // Toggle this dropdown
-      dropdownContent.style.display = isVisible ? 'none' : 'block';
+    selectColumnBtn.addEventListener('mouseenter', () => {
+      selectColumnBtn.style.background = 'var(--primary-blue)';
+      selectColumnBtn.style.color = 'white';
     });
     
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!multiselectContainer.contains(e.target)) {
-        dropdownContent.style.display = 'none';
-      }
+    selectColumnBtn.addEventListener('mouseleave', () => {
+      selectColumnBtn.style.background = 'var(--light-blue-bg)';
+      selectColumnBtn.style.color = 'var(--primary-blue)';
     });
     
-    multiselectContainer.appendChild(dropdownButton);
-    multiselectContainer.appendChild(dropdownContent);
-    editControls.appendChild(multiselectContainer);
+    editControls.appendChild(selectColumnBtn);
   }
+  
+
   
   // Create kebab menu button
   const kebabBtn = document.createElement('button');
@@ -2065,3 +1911,214 @@ function getContextualValuesForNodeWithFilter(filterNode, columnIndex) {
   
   return result;
 } 
+
+// Store current selection state
+let currentSelectedNode = null;
+let currentSelectionMode = 'child'; // 'child' or 'sibling'
+let selectedColumnIndex = null;
+
+// Function to show the column selection area
+function showColumnSelectionArea(node) {
+  currentSelectedNode = node;
+  const columnSelectionArea = document.querySelector('.column-selection-area');
+  const availableColumnsContainer = document.getElementById('available-columns');
+  const addButton = document.getElementById('add-selected-column');
+  
+  // Clear previous content
+  availableColumnsContainer.innerHTML = '';
+  selectedColumnIndex = null;
+  addButton.style.display = 'none';
+  
+  // Show the area
+  columnSelectionArea.style.display = 'block';
+  
+  // Get available columns
+  const activeSheetId = window.excelData.activeSheetId;
+  const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+  
+  if (!sheetData || !sheetData.headers) {
+    availableColumnsContainer.innerHTML = '<span style="color: #999;">No columns available</span>';
+    return;
+  }
+  
+  const usedColumns = getUsedColumnsInHierarchy(node);
+  
+  // Create column buttons
+  sheetData.headers.forEach((header, index) => {
+    if (!header) return;
+    
+    const columnBtn = document.createElement('button');
+    columnBtn.className = 'column-button';
+    columnBtn.textContent = header;
+    columnBtn.dataset.columnIndex = index;
+    
+    if (usedColumns.includes(index)) {
+      columnBtn.classList.add('disabled');
+      columnBtn.title = 'Column already used in hierarchy';
+      columnBtn.disabled = true;
+    } else {
+      columnBtn.addEventListener('click', () => selectColumn(index, columnBtn));
+    }
+    
+    availableColumnsContainer.appendChild(columnBtn);
+  });
+  
+  // Setup toggle buttons
+  setupToggleButtons();
+  
+  // Setup add button
+  setupAddButton();
+}
+
+// Function to setup toggle buttons (Child/Sibling)
+function setupToggleButtons() {
+  const childToggle = document.getElementById('toggle-child');
+  const siblingToggle = document.getElementById('toggle-sibling');
+  
+  // Remove existing listeners
+  childToggle.replaceWith(childToggle.cloneNode(true));
+  siblingToggle.replaceWith(siblingToggle.cloneNode(true));
+  
+  // Get fresh references
+  const newChildToggle = document.getElementById('toggle-child');
+  const newSiblingToggle = document.getElementById('toggle-sibling');
+  
+  newChildToggle.addEventListener('click', () => {
+    currentSelectionMode = 'child';
+    newChildToggle.classList.add('active');
+    newSiblingToggle.classList.remove('active');
+  });
+  
+  newSiblingToggle.addEventListener('click', () => {
+    currentSelectionMode = 'sibling';
+    newSiblingToggle.classList.add('active');
+    newChildToggle.classList.remove('active');
+  });
+  
+  // Set initial state
+  if (currentSelectedNode && (currentSelectedNode.level <= -1 || currentSelectedNode.isPlaceholder)) {
+    // Root level nodes can only have children
+    newSiblingToggle.disabled = true;
+    newSiblingToggle.style.opacity = '0.5';
+    currentSelectionMode = 'child';
+    newChildToggle.classList.add('active');
+    newSiblingToggle.classList.remove('active');
+  } else {
+    newSiblingToggle.disabled = false;
+    newSiblingToggle.style.opacity = '1';
+    // Restore current mode
+    if (currentSelectionMode === 'child') {
+      newChildToggle.classList.add('active');
+      newSiblingToggle.classList.remove('active');
+    } else {
+      newSiblingToggle.classList.add('active');
+      newChildToggle.classList.remove('active');
+    }
+  }
+}
+
+// Function to select a column
+function selectColumn(columnIndex, buttonElement) {
+  // Clear previous selection
+  document.querySelectorAll('.column-button.selected').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  
+  // Select this column
+  buttonElement.classList.add('selected');
+  selectedColumnIndex = columnIndex;
+  
+  // Show add button
+  const addButton = document.getElementById('add-selected-column');
+  addButton.style.display = 'block';
+}
+
+// Function to setup add button
+function setupAddButton() {
+  const addButton = document.getElementById('add-selected-column');
+  
+  // Remove existing listener
+  addButton.replaceWith(addButton.cloneNode(true));
+  const newAddButton = document.getElementById('add-selected-column');
+  
+  newAddButton.addEventListener('click', () => {
+    if (!currentSelectedNode || selectedColumnIndex === null) return;
+    
+    // Hide the selection area
+    document.querySelector('.column-selection-area').style.display = 'none';
+    
+    // Apply the selection
+    if (currentSelectionMode === 'child') {
+      // Add as child
+      assignColumnToNode(currentSelectedNode, selectedColumnIndex);
+    } else {
+      // Add as sibling
+      addSiblingWithColumn(currentSelectedNode, selectedColumnIndex);
+    }
+    
+    // Reset state
+    currentSelectedNode = null;
+    selectedColumnIndex = null;
+  });
+}
+
+// Function to add sibling with column
+function addSiblingWithColumn(node, columnIndex) {
+  // First create a sibling using existing functionality
+  addSiblingContainer(node);
+  
+  // Find the newly created sibling (it will be the last child of the parent)
+  const parentNode = window.ExcelViewerNodeManager ? 
+    window.ExcelViewerNodeManager.findParentNode(node.id) : 
+    findParentNodeLocal(node);
+    
+  if (parentNode && parentNode.children && parentNode.children.length > 0) {
+    const newSibling = parentNode.children[parentNode.children.length - 1];
+    
+    // Assign column to the new sibling
+    setTimeout(() => {
+      assignColumnToNode(newSibling, columnIndex);
+    }, 100); // Small delay to ensure DOM is updated
+  } else {
+    console.error('Could not find newly created sibling');
+  }
+}
+
+// Local fallback for finding parent node
+function findParentNodeLocal(targetNode) {
+  const activeSheetId = window.excelData.activeSheetId;
+  const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+  
+  if (!sheetData || !sheetData.root) return null;
+  
+  function searchInNode(node) {
+    if (node.children) {
+      for (let child of node.children) {
+        if (child.id === targetNode.id) {
+          return node;
+        }
+        const found = searchInNode(child);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  
+  return searchInNode(sheetData.root);
+}
+
+// Hide column selection area when clicking outside
+document.addEventListener('click', (e) => {
+  const columnSelectionArea = document.querySelector('.column-selection-area');
+  const selectColumnButtons = document.querySelectorAll('.select-column-button');
+  
+  // Check if click is on a select column button or inside the selection area
+  let isInsideSelection = columnSelectionArea && columnSelectionArea.contains(e.target);
+  let isSelectButton = Array.from(selectColumnButtons).some(btn => btn.contains(e.target));
+  
+  if (!isInsideSelection && !isSelectButton && columnSelectionArea) {
+    columnSelectionArea.style.display = 'none';
+    currentSelectedNode = null;
+    selectedColumnIndex = null;
+  }
+}); 
