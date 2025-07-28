@@ -77,7 +77,8 @@ function addEditControls(node, nodeEl, header) {
   }
   
   // Only create kebab menu for nodes that already have data/content
-  if ((node.columnIndex || node.columnIndex === 0) || node.isPlaceholder) {
+  // EXCLUDE nodes that show "+Add Content" button to avoid double controls
+  if (((node.columnIndex || node.columnIndex === 0) || node.isPlaceholder) && !hasNoRealData) {
     // Menu items array - build first to check if we need menu
     const menuItems = [];
   
@@ -221,7 +222,7 @@ function addEditControls(node, nodeEl, header) {
 }
 
 // Function to add a child container (IMPROVED WITH TEMPLATE MARKING)
-function addChildContainer(parentNode) {
+function addChildContainer(parentNode, skipReRender = false) {
   // Check if this is a duplicate - only templates can be modified
   if (parentNode.isDuplicate) {
     alert('🚫 This is a duplicate node. Please modify the template (- master) instead.');
@@ -269,7 +270,7 @@ function addChildContainer(parentNode) {
   // Template replication if this is a template
   if (parentNode.isTemplate) {
     applyGlobalTemplateReplication(parentNode);
-  } else {
+  } else if (!skipReRender) {
     // Just re-render normally for now
     const activeSheetId = window.excelData.activeSheetId;
     if (window.renderSheet) {
@@ -2157,39 +2158,32 @@ function setupAddButtonForArea(area) {
     // Apply the selections using SAVED values
     
     if (savedSelectedIndices.length === 1) {
-      console.log('✅ Single column selection - mode:', savedSelectionMode);
       // Single column selection
       if (savedSelectionMode === 'child') {
         // 🔥 CRITICAL FIX: Create child first, then assign column to the child
-        addChildContainer(savedSelectedNode);
+        addChildContainer(savedSelectedNode, false); // Don't skip re-render for single child
         
-        // Find the newly created child (it will be the last child)
-        setTimeout(() => {
-          if (savedSelectedNode.children && savedSelectedNode.children.length > 0) {
-            const newChild = savedSelectedNode.children[savedSelectedNode.children.length - 1];
-            assignColumnToNode(newChild, savedSelectedIndices[0]);
-            console.log('✅ Child created and column assigned:', newChild.id, 'column:', savedSelectedIndices[0]);
-          }
-        }, 50);
+        // Find the newly created child (it will be the last child) - DO IT SYNCHRONOUSLY
+        if (savedSelectedNode.children && savedSelectedNode.children.length > 0) {
+          const newChild = savedSelectedNode.children[savedSelectedNode.children.length - 1];
+          assignColumnToNode(newChild, savedSelectedIndices[0]);
+        }
       } else {
         addSiblingWithColumn(savedSelectedNode, savedSelectedIndices[0]);
       }
     } else {
-      console.log('✅ Multiple column selection (' + savedSelectedIndices.length + ') - mode:', savedSelectionMode);
       // Multiple column selection
       if (savedSelectionMode === 'child') {
         // 🔥 CRITICAL FIX: Create multiple children, one for each column
         savedSelectedIndices.forEach((columnIndex, i) => {
-          addChildContainer(savedSelectedNode);
+          const isLast = i === savedSelectedIndices.length - 1;
+          addChildContainer(savedSelectedNode, !isLast); // Skip re-render except for last one
           
-          // Find the newly created child and assign column
-          setTimeout(() => {
-            if (savedSelectedNode.children && savedSelectedNode.children.length > 0) {
-              const newChild = savedSelectedNode.children[savedSelectedNode.children.length - 1];
-              assignColumnToNode(newChild, columnIndex);
-              console.log('✅ Multiple child', i+1, 'created and column assigned:', newChild.id, 'column:', columnIndex);
-            }
-          }, 50 + (i * 10)); // Stagger slightly for multiple children
+          // Find the newly created child and assign column - DO IT SYNCHRONOUSLY
+          if (savedSelectedNode.children && savedSelectedNode.children.length > 0) {
+            const newChild = savedSelectedNode.children[savedSelectedNode.children.length - 1];
+            assignColumnToNode(newChild, columnIndex, !isLast); // Skip re-render except for last one
+          }
         });
       } else {
         // Create multiple sibling containers
