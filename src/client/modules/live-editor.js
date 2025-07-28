@@ -34,12 +34,19 @@ function addEditControls(node, nodeEl, header) {
   editControls.style.marginLeft = 'auto';
   editControls.style.position = 'relative';
   
-  // Add direct "+Add Content" button for nodes without meaningful data
-  // Show for: empty containers, placeholders, nodes without column data, OR nodes with columnIndex but no meaningful value
-  const hasNoRealData = (!node.columnIndex && node.columnIndex !== 0) || 
-                        node.isPlaceholder || 
-                        (node.value && (node.value === 'Container' || node.value === 'New Container')) ||
-                        ((node.columnIndex || node.columnIndex === 0) && (!node.value || node.value.trim() === ''));
+  // Add direct "+Add Content" button for nodes that can have children added
+  // Show for: nodes without children, empty containers, placeholders, or nodes that can be expanded
+  const canAddChildren = (!node.children || node.children.length === 0) || 
+                         node.isPlaceholder || 
+                         (node.value && (node.value === 'Container' || node.value === 'New Container'));
+  
+  // BUT only show for template nodes or truly empty nodes (not duplicates)
+  const isTemplateOrEmpty = node.isTemplate || 
+                           (!node.columnIndex && node.columnIndex !== 0) || 
+                           node.isPlaceholder ||
+                           (node.value && (node.value === 'Container' || node.value === 'New Container'));
+  
+  const hasNoRealData = canAddChildren && isTemplateOrEmpty;
   
   if (hasNoRealData) {
     const addContentBtn = document.createElement('button');
