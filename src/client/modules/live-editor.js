@@ -2160,7 +2160,17 @@ function setupAddButtonForArea(area) {
       console.log('✅ Single column selection - mode:', savedSelectionMode);
       // Single column selection
       if (savedSelectionMode === 'child') {
-        assignColumnToNode(savedSelectedNode, savedSelectedIndices[0]);
+        // 🔥 CRITICAL FIX: Create child first, then assign column to the child
+        addChildContainer(savedSelectedNode);
+        
+        // Find the newly created child (it will be the last child)
+        setTimeout(() => {
+          if (savedSelectedNode.children && savedSelectedNode.children.length > 0) {
+            const newChild = savedSelectedNode.children[savedSelectedNode.children.length - 1];
+            assignColumnToNode(newChild, savedSelectedIndices[0]);
+            console.log('✅ Child created and column assigned:', newChild.id, 'column:', savedSelectedIndices[0]);
+          }
+        }, 50);
       } else {
         addSiblingWithColumn(savedSelectedNode, savedSelectedIndices[0]);
       }
@@ -2168,11 +2178,19 @@ function setupAddButtonForArea(area) {
       console.log('✅ Multiple column selection (' + savedSelectedIndices.length + ') - mode:', savedSelectionMode);
       // Multiple column selection
       if (savedSelectionMode === 'child') {
-        // Create multiple child containers
-        createMultipleColumnContainers(savedSelectedNode, savedSelectedIndices.map(index => ({
-          index: index,
-          name: getColumnName(index)
-        })));
+        // 🔥 CRITICAL FIX: Create multiple children, one for each column
+        savedSelectedIndices.forEach((columnIndex, i) => {
+          addChildContainer(savedSelectedNode);
+          
+          // Find the newly created child and assign column
+          setTimeout(() => {
+            if (savedSelectedNode.children && savedSelectedNode.children.length > 0) {
+              const newChild = savedSelectedNode.children[savedSelectedNode.children.length - 1];
+              assignColumnToNode(newChild, columnIndex);
+              console.log('✅ Multiple child', i+1, 'created and column assigned:', newChild.id, 'column:', columnIndex);
+            }
+          }, 50 + (i * 10)); // Stagger slightly for multiple children
+        });
       } else {
         // Create multiple sibling containers
         savedSelectedIndices.forEach(columnIndex => {
