@@ -1915,22 +1915,58 @@ function getContextualValuesForNodeWithFilter(filterNode, columnIndex) {
 // Store current selection state
 let currentSelectedNode = null;
 let currentSelectionMode = 'child'; // 'child' or 'sibling'
-let selectedColumnIndex = null;
+let selectedColumnIndices = []; // Changed to array for multiselect
+let currentSelectionArea = null;
 
 // Function to show the column selection area
 function showColumnSelectionArea(node) {
+  // Hide any existing selection area
+  hideColumnSelectionArea();
+  
   currentSelectedNode = node;
-  const columnSelectionArea = document.querySelector('.column-selection-area');
-  const availableColumnsContainer = document.getElementById('available-columns');
-  const addButton = document.getElementById('add-selected-column');
+  selectedColumnIndices = []; // Reset selections
   
-  // Clear previous content
-  availableColumnsContainer.innerHTML = '';
-  selectedColumnIndex = null;
-  addButton.style.display = 'none';
-  
-  // Show the area
+  // Create floating column selection area
+  const columnSelectionArea = document.createElement('div');
+  columnSelectionArea.className = 'column-selection-area';
   columnSelectionArea.style.display = 'block';
+  
+  // Find the node element to position relative to
+  const nodeElement = document.querySelector(`[data-node-id="${node.id}"]`);
+  if (!nodeElement) {
+    console.error('Could not find node element for positioning');
+    return;
+  }
+  
+  // Position the area below the node
+  const nodeRect = nodeElement.getBoundingClientRect();
+  columnSelectionArea.style.top = (nodeRect.bottom + window.scrollY + 10) + 'px';
+  columnSelectionArea.style.left = (nodeRect.left + window.scrollX) + 'px';
+  
+  // Create the content structure
+  columnSelectionArea.innerHTML = `
+    <div class="column-controls">
+      <div class="toggle-group">
+        <label>Add as:</label>
+        <button class="toggle-button active child-toggle" data-mode="child">Child</button>
+        <button class="toggle-button sibling-toggle" data-mode="sibling">Sibling</button>
+      </div>
+      <div class="available-columns">
+        <!-- Column buttons will be added here -->
+      </div>
+      <div class="selection-actions" style="display: none;">
+        <span class="selection-count">0 columns selected</span>
+        <button class="add-button">➕ Add Selected</button>
+      </div>
+    </div>
+  `;
+  
+  // Add to body
+  document.body.appendChild(columnSelectionArea);
+  currentSelectionArea = columnSelectionArea;
+  
+  // Get containers
+  const availableColumnsContainer = columnSelectionArea.querySelector('.available-columns');
   
   // Get available columns
   const activeSheetId = window.excelData.activeSheetId;
@@ -1957,109 +1993,151 @@ function showColumnSelectionArea(node) {
       columnBtn.title = 'Column already used in hierarchy';
       columnBtn.disabled = true;
     } else {
-      columnBtn.addEventListener('click', () => selectColumn(index, columnBtn));
+      columnBtn.addEventListener('click', () => toggleColumnSelection(index, columnBtn));
     }
     
     availableColumnsContainer.appendChild(columnBtn);
   });
   
-  // Setup toggle buttons
-  setupToggleButtons();
+  // Setup toggle buttons for this area
+  setupToggleButtonsForArea(columnSelectionArea);
   
-  // Setup add button
-  setupAddButton();
+  // Setup add button for this area
+  setupAddButtonForArea(columnSelectionArea);
 }
 
-// Function to setup toggle buttons (Child/Sibling)
-function setupToggleButtons() {
-  const childToggle = document.getElementById('toggle-child');
-  const siblingToggle = document.getElementById('toggle-sibling');
+// Function to hide column selection area
+function hideColumnSelectionArea() {
+  if (currentSelectionArea) {
+    currentSelectionArea.remove();
+    currentSelectionArea = null;
+  }
+  currentSelectedNode = null;
+  selectedColumnIndices = [];
+}
+
+// Function to setup toggle buttons for specific area
+function setupToggleButtonsForArea(area) {
+  const childToggle = area.querySelector('.child-toggle');
+  const siblingToggle = area.querySelector('.sibling-toggle');
   
-  // Remove existing listeners
-  childToggle.replaceWith(childToggle.cloneNode(true));
-  siblingToggle.replaceWith(siblingToggle.cloneNode(true));
-  
-  // Get fresh references
-  const newChildToggle = document.getElementById('toggle-child');
-  const newSiblingToggle = document.getElementById('toggle-sibling');
-  
-  newChildToggle.addEventListener('click', () => {
+  childToggle.addEventListener('click', () => {
     currentSelectionMode = 'child';
-    newChildToggle.classList.add('active');
-    newSiblingToggle.classList.remove('active');
+    childToggle.classList.add('active');
+    siblingToggle.classList.remove('active');
   });
   
-  newSiblingToggle.addEventListener('click', () => {
+  siblingToggle.addEventListener('click', () => {
     currentSelectionMode = 'sibling';
-    newSiblingToggle.classList.add('active');
-    newChildToggle.classList.remove('active');
+    siblingToggle.classList.add('active');
+    childToggle.classList.remove('active');
   });
   
   // Set initial state
   if (currentSelectedNode && (currentSelectedNode.level <= -1 || currentSelectedNode.isPlaceholder)) {
     // Root level nodes can only have children
-    newSiblingToggle.disabled = true;
-    newSiblingToggle.style.opacity = '0.5';
+    siblingToggle.disabled = true;
+    siblingToggle.style.opacity = '0.5';
     currentSelectionMode = 'child';
-    newChildToggle.classList.add('active');
-    newSiblingToggle.classList.remove('active');
+    childToggle.classList.add('active');
+    siblingToggle.classList.remove('active');
   } else {
-    newSiblingToggle.disabled = false;
-    newSiblingToggle.style.opacity = '1';
-    // Restore current mode
+    siblingToggle.disabled = false;
+    siblingToggle.style.opacity = '1';
+    // Default to current mode
     if (currentSelectionMode === 'child') {
-      newChildToggle.classList.add('active');
-      newSiblingToggle.classList.remove('active');
+      childToggle.classList.add('active');
+      siblingToggle.classList.remove('active');
     } else {
-      newSiblingToggle.classList.add('active');
-      newChildToggle.classList.remove('active');
+      siblingToggle.classList.add('active');
+      childToggle.classList.remove('active');
     }
   }
 }
 
-// Function to select a column
-function selectColumn(columnIndex, buttonElement) {
-  // Clear previous selection
-  document.querySelectorAll('.column-button.selected').forEach(btn => {
-    btn.classList.remove('selected');
-  });
+// Function to toggle column selection (multiselect)
+function toggleColumnSelection(columnIndex, buttonElement) {
+  const isSelected = buttonElement.classList.contains('selected');
   
-  // Select this column
-  buttonElement.classList.add('selected');
-  selectedColumnIndex = columnIndex;
+  if (isSelected) {
+    // Deselect this column
+    buttonElement.classList.remove('selected');
+    const index = selectedColumnIndices.indexOf(columnIndex);
+    if (index > -1) {
+      selectedColumnIndices.splice(index, 1);
+    }
+  } else {
+    // Select this column
+    buttonElement.classList.add('selected');
+    selectedColumnIndices.push(columnIndex);
+  }
   
-  // Show add button
-  const addButton = document.getElementById('add-selected-column');
-  addButton.style.display = 'block';
+  // Update selection UI
+  updateSelectionUI();
 }
 
-// Function to setup add button
-function setupAddButton() {
-  const addButton = document.getElementById('add-selected-column');
+// Function to update selection UI
+function updateSelectionUI() {
+  if (!currentSelectionArea) return;
   
-  // Remove existing listener
-  addButton.replaceWith(addButton.cloneNode(true));
-  const newAddButton = document.getElementById('add-selected-column');
+  const selectionActions = currentSelectionArea.querySelector('.selection-actions');
+  const selectionCount = currentSelectionArea.querySelector('.selection-count');
+  const addButton = currentSelectionArea.querySelector('.add-button');
   
-  newAddButton.addEventListener('click', () => {
-    if (!currentSelectedNode || selectedColumnIndex === null) return;
+  if (selectedColumnIndices.length === 0) {
+    selectionActions.style.display = 'none';
+  } else {
+    selectionActions.style.display = 'flex';
+    selectionActions.style.alignItems = 'center';
+    selectionActions.style.gap = '10px';
+    
+    const count = selectedColumnIndices.length;
+    const columnText = count === 1 ? 'column' : 'columns';
+    selectionCount.textContent = `${count} ${columnText} selected`;
+  }
+}
+
+// Function to setup add button for specific area
+function setupAddButtonForArea(area) {
+  const addButton = area.querySelector('.add-button');
+  
+  addButton.addEventListener('click', () => {
+    if (!currentSelectedNode || selectedColumnIndices.length === 0) return;
     
     // Hide the selection area
-    document.querySelector('.column-selection-area').style.display = 'none';
+    hideColumnSelectionArea();
     
-    // Apply the selection
-    if (currentSelectionMode === 'child') {
-      // Add as child
-      assignColumnToNode(currentSelectedNode, selectedColumnIndex);
+    // Apply the selections
+    if (selectedColumnIndices.length === 1) {
+      // Single column selection
+      if (currentSelectionMode === 'child') {
+        assignColumnToNode(currentSelectedNode, selectedColumnIndices[0]);
+      } else {
+        addSiblingWithColumn(currentSelectedNode, selectedColumnIndices[0]);
+      }
     } else {
-      // Add as sibling
-      addSiblingWithColumn(currentSelectedNode, selectedColumnIndex);
+      // Multiple column selection
+      if (currentSelectionMode === 'child') {
+        // Create multiple child containers
+        createMultipleColumnContainers(currentSelectedNode, selectedColumnIndices.map(index => ({
+          index: index,
+          name: getColumnName(index)
+        })));
+      } else {
+        // Create multiple sibling containers
+        selectedColumnIndices.forEach(columnIndex => {
+          addSiblingWithColumn(currentSelectedNode, columnIndex);
+        });
+      }
     }
-    
-    // Reset state
-    currentSelectedNode = null;
-    selectedColumnIndex = null;
   });
+}
+
+// Helper function to get column name by index
+function getColumnName(columnIndex) {
+  const activeSheetId = window.excelData.activeSheetId;
+  const sheetData = window.excelData.sheetsLoaded[activeSheetId];
+  return sheetData?.headers?.[columnIndex] || `Column ${columnIndex + 1}`;
 }
 
 // Function to add sibling with column
@@ -2109,16 +2187,15 @@ function findParentNodeLocal(targetNode) {
 
 // Hide column selection area when clicking outside
 document.addEventListener('click', (e) => {
-  const columnSelectionArea = document.querySelector('.column-selection-area');
+  if (!currentSelectionArea) return;
+  
   const selectColumnButtons = document.querySelectorAll('.select-column-button');
   
   // Check if click is on a select column button or inside the selection area
-  let isInsideSelection = columnSelectionArea && columnSelectionArea.contains(e.target);
+  let isInsideSelection = currentSelectionArea.contains(e.target);
   let isSelectButton = Array.from(selectColumnButtons).some(btn => btn.contains(e.target));
   
-  if (!isInsideSelection && !isSelectButton && columnSelectionArea) {
-    columnSelectionArea.style.display = 'none';
-    currentSelectedNode = null;
-    selectedColumnIndex = null;
+  if (!isInsideSelection && !isSelectButton) {
+    hideColumnSelectionArea();
   }
 }); 

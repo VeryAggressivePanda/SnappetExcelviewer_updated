@@ -2347,13 +2347,17 @@ footer {
   display: none !important;
 }
 
-/* Column Selection Area */
+/* Column Selection Area - Floating */
 .column-selection-area {
+  position: absolute;
   background: var(--light-blue-bg);
   border-radius: 8px;
   padding: 12px;
-  margin-top: 10px;
   border: 1px solid rgba(52, 163, 215, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 400px;
+  max-width: 600px;
 }
 
 .column-controls {
@@ -2465,4 +2469,22 @@ footer {
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Selection Actions Area */
+.selection-actions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(52, 163, 215, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.selection-count {
+  font-size: 12px;
+  color: var(--primary-blue);
+  font-weight: 500;
+  font-family: 'AbeZeh', sans-serif;
 } 
