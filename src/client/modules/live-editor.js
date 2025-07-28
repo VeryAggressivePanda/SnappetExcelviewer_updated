@@ -34,197 +34,80 @@ function addEditControls(node, nodeEl, header) {
   editControls.style.marginLeft = 'auto';
   editControls.style.position = 'relative';
   
-  // Add direct "+Add Content" button for nodes that can have children added
-  // Show for: nodes without children, empty containers, placeholders, or nodes that can be expanded
-  const canAddChildren = (!node.children || node.children.length === 0) || 
-                         node.isPlaceholder || 
-                         (node.value && (node.value === 'Container' || node.value === 'New Container'));
+  // ALL nodes get Add/Edit Content button - NO MORE KEBAB MENUS
+  // Show "Add Content" if no children, "Edit Content" if has children
+  const hasChildren = node.children && node.children.length > 0;
+  const buttonText = hasChildren ? '✏️ Edit Content' : '➕ Add Content';
+  const buttonClass = hasChildren ? 'edit-content-button' : 'add-content-button';
   
-  // BUT only show for template nodes or truly empty nodes (not duplicates)
-  const isTemplateOrEmpty = node.isTemplate || 
-                           (!node.columnIndex && node.columnIndex !== 0) || 
-                           node.isPlaceholder ||
-                           (node.value && (node.value === 'Container' || node.value === 'New Container'));
-  
-  const hasNoRealData = canAddChildren && isTemplateOrEmpty;
-  
-  if (hasNoRealData) {
+  // Create button for ALL nodes - both templates and duplicates
+  // Templates get actual functionality, duplicates show but alert when clicked
+  {
     const addContentBtn = document.createElement('button');
-    addContentBtn.className = 'add-content-button';
-    addContentBtn.innerHTML = '➕ Add Content';
+    addContentBtn.className = buttonClass;
+    addContentBtn.innerHTML = buttonText;
     addContentBtn.style.padding = '6px 12px';
     addContentBtn.style.fontSize = '12px';
-    addContentBtn.style.border = '2px solid #4caf50';
     addContentBtn.style.borderRadius = '1rem';
-    addContentBtn.style.background = '#4caf50';
-    addContentBtn.style.color = 'white';
     addContentBtn.style.cursor = 'pointer';
     addContentBtn.style.fontWeight = '500';
     addContentBtn.style.transition = 'all 0.2s ease';
     addContentBtn.style.fontFamily = 'Inter, sans-serif';
     
+    // Different colors for Add vs Edit
+    if (hasChildren) {
+      // Edit Content - Blue
+      addContentBtn.style.border = '2px solid #2196f3';
+      addContentBtn.style.background = '#2196f3';
+      addContentBtn.style.color = 'white';
+    } else {
+      // Add Content - Green  
+      addContentBtn.style.border = '2px solid #4caf50';
+      addContentBtn.style.background = '#4caf50';
+      addContentBtn.style.color = 'white';
+    }
+    
     addContentBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      
+      // Check if this is a duplicate node
+      if (node.isDuplicate) {
+        alert('🚫 This is a duplicate node. Please modify the template (🏗️ master) instead to automatically update all duplicates.');
+        return;
+      }
+      
       console.log('Add Content clicked for node:', node);
       showColumnSelectionArea(node);
     });
     
     addContentBtn.addEventListener('mouseenter', () => {
-      addContentBtn.style.background = '#45a049';
+      if (hasChildren) {
+        // Edit Content hover - darker blue
+        addContentBtn.style.background = '#1976d2';
+        addContentBtn.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+      } else {
+        // Add Content hover - darker green
+        addContentBtn.style.background = '#45a049';
+        addContentBtn.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
+      }
       addContentBtn.style.transform = 'translateY(-1px)';
-      addContentBtn.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
     });
     
     addContentBtn.addEventListener('mouseleave', () => {
-      addContentBtn.style.background = '#4caf50';
+      if (hasChildren) {
+        // Edit Content - blue
+        addContentBtn.style.background = '#2196f3';
+      } else {
+        // Add Content - green
+        addContentBtn.style.background = '#4caf50';
+      }
       addContentBtn.style.transform = 'translateY(0)';
       addContentBtn.style.boxShadow = 'none';
     });
     
     editControls.appendChild(addContentBtn);
   }
-  
-  // Only create kebab menu for nodes that already have data/content
-  // EXCLUDE nodes that show "+Add Content" button to avoid double controls
-  if (((node.columnIndex || node.columnIndex === 0) || node.isPlaceholder) && !hasNoRealData) {
-    // Menu items array - build first to check if we need menu
-    const menuItems = [];
-  
-    // Add Sibling option (not for root)
-    if (node.level > -1 && !node.isPlaceholder) {
-      menuItems.push({
-        text: '➕ Add Sibling',
-        icon: '➕',
-        action: () => addSiblingContainer(node),
-        color: '#2196f3'
-      });
-    }
-    
-    // Layout toggle option (available for ALL nodes, not just those with children)
-    if (!node.isPlaceholder) {
-      const currentLayout = node.layoutMode || 'horizontal';
-      const newLayout = currentLayout === 'horizontal' ? 'vertical' : 'horizontal';
-      const layoutIcon = currentLayout === 'horizontal' ? '⬇️' : '➡️';
-      
-      menuItems.push({
-        text: `${layoutIcon} Layout Toggle`,
-        icon: layoutIcon,
-        action: () => toggleNodeLayout(node),
-        color: '#ff9800'
-      });
-    }
-    
-    // Manage Items option for nodes with column data
-    if ((node.columnIndex || node.columnIndex === 0) && !node.isPlaceholder) {
-      menuItems.push({
-        text: '☑️ Refresh Values',
-        icon: '🔄',
-        action: () => {
-          if (node.columnIndex !== undefined) {
-            console.log('Refreshing column data for:', node.columnName);
-            assignColumnToNode(node, node.columnIndex);
-          }
-        },
-        color: '#9c27b0'
-      });
-    }
-    
-    // Delete option (not for root)
-    if (node.level > -1 && !node.isPlaceholder) {
-      menuItems.push({
-        text: '🗑️ Delete',
-        icon: '❌',
-        action: () => deleteContainer(node),
-        color: '#f44336',
-        separator: true
-      });
-    }
-    
-    // Only create kebab menu if there are actually menu items to show
-    if (menuItems.length > 0) {
-      // Create kebab menu button
-      const kebabBtn = document.createElement('button');
-      kebabBtn.className = 'kebab-menu-button';
-      kebabBtn.innerHTML = '⋮';
-      
-      // Create dropdown menu
-      const dropdownMenu = document.createElement('div');
-      dropdownMenu.className = 'kebab-dropdown-menu';
-      dropdownMenu.style.display = 'none';
-      
-      // Create menu item elements
-      menuItems.forEach((item, index) => {
-        if (item.separator && index > 0) {
-          const separator = document.createElement('div');
-          separator.style.height = '1px';
-          separator.style.background = '#eee';
-          separator.style.margin = '4px 0';
-          dropdownMenu.appendChild(separator);
-        }
-      
-      const menuItem = document.createElement('div');
-      menuItem.className = 'kebab-menu-item';
-      menuItem.textContent = item.text;
-      menuItem.style.padding = '8px 12px';
-      menuItem.style.cursor = 'pointer';
-      menuItem.style.fontSize = '13px';
-      menuItem.style.color = item.color;
-      menuItem.style.borderBottom = index < menuItems.length - 1 ? '1px solid #f0f0f0' : 'none';
-      menuItem.style.transition = 'background-color 0.2s ease';
-      
-      menuItem.addEventListener('mouseenter', () => {
-        menuItem.style.backgroundColor = '#f5f5f5';
-      });
-      
-      menuItem.addEventListener('mouseleave', () => {
-        menuItem.style.backgroundColor = 'transparent';
-      });
-      
-      menuItem.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.style.display = 'none';
-        item.action();
-      });
-      
-      dropdownMenu.appendChild(menuItem);
-    });
-    
-      // Toggle dropdown on kebab button click
-      kebabBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isVisible = dropdownMenu.style.display === 'block';
-        
-        // Hide all other open dropdowns
-        document.querySelectorAll('.kebab-dropdown-menu').forEach(menu => {
-          menu.style.display = 'none';
-        });
-        
-        // Toggle this dropdown
-        dropdownMenu.style.display = isVisible ? 'none' : 'block';
-      });
-      
-      // Close dropdown when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!editControls.contains(e.target)) {
-          dropdownMenu.style.display = 'none';
-        }
-      });
-      
-      // Hover effects for kebab button
-      kebabBtn.addEventListener('mouseenter', () => {
-        kebabBtn.style.background = '#e9ecef';
-        kebabBtn.style.borderColor = '#adb5bd';
-      });
-      
-      kebabBtn.addEventListener('mouseleave', () => {
-        kebabBtn.style.background = '#f8f9fa';
-        kebabBtn.style.borderColor = '#ddd';
-      });
-  
-      editControls.appendChild(kebabBtn);
-      editControls.appendChild(dropdownMenu);
-    } // End of menuItems.length > 0 check
-  } // End of kebab menu conditional
+
   
   header.appendChild(editControls);
 }
@@ -2270,9 +2153,9 @@ function findParentNodeLocal(targetNode) {
 document.addEventListener('click', (e) => {
   if (!currentSelectionArea) return;
   
-  const addContentButtons = document.querySelectorAll('.add-content-button');
+      const addContentButtons = document.querySelectorAll('.add-content-button, .edit-content-button');
   
-  // Check if click is on an add content button or inside the selection area
+  // Check if click is on an add/edit content button or inside the selection area
   let isInsideSelection = currentSelectionArea.contains(e.target);
   let isAddContentButton = Array.from(addContentButtons).some(btn => btn.contains(e.target));
   
