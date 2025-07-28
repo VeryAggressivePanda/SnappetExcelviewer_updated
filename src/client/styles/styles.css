@@ -2365,25 +2365,33 @@ footer {
   gap: 6px;
   flex-wrap: wrap;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .column-selection-area .column-button {
   flex: 0 0 auto;
   min-width: auto;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  /* Add tooltip for full text */
 }
 
 .column-controls {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 15px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Keep toggle and columns side by side */
 }
 
 .toggle-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0; /* Don't shrink toggle group */
+  min-width: 120px; /* Minimum space for toggle */
 }
 
 .toggle-group label {
@@ -2416,9 +2424,11 @@ footer {
 
 .available-columns {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   align-items: center;
+  flex: 1; /* Take remaining space */
+  min-width: 0; /* Allow shrinking */
 }
 
 .column-button {
@@ -2433,6 +2443,11 @@ footer {
   transition: all 0.2s ease;
   font-family: 'AbeZeh', sans-serif;
   position: relative;
+  max-width: 120px; /* Limit button width */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0; /* Prevent buttons from getting too small */
 }
 
 .column-button:hover {

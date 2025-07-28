@@ -57,6 +57,7 @@ function addEditControls(node, nodeEl, header) {
     
     addContentBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      console.log('Add Content clicked for node:', node);
       showColumnSelectionArea(node);
     });
     
@@ -1914,6 +1915,8 @@ let currentSelectionArea = null;
 
 // Function to show the column selection area
 function showColumnSelectionArea(node) {
+  console.log('showColumnSelectionArea called with node:', node);
+  
   // Hide any existing selection area
   hideColumnSelectionArea();
   
@@ -1985,9 +1988,14 @@ function showColumnSelectionArea(node) {
     columnBtn.textContent = header;
     columnBtn.dataset.columnIndex = index;
     
+    // Add tooltip for long text
+    if (header.length > 15) {
+      columnBtn.title = header;
+    }
+    
     if (usedColumns.includes(index)) {
       columnBtn.classList.add('disabled');
-      columnBtn.title = 'Column already used in hierarchy';
+      columnBtn.title = `${header} (already used in hierarchy)`;
       columnBtn.disabled = true;
     } else {
       columnBtn.addEventListener('click', () => toggleColumnSelection(index, columnBtn));
