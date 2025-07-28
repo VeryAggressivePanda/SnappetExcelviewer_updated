@@ -34,8 +34,13 @@ function addEditControls(node, nodeEl, header) {
   editControls.style.marginLeft = 'auto';
   editControls.style.position = 'relative';
   
-  // Add direct "+Add Content" button for nodes without data
-  if (!node.columnIndex && node.columnIndex !== 0 && !node.isPlaceholder) {
+  // Add direct "+Add Content" button for nodes without meaningful data
+  // Show for: empty containers, placeholders, or nodes without column data
+  const hasNoRealData = (!node.columnIndex && node.columnIndex !== 0) || 
+                        node.isPlaceholder || 
+                        (node.value && (node.value === 'Container' || node.value === 'New Container'));
+  
+  if (hasNoRealData) {
     const addContentBtn = document.createElement('button');
     addContentBtn.className = 'add-content-button';
     addContentBtn.innerHTML = '➕ Add Content';
