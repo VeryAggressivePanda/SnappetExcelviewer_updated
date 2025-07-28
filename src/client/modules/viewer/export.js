@@ -64,11 +64,23 @@ async function exportToPdf() {
     // Get the data for the active sheet
     const sheetData = window.excelData.sheetsLoaded[activeSheetId];
     
-    // Filter the data by the selected top-level value
+    // Filter the data by the selected value (search in children too)
     let filteredData = { ...sheetData };
     if (selectedValue) {
-      // Get nodes that match the selected value
-      const matchingNodes = sheetData.root.children.filter(node => node.value === selectedValue);
+      // Find the container that contains the selected node
+      let matchingNodes = [];
+      
+      sheetData.root.children.forEach(containerNode => {
+        // Check if this container or its children match
+        if (containerNode.value === selectedValue) {
+          matchingNodes.push(containerNode);
+        } else if (containerNode.children) {
+          const hasMatchingChild = containerNode.children.some(child => child.value === selectedValue);
+          if (hasMatchingChild) {
+            matchingNodes.push(containerNode);
+          }
+        }
+      });
       
       // Create a deep clone of the matching nodes to avoid modifying the original data
       const clonedNodes = deepCloneWithoutParent(matchingNodes);
@@ -85,13 +97,13 @@ async function exportToPdf() {
       // Strip parent references vóór export/preview
       stripParentReferences(clonedNodes);
       // Debug: check of parent-property is verwijderd
-      console.log("Na strippen, parent in eerste node?", 'parent' in clonedNodes[0]);
+      console.log("Na strippen, parent in eerste node?", clonedNodes.length > 0 ? 'parent' in clonedNodes[0] : 'no nodes to check');
       
       // Log what we're sending for debugging
       console.log("[PDF EXPORT] Sending to PDF export:", {
         selectedValue,
         nodeCount: filteredData.root.children.length,
-        firstNode: filteredData.root.children[0],
+        firstNode: filteredData.root.children.length > 0 ? filteredData.root.children[0] : null,
         levels: filteredData.root.children.map(n => ({ value: n.value, level: n.level }))
       });
     }
@@ -207,11 +219,23 @@ function previewPdf() {
     // Get the data for the active sheet
     const sheetData = window.excelData.sheetsLoaded[activeSheetId];
     
-    // Filter the data by the selected top-level value
+    // Filter the data by the selected value (search in children too)
     let filteredData = { ...sheetData };
     if (selectedValue) {
-      // Get nodes that match the selected value
-      const matchingNodes = sheetData.root.children.filter(node => node.value === selectedValue);
+      // Find the container that contains the selected node
+      let matchingNodes = [];
+      
+      sheetData.root.children.forEach(containerNode => {
+        // Check if this container or its children match
+        if (containerNode.value === selectedValue) {
+          matchingNodes.push(containerNode);
+        } else if (containerNode.children) {
+          const hasMatchingChild = containerNode.children.some(child => child.value === selectedValue);
+          if (hasMatchingChild) {
+            matchingNodes.push(containerNode);
+          }
+        }
+      });
       
       // Create a deep clone of the matching nodes to avoid modifying the original data
       const clonedNodes = deepCloneWithoutParent(matchingNodes);
@@ -228,13 +252,13 @@ function previewPdf() {
       // Strip parent references vóór export/preview
       stripParentReferences(clonedNodes);
       // Debug: check of parent-property is verwijderd
-      console.log("Na strippen, parent in eerste node?", 'parent' in clonedNodes[0]);
+      console.log("Na strippen, parent in eerste node?", clonedNodes.length > 0 ? 'parent' in clonedNodes[0] : 'no nodes to check');
       
       // Log what we're sending for debugging
       console.log("Sending to PDF preview:", {
         selectedValue,
         nodeCount: filteredData.root.children.length,
-        firstNode: filteredData.root.children[0],
+        firstNode: filteredData.root.children.length > 0 ? filteredData.root.children[0] : null,
         levels: filteredData.root.children.map(n => ({ value: n.value, level: n.level }))
       });
     }

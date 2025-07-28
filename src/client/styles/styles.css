@@ -2351,15 +2351,16 @@ footer {
 
 .column-controls {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
+  align-items: center;
 }
 
 /* Add Actions Area */
 .add-actions {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  flex-shrink: 0;
 }
 
 /* Toggle group styles removed - no longer needed */
@@ -2442,10 +2443,9 @@ footer {
 
 /* Clear Content Actions */
 .clear-content-actions {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(244, 67, 54, 0.2);
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .clear-content-button {

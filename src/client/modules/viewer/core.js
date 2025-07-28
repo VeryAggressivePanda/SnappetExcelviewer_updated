@@ -89,12 +89,32 @@ function populateExportColumnDropdown() {
     return;
   }
   
-  // Get top-level nodes (level 0 nodes which are the root nodes in each tab)
-  const topLevelNodes = sheetData.root.children.filter(node => 
-    node.columnIndex === 0
-  );
+  // Get children of containers for the dropdown (not the containers themselves)
+  let exportableNodes = [];
   
-  console.log("Top level nodes for export:", topLevelNodes.map(n => ({ value: n.value, level: n.level })));
+  // Loop through container nodes and get their children
+  sheetData.root.children.forEach(containerNode => {
+    if (containerNode.children && containerNode.children.length > 0) {
+      // Get content children (not placeholders)
+      const contentChildren = containerNode.children.filter(child => 
+        !child.isPlaceholder && 
+        child.value && 
+        child.value.trim() !== ''
+      );
+      exportableNodes.push(...contentChildren);
+    }
+  });
+  
+  // If no children found, fall back to direct nodes
+  if (exportableNodes.length === 0) {
+    exportableNodes = sheetData.root.children.filter(node => 
+      !node.isPlaceholder && 
+      node.value && 
+      node.value.trim() !== ''
+    );
+  }
+  
+  console.log("Exportable nodes (children of containers):", exportableNodes.map(n => ({ value: n.value, level: n.level })));
   
   // Add default option
   const defaultOption = document.createElement('option');
@@ -102,8 +122,8 @@ function populateExportColumnDropdown() {
   defaultOption.text = 'Select an item to export...';
   exportColumnSelect.appendChild(defaultOption);
   
-  // Add option for each top-level node
-  topLevelNodes.forEach(node => {
+  // Add option for each exportable node  
+  exportableNodes.forEach(node => {
     const option = document.createElement('option');
     option.value = node.value;
     option.text = node.value;

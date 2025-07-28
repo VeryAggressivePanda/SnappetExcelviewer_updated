@@ -48,14 +48,14 @@
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: wrap !important;
-  gap: 8px !important;
+  gap: 1rem !important;
   align-items: stretch !important;
 }
 
 .pdf-section .layout-vertical {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
+  gap: 1rem !important;
   align-items: stretch !important;
 }
 
@@ -95,7 +95,7 @@
 .pdf-section .level-5-children {
   display: flex !important;
   flex-wrap: wrap !important;
-  gap: 6px !important;
+  gap: 10px !important;
   width: 100% !important;
 }
 
@@ -133,7 +133,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 1rem;
 }
 
 /* Level 2 Nodes (Les) - Lichtblauw */
@@ -151,25 +151,23 @@
 }
 
 .pdf-section .level-2-header {
-  background: rgba(52, 163, 215, 0.1);
-  color: #34a3d7;
+  background: #34a3d7;
+  color: white;
   padding: 12px 16px;
   font-weight: bold;
   font-size: 14px;
-  margin: 0;
-  border-radius: .5rem;
   margin: 20px 0 10px 0;
+  border-radius: .5rem;
 }
 
 .pdf-section .level-2-children {
   background: #fff;
-
+  padding: 0;
   margin: 0;
   display: flex;
   flex-direction: row;
   gap: 1rem;
   flex-wrap: wrap;
- 
 }
 
 /* Property Cards */
@@ -213,6 +211,19 @@
   border-radius: .5rem;
 }
 
+/* Alternating background opacity for property cards and nodes */
+.pdf-section .excel-node-property:nth-child(odd),
+.pdf-section .level-3-node:nth-child(odd),
+.pdf-section .level-4-node:nth-child(odd) {
+  background: #f7f7f9 !important;
+}
+
+.pdf-section .excel-node-property:nth-child(even),
+.pdf-section .level-3-node:nth-child(even),
+.pdf-section .level-4-node:nth-child(even) {
+  background: rgba(247, 247, 249, 0.5) !important;
+}
+
 .pdf-section .level-3-header,
 .pdf-section .level-4-header {
   background: transparent;
@@ -230,48 +241,7 @@
   line-height: 1.4;
 }
 
-/* Layout System for PDF */
-.pdf-section .layout-horizontal {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: wrap !important;
-  gap: .5rem !important;
-  align-items: stretch !important;
-}
 
-.pdf-section .layout-vertical {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 0 !important;
-  align-items: stretch !important;
-}
-
-/* Horizontal layout variations */
-.pdf-section .layout-horizontal.layout-single-child > [class*="-node"] {
-  width: 100% !important;
-  flex: 1 !important;
-}
-
-.pdf-section .layout-horizontal.layout-two-children > [class*="-node"] {
-  width: calc(50% - 6px) !important;
-  flex: 1 !important;
-}
-
-.pdf-section .layout-horizontal.layout-three-children > [class*="-node"] {
-  width: calc(33.333% - 8px) !important;
-  flex: 1 !important;
-}
-
-.pdf-section .layout-horizontal.layout-many-children > [class*="-node"] {
-  width: calc(25% - 9px) !important;
-  flex: 1 !important;
-}
-
-/* Vertical layout - all children full width */
-.pdf-section .layout-vertical > [class*="-node"] {
-  width: 100% !important;
-  flex: none !important;
-}
 
 /* Ensure all colors render correctly in PDF */
 * {
