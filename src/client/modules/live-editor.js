@@ -34,79 +34,72 @@ function addEditControls(node, nodeEl, header) {
   editControls.style.marginLeft = 'auto';
   editControls.style.position = 'relative';
   
-  // ALL nodes get Add/Edit Content button - NO MORE KEBAB MENUS
-  // Show "Add Content" if no children, "Edit Content" if has children
+  // Create icon buttons for ALL nodes
+  // Always show: Add/Edit button + Delete button
+  // If has content: also show Layout Toggle button
   const hasChildren = node.children && node.children.length > 0;
-  const buttonText = hasChildren ? '✏️ Edit Content' : '➕ Add Content';
-  const buttonClass = hasChildren ? 'edit-content-button' : 'add-content-button';
+  const hasContent = (node.columnIndex || node.columnIndex === 0) || hasChildren;
   
-  // Create button for ALL nodes - both templates and duplicates
-  // Templates get actual functionality, duplicates show but alert when clicked
-  {
-    const addContentBtn = document.createElement('button');
-    addContentBtn.className = buttonClass;
-    addContentBtn.innerHTML = buttonText;
-    addContentBtn.style.padding = '6px 12px';
-    addContentBtn.style.fontSize = '12px';
-    addContentBtn.style.borderRadius = '1rem';
-    addContentBtn.style.cursor = 'pointer';
-    addContentBtn.style.fontWeight = '500';
-    addContentBtn.style.transition = 'all 0.2s ease';
-    addContentBtn.style.fontFamily = 'Inter, sans-serif';
+  // 1. Add/Edit Content Button (Blue Plus)
+  const addContentBtn = document.createElement('button');
+  addContentBtn.className = 'icon-button add-edit-button';
+  addContentBtn.innerHTML = '➕';
+  addContentBtn.title = hasContent ? 'Edit Content' : 'Add Content';
+  
+  addContentBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     
-    // Different colors for Add vs Edit
-    if (hasChildren) {
-      // Edit Content - Blue
-      addContentBtn.style.border = '2px solid #2196f3';
-      addContentBtn.style.background = '#2196f3';
-      addContentBtn.style.color = 'white';
-    } else {
-      // Add Content - Green  
-      addContentBtn.style.border = '2px solid #4caf50';
-      addContentBtn.style.background = '#4caf50';
-      addContentBtn.style.color = 'white';
+    // Check if this is a duplicate node
+    if (node.isDuplicate) {
+      alert('🚫 This is a duplicate node. Please modify the template (🏗️ master) instead to automatically update all duplicates.');
+      return;
     }
     
-    addContentBtn.addEventListener('click', (e) => {
+    console.log('Add Content clicked for node:', node);
+    showColumnSelectionArea(node);
+  });
+  
+  editControls.appendChild(addContentBtn);
+  
+  // 2. Layout Toggle Button (only if has content)
+  if (hasContent) {
+    const layoutToggleBtn = document.createElement('button');
+    layoutToggleBtn.className = 'icon-button layout-toggle-button';
+    layoutToggleBtn.innerHTML = '⚏'; // Layout icon
+    layoutToggleBtn.title = 'Toggle Layout (Horizontal/Vertical)';
+    
+    layoutToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       
-      // Check if this is a duplicate node
       if (node.isDuplicate) {
-        alert('🚫 This is a duplicate node. Please modify the template (🏗️ master) instead to automatically update all duplicates.');
+        alert('🚫 This is a duplicate node. Please modify the template (🏗️ master) instead.');
         return;
       }
       
-      console.log('Add Content clicked for node:', node);
-      showColumnSelectionArea(node);
+      toggleNodeLayout(node);
     });
     
-    addContentBtn.addEventListener('mouseenter', () => {
-      if (hasChildren) {
-        // Edit Content hover - darker blue
-        addContentBtn.style.background = '#1976d2';
-        addContentBtn.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
-      } else {
-        // Add Content hover - darker green
-        addContentBtn.style.background = '#45a049';
-        addContentBtn.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
-      }
-      addContentBtn.style.transform = 'translateY(-1px)';
-    });
-    
-    addContentBtn.addEventListener('mouseleave', () => {
-      if (hasChildren) {
-        // Edit Content - blue
-        addContentBtn.style.background = '#2196f3';
-      } else {
-        // Add Content - green
-        addContentBtn.style.background = '#4caf50';
-      }
-      addContentBtn.style.transform = 'translateY(0)';
-      addContentBtn.style.boxShadow = 'none';
-    });
-    
-    editControls.appendChild(addContentBtn);
+    editControls.appendChild(layoutToggleBtn);
   }
+  
+  // 3. Delete Button (Red Cross)
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'icon-button delete-button';
+  deleteBtn.innerHTML = '✕';
+  deleteBtn.title = 'Delete Node';
+  
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    
+    if (node.isDuplicate) {
+      alert('🚫 This is a duplicate node. Please modify the template (🏗️ master) instead.');
+      return;
+    }
+    
+    deleteContainer(node);
+  });
+  
+  editControls.appendChild(deleteBtn);
 
   
   header.appendChild(editControls);
@@ -2221,7 +2214,7 @@ function findParentNodeLocal(targetNode) {
 document.addEventListener('click', (e) => {
   if (!currentSelectionArea) return;
   
-      const addContentButtons = document.querySelectorAll('.add-content-button, .edit-content-button');
+      const addContentButtons = document.querySelectorAll('.add-edit-button');
   
   // Check if click is on an add/edit content button or inside the selection area
   let isInsideSelection = currentSelectionArea.contains(e.target);

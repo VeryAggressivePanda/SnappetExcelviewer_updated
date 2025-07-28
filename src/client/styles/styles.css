@@ -2514,44 +2514,62 @@ footer {
   font-family: 'Inter', sans-serif;
 } 
 
-/* Add/Edit Content Buttons - Always Visible */
-.add-content-button,
-.edit-content-button {
-  padding: 6px 12px !important;
-  font-size: 12px !important;
-  border-radius: 1rem !important;
+/* Icon Button Base Styles - Round "bolletjes" */
+.icon-button {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: none !important;
   cursor: pointer !important;
-  font-weight: 500 !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
   transition: all 0.2s ease !important;
   font-family: 'Inter', sans-serif !important;
   opacity: 1 !important;
   visibility: visible !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 2px !important;
 }
 
-/* Add Content Button - Green */
-.add-content-button {
-  border: 2px solid #4caf50 !important;
-  background: #4caf50 !important;
+.icon-button:hover {
+  transform: translateY(-1px) scale(1.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Add/Edit Content Button - Blue */
+.add-edit-button {
+  background: #34a3d7 !important;
   color: white !important;
 }
 
-.add-content-button:hover {
-  background: #45a049 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+.add-edit-button:hover {
+  background: #2980b9 !important;
+  box-shadow: 0 2px 8px rgba(52, 163, 215, 0.4) !important;
 }
 
-/* Edit Content Button - Blue */
-.edit-content-button {
-  border: 2px solid #2196f3 !important;
-  background: #2196f3 !important;
+/* Layout Toggle Button - Orange */
+.layout-toggle-button {
+  background: #ff9800 !important;
   color: white !important;
 }
 
-.edit-content-button:hover {
-  background: #1976d2 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3) !important;
+.layout-toggle-button:hover {
+  background: #f57c00 !important;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4) !important;
+}
+
+/* Delete Button - Red */
+.delete-button {
+  background: #c71717 !important;
+  color: white !important;
+}
+
+.delete-button:hover {
+  background: #a31313 !important;
+  box-shadow: 0 2px 8px rgba(199, 23, 23, 0.4) !important;
 }
 
 /* Ensure edit controls are ALWAYS visible for ALL nodes */
@@ -2560,8 +2578,7 @@ footer {
   visibility: visible !important;
 }
 
-/* Make sure content buttons show for ALL nodes */
-[data-node-id] .edit-controls .add-content-button,
-[data-node-id] .edit-controls .edit-content-button {
-  display: inline-block !important;
+/* Make sure icon buttons show for ALL nodes */
+[data-node-id] .edit-controls .icon-button {
+  display: inline-flex !important;
 } 
