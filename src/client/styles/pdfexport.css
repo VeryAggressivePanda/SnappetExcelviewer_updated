@@ -4,7 +4,7 @@
 .pdf-container {
   width: 210mm;
   margin: 0 auto;
-  font-family: 'AbeZeh', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: white;
   /* padding: 10mm; */
   box-sizing: border-box;
@@ -190,14 +190,14 @@
   color: #333;
   font-size: 13px;
   margin-bottom: 4px;
-  font-family: 'AbeZeh', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .pdf-section .property-value {
   color: #666;
   font-size: 12px;
   line-height: 1.4;
-  font-family: 'AbeZeh', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Special nodes styling */

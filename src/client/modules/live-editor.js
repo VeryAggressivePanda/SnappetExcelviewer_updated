@@ -53,7 +53,7 @@ function addEditControls(node, nodeEl, header) {
     addContentBtn.style.cursor = 'pointer';
     addContentBtn.style.fontWeight = '500';
     addContentBtn.style.transition = 'all 0.2s ease';
-    addContentBtn.style.fontFamily = 'AbeZeh, sans-serif';
+    addContentBtn.style.fontFamily = 'Inter, sans-serif';
     
     addContentBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1287,6 +1287,19 @@ function showMultiColumnSelector(node) {
 
 // Function to create multiple column containers
 function createMultipleColumnContainers(parentNode, selectedColumns) {
+  // Validate inputs
+  if (!parentNode) {
+    console.error('❌ createMultipleColumnContainers: parentNode is null or undefined');
+    return;
+  }
+  
+  if (!selectedColumns || !Array.isArray(selectedColumns) || selectedColumns.length === 0) {
+    console.error('❌ createMultipleColumnContainers: selectedColumns is invalid or empty');
+    return;
+  }
+  
+  console.log('✅ createMultipleColumnContainers called with:', { parentNode, selectedColumns });
+  
   // If this is a "New Container" without column info, 
   // find the real template parent (Les node) to add children to
   let realTemplateParent = parentNode;
@@ -1295,6 +1308,13 @@ function createMultipleColumnContainers(parentNode, selectedColumns) {
   if (!parentNode.columnIndex && parentNode.columnIndex !== 0 && parentNode.parent) {
     realTemplateParent = parentNode.parent;
     shouldRemoveContainer = true; // Mark for removal since we're bypassing it
+  }
+  
+  // Additional safety check
+  if (!realTemplateParent) {
+    console.error('❌ realTemplateParent is null, using original parentNode');
+    realTemplateParent = parentNode;
+    shouldRemoveContainer = false;
   }
   
   // Remove placeholder if it exists
@@ -1364,7 +1384,12 @@ function createMultipleColumnContainers(parentNode, selectedColumns) {
     const rootNode = sheetData.root;
     
     // Mark real template parent as GLOBAL template if needed
-    markGlobalTemplatesOfType(rootNode, realTemplateParent.columnName, realTemplateParent.columnIndex);
+    // Add null check for realTemplateParent
+    if (realTemplateParent && realTemplateParent.columnName !== undefined) {
+      markGlobalTemplatesOfType(rootNode, realTemplateParent.columnName, realTemplateParent.columnIndex);
+    } else {
+      console.warn('⚠️ realTemplateParent is null or missing columnName, skipping template marking');
+    }
     
     console.log('🔍 DEBUG: After markGlobalTemplatesOfType:', {
       isTemplate: realTemplateParent.isTemplate,
@@ -2107,7 +2132,17 @@ function setupAddButtonForArea(area) {
   const addButton = area.querySelector('.add-button');
   
   addButton.addEventListener('click', () => {
-    if (!currentSelectedNode || selectedColumnIndices.length === 0) return;
+    console.log('Add button clicked with:', { currentSelectedNode, selectedColumnIndices, currentSelectionMode });
+    
+    if (!currentSelectedNode) {
+      console.error('❌ No currentSelectedNode available');
+      return;
+    }
+    
+    if (selectedColumnIndices.length === 0) {
+      console.error('❌ No columns selected');
+      return;
+    }
     
     // Hide the selection area
     hideColumnSelectionArea();

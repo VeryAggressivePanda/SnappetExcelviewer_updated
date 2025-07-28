@@ -232,7 +232,7 @@ function generatePdfContent(data, title, showEmptyCells = true) {
     <style>
       /* Base font family */
       body {
-        font-family: 'AbeZeh', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
         margin: 0;
         padding: 0;
       }
