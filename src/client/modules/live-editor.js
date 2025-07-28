@@ -70,154 +70,144 @@ function addEditControls(node, nodeEl, header) {
     editControls.appendChild(addContentBtn);
   }
   
-
-  
-  // Create kebab menu button
-  const kebabBtn = document.createElement('button');
-  kebabBtn.className = 'kebab-menu-button';
-  kebabBtn.innerHTML = '⋮';
-  
-  // Create dropdown menu
-  const dropdownMenu = document.createElement('div');
-  dropdownMenu.className = 'kebab-dropdown-menu';
-  dropdownMenu.style.display = 'none';
-  
-  // Menu items array
-  const menuItems = [];
-  
-  // Skip Add Child option - now handled by +Add Content button
-  
-  // Add Sibling option (not for root)
-  if (node.level > -1 && !node.isPlaceholder) {
-    menuItems.push({
-      text: '➕ Add Sibling',
-      icon: '➕',
-      action: () => addSiblingContainer(node),
-      color: '#2196f3'
-    });
-  }
-  
-  // Layout toggle option (available for ALL nodes, not just those with children)
-  if (!node.isPlaceholder) {
-    const currentLayout = node.layoutMode || 'horizontal';
-    const newLayout = currentLayout === 'horizontal' ? 'vertical' : 'horizontal';
-    const layoutIcon = currentLayout === 'horizontal' ? '⬇️' : '➡️';
+  // Only create kebab menu for nodes that already have data/content
+  if ((node.columnIndex || node.columnIndex === 0) || node.isPlaceholder) {
+    // Create kebab menu button
+    const kebabBtn = document.createElement('button');
+    kebabBtn.className = 'kebab-menu-button';
+    kebabBtn.innerHTML = '⋮';
     
-    menuItems.push({
-      text: `${layoutIcon} Layout Toggle`,
-      icon: layoutIcon,
-      action: () => toggleNodeLayout(node),
-      color: '#ff9800'
-    });
-  }
+    // Create dropdown menu
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'kebab-dropdown-menu';
+    dropdownMenu.style.display = 'none';
+    
+    // Menu items array
+    const menuItems = [];
   
-  // Multiselect Columns option (only for nodes without column data)
-  if (!node.columnIndex && node.columnIndex !== 0 && !node.isPlaceholder) {
-    menuItems.push({
-      text: '☑️ Select Multiple Columns',
-      icon: '☑️',
-      action: () => showMultiColumnSelector(node),
-      color: '#9c27b0'
-    });
-  }
-  
-  // Manage Items option for nodes with column data
-  if ((node.columnIndex || node.columnIndex === 0) && !node.isPlaceholder) {
-    menuItems.push({
-      text: '☑️ Refresh Values',
-      icon: '🔄',
-      action: () => {
-        if (node.columnIndex !== undefined) {
-          console.log('Refreshing column data for:', node.columnName);
-          assignColumnToNode(node, node.columnIndex);
-        }
-      },
-      color: '#9c27b0'
-    });
-  }
-  
-  // Delete option (not for root)
-  if (node.level > -1 && !node.isPlaceholder) {
-    menuItems.push({
-      text: '🗑️ Delete',
-      icon: '❌',
-      action: () => deleteContainer(node),
-      color: '#f44336',
-      separator: true
-    });
-  }
-  
-  // Create menu item elements
-  menuItems.forEach((item, index) => {
-    if (item.separator && index > 0) {
-      const separator = document.createElement('div');
-      separator.style.height = '1px';
-      separator.style.background = '#eee';
-      separator.style.margin = '4px 0';
-      dropdownMenu.appendChild(separator);
+    // Add Sibling option (not for root)
+    if (node.level > -1 && !node.isPlaceholder) {
+      menuItems.push({
+        text: '➕ Add Sibling',
+        icon: '➕',
+        action: () => addSiblingContainer(node),
+        color: '#2196f3'
+      });
     }
     
-    const menuItem = document.createElement('div');
-    menuItem.className = 'kebab-menu-item';
-    menuItem.textContent = item.text;
-    menuItem.style.padding = '8px 12px';
-    menuItem.style.cursor = 'pointer';
-    menuItem.style.fontSize = '13px';
-    menuItem.style.color = item.color;
-    menuItem.style.borderBottom = index < menuItems.length - 1 ? '1px solid #f0f0f0' : 'none';
-    menuItem.style.transition = 'background-color 0.2s ease';
+    // Layout toggle option (available for ALL nodes, not just those with children)
+    if (!node.isPlaceholder) {
+      const currentLayout = node.layoutMode || 'horizontal';
+      const newLayout = currentLayout === 'horizontal' ? 'vertical' : 'horizontal';
+      const layoutIcon = currentLayout === 'horizontal' ? '⬇️' : '➡️';
+      
+      menuItems.push({
+        text: `${layoutIcon} Layout Toggle`,
+        icon: layoutIcon,
+        action: () => toggleNodeLayout(node),
+        color: '#ff9800'
+      });
+    }
     
-    menuItem.addEventListener('mouseenter', () => {
-      menuItem.style.backgroundColor = '#f5f5f5';
+    // Manage Items option for nodes with column data
+    if ((node.columnIndex || node.columnIndex === 0) && !node.isPlaceholder) {
+      menuItems.push({
+        text: '☑️ Refresh Values',
+        icon: '🔄',
+        action: () => {
+          if (node.columnIndex !== undefined) {
+            console.log('Refreshing column data for:', node.columnName);
+            assignColumnToNode(node, node.columnIndex);
+          }
+        },
+        color: '#9c27b0'
+      });
+    }
+    
+    // Delete option (not for root)
+    if (node.level > -1 && !node.isPlaceholder) {
+      menuItems.push({
+        text: '🗑️ Delete',
+        icon: '❌',
+        action: () => deleteContainer(node),
+        color: '#f44336',
+        separator: true
+      });
+    }
+    
+    // Create menu item elements
+    menuItems.forEach((item, index) => {
+      if (item.separator && index > 0) {
+        const separator = document.createElement('div');
+        separator.style.height = '1px';
+        separator.style.background = '#eee';
+        separator.style.margin = '4px 0';
+        dropdownMenu.appendChild(separator);
+      }
+      
+      const menuItem = document.createElement('div');
+      menuItem.className = 'kebab-menu-item';
+      menuItem.textContent = item.text;
+      menuItem.style.padding = '8px 12px';
+      menuItem.style.cursor = 'pointer';
+      menuItem.style.fontSize = '13px';
+      menuItem.style.color = item.color;
+      menuItem.style.borderBottom = index < menuItems.length - 1 ? '1px solid #f0f0f0' : 'none';
+      menuItem.style.transition = 'background-color 0.2s ease';
+      
+      menuItem.addEventListener('mouseenter', () => {
+        menuItem.style.backgroundColor = '#f5f5f5';
+      });
+      
+      menuItem.addEventListener('mouseleave', () => {
+        menuItem.style.backgroundColor = 'transparent';
+      });
+      
+      menuItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.style.display = 'none';
+        item.action();
+      });
+      
+      dropdownMenu.appendChild(menuItem);
     });
     
-    menuItem.addEventListener('mouseleave', () => {
-      menuItem.style.backgroundColor = 'transparent';
-    });
-    
-    menuItem.addEventListener('click', (e) => {
+    // Toggle dropdown on kebab button click
+    kebabBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdownMenu.style.display = 'none';
-      item.action();
+      const isVisible = dropdownMenu.style.display === 'block';
+      
+      // Hide all other open dropdowns
+      document.querySelectorAll('.kebab-dropdown-menu').forEach(menu => {
+        menu.style.display = 'none';
+      });
+      
+      // Toggle this dropdown
+      dropdownMenu.style.display = isVisible ? 'none' : 'block';
     });
     
-    dropdownMenu.appendChild(menuItem);
-  });
-  
-  // Toggle dropdown on kebab button click
-  kebabBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isVisible = dropdownMenu.style.display === 'block';
-    
-    // Hide all other open dropdowns
-    document.querySelectorAll('.kebab-dropdown-menu').forEach(menu => {
-      menu.style.display = 'none';
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!editControls.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+      }
     });
     
-    // Toggle this dropdown
-    dropdownMenu.style.display = isVisible ? 'none' : 'block';
-  });
+    // Hover effects for kebab button
+    kebabBtn.addEventListener('mouseenter', () => {
+      kebabBtn.style.background = '#e9ecef';
+      kebabBtn.style.borderColor = '#adb5bd';
+    });
+    
+    kebabBtn.addEventListener('mouseleave', () => {
+      kebabBtn.style.background = '#f8f9fa';
+      kebabBtn.style.borderColor = '#ddd';
+    });
   
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!editControls.contains(e.target)) {
-      dropdownMenu.style.display = 'none';
-    }
-  });
+    editControls.appendChild(kebabBtn);
+    editControls.appendChild(dropdownMenu);
+  } // End of kebab menu conditional
   
-  // Hover effects for kebab button
-  kebabBtn.addEventListener('mouseenter', () => {
-    kebabBtn.style.background = '#e9ecef';
-    kebabBtn.style.borderColor = '#adb5bd';
-  });
-  
-  kebabBtn.addEventListener('mouseleave', () => {
-    kebabBtn.style.background = '#f8f9fa';
-    kebabBtn.style.borderColor = '#ddd';
-  });
-  
-  editControls.appendChild(kebabBtn);
-  editControls.appendChild(dropdownMenu);
   header.appendChild(editControls);
 }
 
