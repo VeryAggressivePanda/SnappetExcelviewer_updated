@@ -2444,29 +2444,39 @@ footer {
 }
 
 .add-button {
-  padding: 8px 16px;
-  background: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 2rem;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 13px;
-  transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: white !important;
+  border: 2px solid #ddd !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  transition: all 0.2s ease !important;
+  font-family: 'Inter', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  color: #4caf50 !important;
 }
 
 .add-button:hover {
-  background: #45a049;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  background: #f0fff0 !important;
+  border-color: #4caf50 !important;
+  transform: translateY(-1px) scale(1.1) !important;
+  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3) !important;
 }
 
 .add-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  background: #f5f5f5 !important;
+  color: #ccc !important;
+  border-color: #eee !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Clear Content Actions */
@@ -2512,6 +2522,7 @@ footer {
   color: var(--primary-blue);
   font-weight: 500;
   font-family: 'Inter', sans-serif;
+  flex: 1;
 } 
 
 /* Icon Button Base Styles - White "bolletjes" with colored icons */

@@ -1877,7 +1877,7 @@ function showColumnSelectionArea(node) {
       </div>
       <div class="selection-actions" style="display: none;">
         <span class="selection-count">0 columns selected</span>
-        <button class="add-button">➕ Add Selected</button>
+        <button class="add-button" title="Add Selected">➕</button>
       </div>
       ${hasExistingContent ? `<div class="clear-content-actions">${clearContentButton}</div>` : ''}
     </div>
