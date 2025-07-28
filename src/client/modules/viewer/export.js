@@ -117,7 +117,7 @@ async function exportToPdf() {
     const { showEmptyCellsCheckbox } = window.ExcelViewerCore.getDOMElements();
     const showEmptyCells = showEmptyCellsCheckbox ? showEmptyCellsCheckbox.checked : true;
     
-    console.log('[PDF EXPORT] Frontend sending showEmptyCells:', showEmptyCells);
+
 
     let response;
     try {
@@ -248,7 +248,7 @@ function previewPdf() {
     const { showEmptyCellsCheckbox } = window.ExcelViewerCore.getDOMElements();
     const showEmptyCells = showEmptyCellsCheckbox ? showEmptyCellsCheckbox.checked : true;
     
-    console.log('[PDF PREVIEW] Frontend sending showEmptyCells:', showEmptyCells);
+
 
     // Gebruik deepCloneWithoutParent en safeStringify om circular structure errors te voorkomen
     const cleanData = deepCloneWithoutParent(filteredData.root.children);

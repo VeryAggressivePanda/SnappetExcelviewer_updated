@@ -6,31 +6,41 @@
   margin: 0 auto;
   font-family: 'AbeZeh', sans-serif;
   background: white;
-  padding: 0;
+  /* padding: 10mm; */
   box-sizing: border-box;
 }
 
 .pdf-content {
   margin: 0;
   display: flex;
-  /* flex-direction: column; */
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0;
 }
 
 .pdf-title {
-  font-size: 28px;
-  color: #34a3d7;
+  font-size: 32px;
+  color: #333;
   font-weight: bold;
   text-align: left;
-  text-indent: 0;
-  padding: 0.5rem;
-  margin: 0;
-  text-indent: 0.5rem;
+  padding: 0;
+  margin: 0 0 8px 0;
   display: block;
+  line-height: 1.2;
+}
+
+.pdf-subtitle {
+  font-size: 32px;
+  color: #333;
+  font-weight: bold;
+  text-align: left;
+  padding: 0;
+  margin: 0 0 32px 0;
+  display: block;
+  line-height: 1.2;
 }
 
 .pdf-section {
-  margin: 0;
+  margin: 0 0 24px 0;
 }
 
 /* PDF Layout Classes - Match web layout system */
@@ -92,218 +102,198 @@
 /* Ensure PDF nodes respect flex layout */
 .pdf-section [class*="level-"][class*="-node"] {
   box-sizing: border-box !important;
-  margin: 0.25rem 0 !important;
+
 }
 
 /* PDF Node Styles */
-.pdf-section .excel-node {
-  margin-bottom: 0.5rem;
-  background: transparent;
+
+/* Level 1 Nodes (Week) - Donkerblauw */
+.pdf-section .level-1-node {
+  margin-bottom: 16px;
+  background: #ffffff;
   border: none;
-  border-radius: 4px;
-  box-shadow: none;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.pdf-section .excel-node.level-2:not(:last-child) {
-  margin-bottom: 0.25rem !important;
+.pdf-section .level-1-header {
+  background: #34a3d7;
+  border-radius:2rem;
+  color: white;
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0 0 1rem 0;
+ width:fit-content;
 }
 
-.pdf-section .excel-node.level-2:first-child {
-  margin-top: 0;
-}
-
-.pdf-section .excel-node-header {
+.pdf-section .level-1-children {
   background: transparent;
-  padding: 0.25rem 0.5rem;
-  border-bottom: none;
-  text-align: left;
-  margin-bottom: 0;
-  text-indent: .5rem;
-}
-
-.pdf-section .excel-node-children {
-  margin: 0;
   padding: 0;
-  border-left: none;
-}
-
-.pdf-section .excel-node-properties {
-  margin-bottom: 0;
-}
-
-.pdf-section .property-row {
-  display: flex;
-  /* flex-direction: row; */
-  width: 100%;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  background: rgb(52 163 215 / 3%);
-  border-radius: 4px;
-  margin-bottom: 0;
-  box-sizing: border-box;
-  justify-content: space-between;
-}
-
-.pdf-section .excel-node-property {
-  flex: 0 0 calc((100% - 2rem) / 5);
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0.25rem;
+}
+
+/* Level 2 Nodes (Les) - Lichtblauw */
+.pdf-section .level-2-node {
+  margin: 0;
+  /* background: #34a3d733; */
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  
+}
+
+.pdf-section .level-2-node:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.pdf-section .level-2-header {
+  background: rgba(52, 163, 215, 0.1);
+  color: #34a3d7;
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0;
+  border-radius: .5rem;
+  margin: 20px 0 10px 0;
+}
+
+.pdf-section .level-2-children {
+  background: #fff;
+
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex-wrap: wrap;
+ 
+}
+
+/* Property Cards */
+.pdf-section .excel-node-property {
+  flex: 1;
+  min-width: 200px;
   background: white;
-  border-radius: 4px;
-  box-sizing: border-box;
-  min-width: 0;
+  border-radius: 6px;
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .pdf-section .property-name {
-  font-weight: 500;
-  color: #166d9e;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.9em;
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 4px;
   font-family: 'AbeZeh', sans-serif;
 }
 
-/* Print styles */
-@media print {
-  @page {
-    size: A4;
-  }
+.pdf-section .property-value {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  font-family: 'AbeZeh', sans-serif;
+}
 
-  body {
-    margin: 0;
-    padding: 0;
-    width: 210mm;
-    height: 297mm;
-  }
+/* Special nodes styling */
+.pdf-section .level-3-node,
+.pdf-section .level-4-node {
+  background: #f7f7f9;
+  border-radius: 6px;
+  margin: 0;
+  padding: 12px;
+  
+  flex: 1;
+  min-width: 200px;
+  border-radius: .5rem;
+}
 
-  .pdf-container {
-    padding: 0;
-    margin: 0;
-    width: 210mm;
-    height: 297mm;
-  }
+.pdf-section .level-3-header,
+.pdf-section .level-4-header {
+  background: transparent;
+  padding: 0;
+  margin: 0 0 8px 0;
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+}
 
-  .pdf-content {
-    margin: 0;
-    padding: 0;
-  }
+.pdf-section .level-3-content,
+.pdf-section .level-4-content {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+}
 
-  /* Ensure pdf-title appears at the top of each page */
-  .pdf-title {
-    position: running(header);
-    margin: 0 0 0.5rem 0;
-    font-size: 1.1em;
-    text-align: left;
-    text-indent: 0.5rem;
-    break-after: avoid;
-    page-break-after: avoid;
-    background-color: transparent !important;
-  }
+/* Layout System for PDF */
+.pdf-section .layout-horizontal {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: .5rem !important;
+  align-items: stretch !important;
+}
 
-  /* Add the header to each page */
-  @page {
-    @top-center {
-      content: element(header);
-    }
-  }
+.pdf-section .layout-vertical {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+}
 
-  /* Ensure level-2 nodes stay together */
-  .excel-node.level-2 {
-    break-inside: avoid;
-    page-break-inside: avoid;
-    margin: 0.5rem 0;
-    padding: 0.5rem;
-    background-color: rgb(52 163 215 / 5%) !important;
-    border-radius: 4px;
-  }
+/* Horizontal layout variations */
+.pdf-section .layout-horizontal.layout-single-child > [class*="-node"] {
+  width: 100% !important;
+  flex: 1 !important;
+}
 
-  /* Ensure level-2 headers have correct background */
-  .level-2 > .excel-node-header {
-    background-color: rgba(74, 111, 165, 0.05) !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+.pdf-section .layout-horizontal.layout-two-children > [class*="-node"] {
+  width: calc(50% - 6px) !important;
+  flex: 1 !important;
+}
 
-  /* Ensure property rows have the correct background color */
-  .property-row {
-    background-color: rgb(52 163 215 / 3%) !important;
-  }
+.pdf-section .layout-horizontal.layout-three-children > [class*="-node"] {
+  width: calc(33.333% - 8px) !important;
+  flex: 1 !important;
+}
 
-  /* Ensure excel node properties have white background in print */
-  .excel-node-property {
-    background-color: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+.pdf-section .layout-horizontal.layout-many-children > [class*="-node"] {
+  width: calc(25% - 9px) !important;
+  flex: 1 !important;
+}
 
-  /* Ensure all backgrounds print correctly */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+/* Vertical layout - all children full width */
+.pdf-section .layout-vertical > [class*="-node"] {
+  width: 100% !important;
+  flex: none !important;
+}
 
-  /* Print Layout Classes - Match web layout system */
-  .layout-horizontal {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    align-items: stretch !important;
-  }
+/* Ensure all colors render correctly in PDF */
+* {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
 
-  .layout-vertical {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-    align-items: stretch !important;
-  }
+/* Page break avoidance */
+.level-1-node {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
 
-  /* Print Horizontal layout variations */
-  .layout-horizontal.layout-single-child > [class*="-node"] {
-    width: 100% !important;
-    flex: 1 !important;
-  }
+.excel-node-property,
+.level-3-node,
+.level-4-node {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
 
-  .layout-horizontal.layout-two-children > [class*="-node"] {
-    width: calc(50% - 3px) !important;
-    flex: 1 !important;
-  }
-
-  .layout-horizontal.layout-three-children > [class*="-node"] {
-    width: calc(33.333% - 4px) !important;
-    flex: 1 !important;
-  }
-
-  .layout-horizontal.layout-many-children > [class*="-node"] {
-    width: calc(25% - 5px) !important;
-    flex: 1 !important;
-  }
-
-  /* Print Vertical layout - all children full width */
-  .layout-vertical > [class*="-node"] {
-    width: 100% !important;
-    flex: none !important;
-  }
-
-  /* Print Level-specific layout overrides */
-  .level-0-children,
-  .level-1-children,
-  .level-2-children,
-  .level-3-children,
-  .level-4-children,
-  .level-5-children {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 4px !important;
-    width: 100% !important;
-  }
-
-  /* Ensure print nodes respect flex layout */
-  [class*="level-"][class*="-node"] {
-    box-sizing: border-box !important;
-    margin: 0.2rem 0 !important;
-  }
+.pdf-title,
+.pdf-subtitle {
+  break-after: avoid;
+  page-break-after: avoid;
 } 
