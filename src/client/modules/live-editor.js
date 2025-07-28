@@ -1864,7 +1864,14 @@ function showColumnSelectionArea(node) {
   columnSelectionArea.style.minWidth = 'auto'; // Override the CSS min-width
   columnSelectionArea.style.maxWidth = 'none'; // Override the CSS max-width
   
-  // Create the content structure
+  // Check if node has existing content
+  const hasExistingContent = (node.columnIndex || node.columnIndex === 0) || 
+                            (node.children && node.children.length > 0) ||
+                            (node.value && node.value !== 'Container' && node.value !== 'New Container' && node.value !== 'Start Building');
+  
+  // Create the content structure  
+  const clearContentButton = hasExistingContent ? '<button class="clear-content-button">🗑️ Clear Content</button>' : '';
+  
   columnSelectionArea.innerHTML = `
     <div class="column-controls">
       <div class="toggle-group">
@@ -1879,6 +1886,7 @@ function showColumnSelectionArea(node) {
         <span class="selection-count">0 columns selected</span>
         <button class="add-button">➕ Add Selected</button>
       </div>
+      ${hasExistingContent ? `<div class="clear-content-actions">${clearContentButton}</div>` : ''}
     </div>
   `;
   
@@ -1930,6 +1938,9 @@ function showColumnSelectionArea(node) {
   
   // Setup add button for this area
   setupAddButtonForArea(columnSelectionArea);
+  
+  // Setup clear content button if it exists
+  setupClearContentButtonForArea(columnSelectionArea, node);
 }
 
 // Function to hide column selection area
@@ -2084,6 +2095,63 @@ function setupAddButtonForArea(area) {
       }
     }
   });
+}
+
+// Function to setup clear content button for specific area
+function setupClearContentButtonForArea(area, node) {
+  const clearContentButton = area.querySelector('.clear-content-button');
+  if (!clearContentButton) return; // Button doesn't exist if no content
+  
+  clearContentButton.addEventListener('click', () => {
+    // Confirm action
+    const nodeName = node.value || node.columnName || 'this node';
+    if (!confirm(`🗑️ Clear all content from "${nodeName}"?\n\nThis will remove:\n• Column assignment\n• All children\n• All data\n\nThis action cannot be undone.`)) {
+      return;
+    }
+    
+    // Clear the node content
+    clearNodeContent(node);
+    
+    // Hide the selection area
+    hideColumnSelectionArea();
+  });
+}
+
+// Function to clear all content from a node
+function clearNodeContent(node) {
+  console.log('Clearing content from node:', node.id);
+  
+  // Remove column assignment
+  delete node.columnIndex;
+  delete node.columnName;
+  
+  // Clear value (but keep meaningful container names)
+  if (node.value !== 'Container' && node.value !== 'Start Building') {
+    node.value = 'Container';
+  }
+  
+  // Remove all children
+  if (node.children) {
+    node.children = [];
+  }
+  
+  // Remove all properties  
+  if (node.properties) {
+    node.properties = [];
+  }
+  
+  // If this is a template, also clear all duplicates
+  if (node.isTemplate) {
+    console.log('🔄 Template cleared - applying to all duplicates');
+    applyGlobalTemplateReplication(node);
+  }
+  
+  // Re-render to show changes
+  const activeSheetId = window.excelData.activeSheetId;
+  if (window.renderSheet) {
+    window.renderSheet(activeSheetId, window.excelData.sheetsLoaded[activeSheetId]);
+  }
+  applyFlexboxStyling();
 }
 
 // Helper function to get column name by index
