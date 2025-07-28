@@ -33,9 +33,10 @@
 
 /* Base Styles */
 :root {
-  --primary-color: #4a6fa5;
+  /* Updated to match PDF template */
+  --primary-color: #34a3d7;
   --secondary-color: #166d9e;
-  --accent-color: #1e90ff;
+  --accent-color: #34a3d7;
   --light-color: #f5f7fa;
   --dark-color: #2c3e50;
   --text-color: #333;
@@ -49,6 +50,12 @@
   --bg-color-alt: #f8f9fa;
   --hover-color: #f0f4f8;
   --text-color-muted: #666;
+  
+  /* New PDF-inspired colors */
+  --primary-blue: #34a3d7;
+  --light-blue-bg: rgba(52, 163, 215, 0.1);
+  --card-bg: #ffffff;
+  --property-bg: #f7f7f9;
 }
 
 * {
@@ -103,7 +110,7 @@ h2 {
 .back-link {
   display: inline-flex;
   padding: 8px 16px;
-  background-color: #34a3d7;
+  background-color: var(--primary-blue);
   color: white;
   text-decoration: none;
   border-radius: 2rem;
@@ -111,10 +118,13 @@ h2 {
   height: 3.125rem;
   align-items: center;
   width: auto;
+  font-weight: 500;
 }
 
 .back-link:hover {
   background-color: var(--secondary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 163, 215, 0.3);
 }
 
 .header-controls {
@@ -139,12 +149,13 @@ h2 {
   font-family: 'AbeZeh', sans-serif;
   font-size: 1rem;
   min-width: 200px;
+  transition: all 0.2s ease;
 }
 
 .export-controls select:focus {
   outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 2px rgba(52, 163, 215, 0.2);
 }
 
 /* Form Styles */
@@ -677,21 +688,24 @@ footer {
   width: 100%;
 }
 
-/* Property styling */
+/* Property styling - PDF Template Style */
 .excel-node-property {
-  background-color: white;
-  border-radius: 4px;
-  padding: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  flex: 1 1 200px;
-  min-width: 150px;
   margin-bottom: 0.5rem;
   transition: all 0.2s ease;
 }
 
 .excel-node-property:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* When there are few properties, make them share space equally */
@@ -817,19 +831,19 @@ footer {
 }
 
 .property-name {
-  font-weight: 500;
-  color: var(--secondary-color);
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.9em;
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 4px;
+  font-family: 'AbeZeh', sans-serif;
 }
 
 .property-value {
-  color: var(--text-color);
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  font-family: 'AbeZeh', sans-serif;
   word-break: break-word;
-  font-size: 0.9em;
 }
 
 /* Empty state */
@@ -984,10 +998,10 @@ footer {
 
 .toolbar-button {
   padding: 8px 16px;
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background-color: var(--light-blue-bg);
+  color: var(--primary-blue);
+  border: 1px solid var(--primary-blue);
+  border-radius: 2rem;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
@@ -995,8 +1009,10 @@ footer {
 }
 
 .toolbar-button:hover {
-  background-color: #e0e0e0;
-  border-color: #bbb;
+  background-color: var(--primary-blue);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 163, 215, 0.3);
 }
 
 #build-structure {
@@ -1203,14 +1219,20 @@ footer {
 }
 
 .level-1-header {
-  background-color: transparent !important;
-  padding: 0;
+  background: var(--primary-blue);
+  border-radius: 2rem;
+  color: white;
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0 0 1rem 0;
+  width: fit-content;
 }
 
 .level-1-title {
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: bold;
-  color: #333;
+  color: white;
 }
 
 .level-1-content {
@@ -1260,15 +1282,20 @@ footer {
 }
 
 .level-2-header {
-  background-color: rgba(74, 111, 165, 0.05);
-  border-radius: 4px 4px 0 0;
-  padding: 0.75rem;
+  background: var(--light-blue-bg);
+  color: var(--primary-blue);
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0;
+  border-radius: .5rem;
+  margin: 20px 0 10px 0;
 }
 
 .level-2-title {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--primary-blue);
 }
 
 .level-2-content {
@@ -1292,36 +1319,42 @@ footer {
   min-width: 200px;
 }
 
-/* Level 3 node styles */
+/* Level 3 node styles - Property Cards */
 .level-3-node {
+  flex: 1;
+  min-width: 200px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  background-color: white;
-  border-radius: 4px;
+  gap: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin: 0;
-  flex: 1;
-  /* min-width: 120px; */
-  width: 100%;
   overflow: visible;
 }
 
 .level-3-header {
-  background-color: rgba(52, 163, 215, 0.1);
-  padding: 0.5rem;
-  border-bottom: 1px solid rgba(52, 163, 215, 0.1);
+  background: transparent;
+  padding: 0;
+  margin: 0 0 8px 0;
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
 }
 
 .level-3-title {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #166d9e;
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
 }
 
 .level-3-content {
-  padding: 0.5rem;
-  color: #333;
-  font-size: 0.9rem;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0;
 }
 
 /* Level 3+ children containers */
