@@ -34,38 +34,40 @@ function addEditControls(node, nodeEl, header) {
   editControls.style.marginLeft = 'auto';
   editControls.style.position = 'relative';
   
-  // Add simple column selector button if node doesn't have data yet
+  // Add direct "+Add Content" button for nodes without data
   if (!node.columnIndex && node.columnIndex !== 0 && !node.isPlaceholder) {
-    const selectColumnBtn = document.createElement('button');
-    selectColumnBtn.className = 'select-column-button';
-    selectColumnBtn.textContent = '☑ Select Column';
-    selectColumnBtn.style.padding = '4px 8px';
-    selectColumnBtn.style.fontSize = '12px';
-    selectColumnBtn.style.border = '2px solid var(--primary-blue)';
-    selectColumnBtn.style.borderRadius = '1rem';
-    selectColumnBtn.style.background = 'var(--light-blue-bg)';
-    selectColumnBtn.style.color = 'var(--primary-blue)';
-    selectColumnBtn.style.cursor = 'pointer';
-    selectColumnBtn.style.fontWeight = '500';
-    selectColumnBtn.style.transition = 'all 0.2s ease';
-    selectColumnBtn.style.fontFamily = 'AbeZeh, sans-serif';
+    const addContentBtn = document.createElement('button');
+    addContentBtn.className = 'add-content-button';
+    addContentBtn.innerHTML = '➕ Add Content';
+    addContentBtn.style.padding = '6px 12px';
+    addContentBtn.style.fontSize = '12px';
+    addContentBtn.style.border = '2px solid #4caf50';
+    addContentBtn.style.borderRadius = '1rem';
+    addContentBtn.style.background = '#4caf50';
+    addContentBtn.style.color = 'white';
+    addContentBtn.style.cursor = 'pointer';
+    addContentBtn.style.fontWeight = '500';
+    addContentBtn.style.transition = 'all 0.2s ease';
+    addContentBtn.style.fontFamily = 'AbeZeh, sans-serif';
     
-    selectColumnBtn.addEventListener('click', (e) => {
+    addContentBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       showColumnSelectionArea(node);
     });
     
-    selectColumnBtn.addEventListener('mouseenter', () => {
-      selectColumnBtn.style.background = 'var(--primary-blue)';
-      selectColumnBtn.style.color = 'white';
+    addContentBtn.addEventListener('mouseenter', () => {
+      addContentBtn.style.background = '#45a049';
+      addContentBtn.style.transform = 'translateY(-1px)';
+      addContentBtn.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
     });
     
-    selectColumnBtn.addEventListener('mouseleave', () => {
-      selectColumnBtn.style.background = 'var(--light-blue-bg)';
-      selectColumnBtn.style.color = 'var(--primary-blue)';
+    addContentBtn.addEventListener('mouseleave', () => {
+      addContentBtn.style.background = '#4caf50';
+      addContentBtn.style.transform = 'translateY(0)';
+      addContentBtn.style.boxShadow = 'none';
     });
     
-    editControls.appendChild(selectColumnBtn);
+    editControls.appendChild(addContentBtn);
   }
   
 
@@ -83,13 +85,7 @@ function addEditControls(node, nodeEl, header) {
   // Menu items array
   const menuItems = [];
   
-  // Add Child option
-  menuItems.push({
-    text: '➕ Add Child',
-    icon: '➕',
-    action: () => addChildContainer(node),
-    color: '#4caf50'
-  });
+  // Skip Add Child option - now handled by +Add Content button
   
   // Add Sibling option (not for root)
   if (node.level > -1 && !node.isPlaceholder) {
@@ -1938,10 +1934,13 @@ function showColumnSelectionArea(node) {
     return;
   }
   
-  // Position the area below the node
+  // Position the area below the node and match its width
   const nodeRect = nodeElement.getBoundingClientRect();
   columnSelectionArea.style.top = (nodeRect.bottom + window.scrollY + 10) + 'px';
   columnSelectionArea.style.left = (nodeRect.left + window.scrollX) + 'px';
+  columnSelectionArea.style.width = nodeRect.width + 'px';
+  columnSelectionArea.style.minWidth = 'auto'; // Override the CSS min-width
+  columnSelectionArea.style.maxWidth = 'none'; // Override the CSS max-width
   
   // Create the content structure
   columnSelectionArea.innerHTML = `
@@ -2189,13 +2188,13 @@ function findParentNodeLocal(targetNode) {
 document.addEventListener('click', (e) => {
   if (!currentSelectionArea) return;
   
-  const selectColumnButtons = document.querySelectorAll('.select-column-button');
+  const addContentButtons = document.querySelectorAll('.add-content-button');
   
-  // Check if click is on a select column button or inside the selection area
+  // Check if click is on an add content button or inside the selection area
   let isInsideSelection = currentSelectionArea.contains(e.target);
-  let isSelectButton = Array.from(selectColumnButtons).some(btn => btn.contains(e.target));
+  let isAddContentButton = Array.from(addContentButtons).some(btn => btn.contains(e.target));
   
-  if (!isInsideSelection && !isSelectButton) {
+  if (!isInsideSelection && !isAddContentButton) {
     hideColumnSelectionArea();
   }
 }); 

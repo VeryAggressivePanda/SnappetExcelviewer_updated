@@ -2356,8 +2356,21 @@ footer {
   border: 1px solid rgba(52, 163, 215, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  min-width: 400px;
-  max-width: 600px;
+  /* Width will be set dynamically to match parent node */
+}
+
+/* Responsive column layout when parent is narrow */
+.column-selection-area .available-columns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.column-selection-area .column-button {
+  flex: 0 0 auto;
+  min-width: auto;
+  white-space: nowrap;
 }
 
 .column-controls {
@@ -2487,4 +2500,39 @@ footer {
   color: var(--primary-blue);
   font-weight: 500;
   font-family: 'AbeZeh', sans-serif;
+} 
+
+/* Add Content Button - Always Visible */
+.add-content-button {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  border: 2px solid #4caf50 !important;
+  border-radius: 1rem !important;
+  background: #4caf50 !important;
+  color: white !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  font-family: 'AbeZeh', sans-serif !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.add-content-button:hover {
+  background: #45a049 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+}
+
+/* Ensure edit controls are always visible for empty nodes */
+[data-node-id]:not([data-column-index]) .edit-controls,
+[data-node-id][data-column-index=""] .edit-controls {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Make sure the add content button shows even without hover */
+[data-node-id]:not([data-column-index]) .edit-controls .add-content-button,
+[data-node-id][data-column-index=""] .edit-controls .add-content-button {
+  display: inline-block !important;
 } 
