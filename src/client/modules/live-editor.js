@@ -369,6 +369,12 @@ function deleteContainer(node) {
 
 // Function to assign a column to a node (IMPROVED VERSION!)
 function assignColumnToNode(node, columnIndex, skipReplication = false) {
+  // Validate node first
+  if (!node) {
+    console.error('❌ Node is null or undefined in assignColumnToNode');
+    return;
+  }
+  
   const activeSheetId = window.excelData.activeSheetId;
   const sheetData = window.excelData.sheetsLoaded[activeSheetId];
   const headers = sheetData.headers;
@@ -1298,8 +1304,6 @@ function createMultipleColumnContainers(parentNode, selectedColumns) {
     return;
   }
   
-  console.log('✅ createMultipleColumnContainers called with:', { parentNode, selectedColumns });
-  
   // If this is a "New Container" without column info, 
   // find the real template parent (Les node) to add children to
   let realTemplateParent = parentNode;
@@ -2132,8 +2136,6 @@ function setupAddButtonForArea(area) {
   const addButton = area.querySelector('.add-button');
   
   addButton.addEventListener('click', () => {
-    console.log('Add button clicked with:', { currentSelectedNode, selectedColumnIndices, currentSelectionMode });
-    
     if (!currentSelectedNode) {
       console.error('❌ No currentSelectedNode available');
       return;
@@ -2144,29 +2146,37 @@ function setupAddButtonForArea(area) {
       return;
     }
     
-    // Hide the selection area
+    // 🔥 CRITICAL FIX: Save selections BEFORE hiding (which resets them!)
+    const savedSelectedIndices = [...selectedColumnIndices]; // Create copy
+    const savedSelectionMode = currentSelectionMode;
+    const savedSelectedNode = currentSelectedNode;
+    
+    // Hide the selection area (this resets selectedColumnIndices!)
     hideColumnSelectionArea();
     
-    // Apply the selections
-    if (selectedColumnIndices.length === 1) {
+    // Apply the selections using SAVED values
+    
+    if (savedSelectedIndices.length === 1) {
+      console.log('✅ Single column selection - mode:', savedSelectionMode);
       // Single column selection
-      if (currentSelectionMode === 'child') {
-        assignColumnToNode(currentSelectedNode, selectedColumnIndices[0]);
+      if (savedSelectionMode === 'child') {
+        assignColumnToNode(savedSelectedNode, savedSelectedIndices[0]);
       } else {
-        addSiblingWithColumn(currentSelectedNode, selectedColumnIndices[0]);
+        addSiblingWithColumn(savedSelectedNode, savedSelectedIndices[0]);
       }
     } else {
+      console.log('✅ Multiple column selection (' + savedSelectedIndices.length + ') - mode:', savedSelectionMode);
       // Multiple column selection
-      if (currentSelectionMode === 'child') {
+      if (savedSelectionMode === 'child') {
         // Create multiple child containers
-        createMultipleColumnContainers(currentSelectedNode, selectedColumnIndices.map(index => ({
+        createMultipleColumnContainers(savedSelectedNode, savedSelectedIndices.map(index => ({
           index: index,
           name: getColumnName(index)
         })));
       } else {
         // Create multiple sibling containers
-        selectedColumnIndices.forEach(columnIndex => {
-          addSiblingWithColumn(currentSelectedNode, columnIndex);
+        savedSelectedIndices.forEach(columnIndex => {
+          addSiblingWithColumn(savedSelectedNode, columnIndex);
         });
       }
     }
@@ -2182,6 +2192,17 @@ function getColumnName(columnIndex) {
 
 // Function to add sibling with column
 function addSiblingWithColumn(node, columnIndex) {
+  // Validate inputs
+  if (!node) {
+    console.error('❌ Node is null or undefined in addSiblingWithColumn');
+    return;
+  }
+  
+  if (columnIndex === undefined || columnIndex === null || isNaN(columnIndex)) {
+    console.error('❌ Invalid columnIndex in addSiblingWithColumn:', columnIndex);
+    return;
+  }
+  
   // First create a sibling using existing functionality
   addSiblingContainer(node);
   
