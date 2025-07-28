@@ -1836,6 +1836,7 @@ function showColumnSelectionArea(node) {
   
   currentSelectedNode = node;
   selectedColumnIndices = []; // Reset selections
+  currentSelectionMode = 'child'; // Default to child mode
   
   // Create floating column selection area
   const columnSelectionArea = document.createElement('div');
@@ -1867,17 +1868,11 @@ function showColumnSelectionArea(node) {
   
   columnSelectionArea.innerHTML = `
     <div class="column-controls">
-      <div class="toggle-group">
-        <label>Add as:</label>
-        <button class="toggle-button active child-toggle" data-mode="child">Child</button>
-        <button class="toggle-button sibling-toggle" data-mode="sibling">Sibling</button>
-      </div>
       <div class="available-columns">
         <!-- Column buttons will be added here -->
       </div>
-      <div class="selection-actions" style="display: none;">
-        <span class="selection-count">0 columns selected</span>
-        <button class="add-button" title="Add Selected">➕</button>
+      <div class="add-actions">
+        <button class="add-button" title="Add Selected">Add</button>
       </div>
       ${hasExistingContent ? `<div class="clear-content-actions">${clearContentButton}</div>` : ''}
     </div>
@@ -1925,9 +1920,6 @@ function showColumnSelectionArea(node) {
     
     availableColumnsContainer.appendChild(columnBtn);
   });
-  
-  // Setup toggle buttons for this area
-  setupToggleButtonsForArea(columnSelectionArea);
   
   // Setup add button for this area
   setupAddButtonForArea(columnSelectionArea);
@@ -2006,25 +1998,10 @@ function toggleColumnSelection(columnIndex, buttonElement) {
   updateSelectionUI();
 }
 
-// Function to update selection UI
+// Function to update selection UI (simplified - no more selection count)
 function updateSelectionUI() {
-  if (!currentSelectionArea) return;
-  
-  const selectionActions = currentSelectionArea.querySelector('.selection-actions');
-  const selectionCount = currentSelectionArea.querySelector('.selection-count');
-  const addButton = currentSelectionArea.querySelector('.add-button');
-  
-  if (selectedColumnIndices.length === 0) {
-    selectionActions.style.display = 'none';
-  } else {
-    selectionActions.style.display = 'flex';
-    selectionActions.style.alignItems = 'center';
-    selectionActions.style.gap = '10px';
-    
-    const count = selectedColumnIndices.length;
-    const columnText = count === 1 ? 'column' : 'columns';
-    selectionCount.textContent = `${count} ${columnText} selected`;
-  }
+  // No longer needed since we removed the selection count display
+  // Add button is always visible now
 }
 
 // Function to setup add button for specific area

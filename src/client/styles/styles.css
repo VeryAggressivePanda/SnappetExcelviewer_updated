@@ -2351,54 +2351,25 @@ footer {
 
 .column-controls {
   display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  flex-wrap: nowrap; /* Keep toggle and columns side by side */
+  flex-direction: column;
+  gap: 12px;
 }
 
-.toggle-group {
+/* Add Actions Area */
+.add-actions {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0; /* Don't shrink toggle group */
-  min-width: 120px; /* Minimum space for toggle */
+  justify-content: center;
+  margin-top: 8px;
 }
 
-.toggle-group label {
-  font-weight: 500;
-  color: var(--primary-blue);
-  font-size: 14px;
-}
-
-.toggle-button {
-  padding: 6px 12px;
-  border: 2px solid var(--primary-blue);
-  background: white;
-  color: var(--primary-blue);
-  border-radius: 1rem;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
-}
-
-.toggle-button.active {
-  background: var(--primary-blue);
-  color: white;
-}
-
-.toggle-button:hover:not(.active) {
-  background: var(--light-blue-bg);
-}
+/* Toggle group styles removed - no longer needed */
 
 .available-columns {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   align-items: center;
-  flex: 1; /* Take remaining space */
-  min-width: 0; /* Allow shrinking */
+  justify-content: flex-start;
 }
 
 .column-button {
@@ -2444,39 +2415,29 @@ footer {
 }
 
 .add-button {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 50% !important;
-  background: white !important;
-  border: 2px solid #ddd !important;
+  padding: 8px 16px !important;
+  background: #4caf50 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 2rem !important;
   cursor: pointer !important;
-  font-size: 14px !important;
-  font-weight: bold !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
   transition: all 0.2s ease !important;
   font-family: 'Inter', sans-serif !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-  color: #4caf50 !important;
 }
 
 .add-button:hover {
-  background: #f0fff0 !important;
-  border-color: #4caf50 !important;
-  transform: translateY(-1px) scale(1.1) !important;
-  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3) !important;
+  background: #45a049 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
 }
 
 .add-button:disabled {
-  background: #f5f5f5 !important;
-  color: #ccc !important;
-  border-color: #eee !important;
+  background: #ccc !important;
   cursor: not-allowed !important;
   transform: none !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: none !important;
 }
 
 /* Clear Content Actions */
@@ -2506,24 +2467,7 @@ footer {
   box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
 }
 
-/* Selection Actions Area */
-.selection-actions {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(52, 163, 215, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.selection-count {
-  font-size: 12px;
-  color: var(--primary-blue);
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  flex: 1;
-} 
+/* Selection Actions Area - removed (simplified interface) */ 
 
 /* Icon Button Base Styles - White "bolletjes" with colored icons */
 .icon-button {
