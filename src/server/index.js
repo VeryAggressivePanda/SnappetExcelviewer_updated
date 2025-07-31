@@ -26,93 +26,17 @@ const storage = multer.diskStorage({
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     
-    // Clean up old uploads with the same name
-    const cleanupUploads = () => {
-      try {
-        const files = fs.readdirSync(uploadDir);
-        const fileBaseName = file.originalname;
-        
-        // Find files with matching base name
-        const matchingFiles = files.filter(f => f.includes(fileBaseName));
-        
-        // Keep only the most recent 2 uploads of this file
-        if (matchingFiles.length > 1) {
-          // Sort by creation time (which is embedded in the filename)
-          matchingFiles.sort((a, b) => {
-            const timeA = parseInt(a.split('-')[0]);
-            const timeB = parseInt(b.split('-')[0]);
-            return timeB - timeA; // Descending order
-          });
-          
-          // Delete all but the most recent file
-          matchingFiles.slice(1).forEach(f => {
-            fs.unlinkSync(path.join(uploadDir, f));
-            console.log(`Deleted old upload: ${f}`);
-          });
-        }
-      } catch (err) {
-        console.error('Error during upload cleanup:', err);
-      }
-    };
-    
-    // Run cleanup
-    cleanupUploads();
+    // No cleanup needed - we reuse the same filename
     
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+    // Reuse existing filename - no unnecessary timestamps
+    cb(null, file.originalname);
   }
 });
 
-// Also add a routine to periodically clean up old files
-const cleanupUploadDirectory = () => {
-  const uploadDir = path.join(__dirname, '../uploads');
-  if (!fs.existsSync(uploadDir)) return;
-  
-  try {
-    const files = fs.readdirSync(uploadDir);
-    
-    // Group files by original name (removing timestamp prefix)
-    const fileGroups = {};
-    files.forEach(file => {
-      const parts = file.split('-');
-      if (parts.length < 2) return;
-      
-      const originalName = parts.slice(1).join('-');
-      if (!fileGroups[originalName]) {
-        fileGroups[originalName] = [];
-      }
-      fileGroups[originalName].push(file);
-    });
-    
-    // For each group, keep only the most recent file
-    Object.values(fileGroups).forEach(group => {
-      if (group.length > 1) {
-        // Sort by creation time (embedded in filename)
-        group.sort((a, b) => {
-          const timeA = parseInt(a.split('-')[0]);
-          const timeB = parseInt(b.split('-')[0]);
-          return timeB - timeA; // Descending order
-        });
-        
-        // Delete all but the most recent file
-        group.slice(1).forEach(file => {
-          fs.unlinkSync(path.join(uploadDir, file));
-          console.log(`Cleaned up old upload: ${file}`);
-        });
-      }
-    });
-  } catch (err) {
-    console.error('Error during upload directory cleanup:', err);
-  }
-};
 
-// Run cleanup on startup
-cleanupUploadDirectory();
-
-// Schedule cleanup every 6 hours
-setInterval(cleanupUploadDirectory, 6 * 60 * 60 * 1000);
 
 const upload = multer({ 
   storage,

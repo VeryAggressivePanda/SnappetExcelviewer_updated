@@ -1,51 +1,94 @@
-# Template Systeem - Excel Viewer
+# List View A4 Export Systeem - Excel Viewer
 
 ## Concept Overview
 
-Het template systeem zorgt voor **uniforme structuren** met **contextuele data** uit Excel bestanden.
+Het list view systeem zorgt voor **professionele A4 PDF exports** van Excel materialen met **automatische pagina-indeling** en **multi-course ondersteuning**.
 
 ## Hoe het werkt
 
-### 1. Template Parent (Eerste Node)
-- De **eerste node** die wordt aangemaakt uit een kolom wordt de **template/master**
-- Deze node heeft een speciale status: 🏗️ template indicator
-- Alle aanpassingen aan deze node worden automatisch gekopieerd naar alle andere nodes
+### 1. Sheet Types & Layout Detection
+- **Single Course**: Sheets zonder Course kolom → Horizontale layout (1:1:3 ratio)
+- **Multi-Course**: Sheets met Course kolom → Verticale layout per course
+- **Automatische detectie**: Systeem herkent type en past layout aan
 
-### 2. Duplicate Parents (Sibling Nodes)
-- Alle **andere nodes** uit dezelfde kolom zijn **duplicates** van de template
-- Ze volgen exact dezelfde structuur als de template
-- Ze kunnen **niet individueel** worden aangepast
+### 2. A4 Pagina Rendering
+- **Correcte afmetingen**: 210mm x 297mm A4 formaat
+- **Echte hoogte meting**: Dynamische berekening van content per rij
+- **Page breaks**: Intelligente verdeling over meerdere pagina's
+- **Titel compensatie**: Minder content op pagina's met titels
 
-### 3. Structuur Replicatie
-- **Structuurwijzigingen** aan de template worden automatisch toegepast op alle duplicates:
-  - Child toevoegen → Alle duplicates krijgen dezelfde child
-  - Layout wijzigen → Alle duplicates krijgen dezelfde layout
-  - Kolom toewijzen → Alle duplicates krijgen dezelfde kolom-structuur
+### 3. Export Opties
+- **Individual Courses**: Selecteer specifieke course voor export
+- **Complete Overview**: Alle courses in één PDF
+- **Dropdown populatie**: Automatisch gevuld met beschikbare courses
 
-### 4. Contextuele Data Populatie
-- **Data** wordt per duplicate **contextueel** ingevuld uit Excel:
-  - Template (Blok 1) + Week child → Vult weeks uit Excel rijen waar Blok = "Blok 1"
-  - Duplicate (Blok 2) + Week child → Vult weeks uit Excel rijen waar Blok = "Blok 2"
+### 4. Multi-Course Features
+- **Course Headers**: Tonen alleen groep (bijv. "Groep 4")
+- **Herhalende Titels**: "Materialenlijst + Sheet naam" op eerste pagina elke course
+- **Separate Paginering**: Elke course start op nieuwe pagina
+- **Consistent Styling**: Uniforme opmaak across courses
 
-## Voorbeeld
+## Layout Specificaties
 
+### Single Course Layout
 ```
-Excel Data:
-Blok 1, Week 1, Les A
-Blok 1, Week 2, Les B  
-Blok 2, Week 3, Les C
-Blok 2, Week 4, Les D
+A4 Pagina (Horizontaal):
+┌─────────────────────────────────────┐
+│ Materialenlijst                     │
+│ [Sheet naam]                        │
+│                                     │
+│ ┌─────┐ ┌─────┐ ┌─────────────────┐ │
+│ │Col 1│ │Col 2│ │     Col 3       │ │
+│ │(40%)│ │(20%)│ │     (40%)       │ │
+│ └─────┘ └─────┘ └─────────────────┘ │
+└─────────────────────────────────────┘
 ```
 
-**Template actie:** Bij Blok 1 (🏗️) voeg "Week" child toe
+### Multi-Course Layout
+```
+A4 Pagina per Course (Verticaal):
+┌─────────────────────────────────────┐
+│ Materialenlijst                     │
+│ [Sheet naam]                        │
+│                                     │
+│ [Groep 4] ← Course header           │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │         Col 1                   │ │
+│ ├─────────────────────────────────┤ │
+│ │         Col 2                   │ │
+│ ├─────────────────────────────────┤ │
+│ │         Col 3                   │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
 
-**Resultaat:**
-- Blok 1 (Template): Week children → "Week 1", "Week 2"
-- Blok 2 (Duplicate): Week children → "Week 3", "Week 4"
+## Course Name Parsing
+
+### Patronen Herkenning
+- **Haakjes**: `"Snappet Rekenen (Groep 4)"` → `"Groep 4"`
+- **Direct**: `"02. RekenWereld groep 3"` → `"groep 3"`
+- **Case insensitive**: Werkt met "Groep" en "groep"
+- **Fallback**: Volledige naam als geen patroon matcht
+
+## Technische Details
+
+### Page Break Berekening
+1. **Content Meting**: Echte DOM rendering voor precisie
+2. **Hoogte Compensatie**: ~1515px per A4 pagina (gemeten ratio)
+3. **Titel Ruimte**: -80px voor pagina's met titels
+4. **Row Synchronisatie**: Gelijke hoogte across kolommen
+
+### Export Process
+1. **Data Filtering**: Per course of alle courses
+2. **DOM Generation**: A4 pagina's met correcte styling
+3. **PDF Conversion**: html2canvas + jsPDF
+4. **Download**: Automatische bestandsnaam generatie
 
 ## Belangrijke Principes
 
-1. **Eén template, alle duplicates volgen**
-2. **Structuur is universeel, data is contextueel**
-3. **Alleen template kan worden aangepast**
-4. **Automatische replicatie naar alle siblings** 
+1. **Responsive Layout**: Past zich aan aan content type
+2. **Professional Output**: Print-ready A4 formatting
+3. **Efficient Pagination**: Optimale content verdeling
+4. **Consistent Branding**: Uniforme titels en styling
+5. **User-Friendly**: Intuïtieve export opties 

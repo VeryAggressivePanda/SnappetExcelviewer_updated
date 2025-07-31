@@ -1,0 +1,3091 @@
+/* Import Google Fonts properly */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
+
+/* ABeZeh Font Family - Complete Set */
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../fonts/WEB/ABeZeh-Regular.eot');
+    src: url('../fonts/WEB/ABeZeh-Regular.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/WEB/ABeZeh-Regular.woff2') format('woff2'),
+         url('../fonts/WEB/ABeZeh-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../fonts/WEB/ABeZeh-Bold.eot');
+    src: url('../fonts/WEB/ABeZeh-Bold.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/WEB/ABeZeh-Bold.woff2') format('woff2'),
+         url('../fonts/WEB/ABeZeh-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../fonts/WEB/ABeZeh-Medium.eot');
+    src: url('../fonts/WEB/ABeZeh-Medium.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/WEB/ABeZeh-Medium.woff2') format('woff2'),
+         url('../fonts/WEB/ABeZeh-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../fonts/WEB/ABeZeh-Thin.eot');
+    src: url('../fonts/WEB/ABeZeh-Thin.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/WEB/ABeZeh-Thin.woff2') format('woff2'),
+         url('../fonts/WEB/ABeZeh-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Base Styles */
+:root {
+  /* Updated to match PDF template */
+  --primary-color: #34a3d7;
+  --secondary-color: #166d9e;
+  --accent-color: #34a3d7;
+  --light-color: #f5f7fa;
+  --dark-color: #2c3e50;
+  --text-color: #333;
+  --border-color: #e1e4e8;
+  --success-color: #28a745;
+  --error-color: #dc3545;
+  --cell-padding: 5px;
+  --font-size: 14px;
+  --grid-color: #e1e4e8;
+  --bg-color: white;
+  --bg-color-alt: #f8f9fa;
+  --hover-color: #f0f4f8;
+  --text-color-muted: #666;
+  
+  /* New PDF-inspired colors */
+  --primary-blue: #34a3d7;
+  --light-blue-bg: rgba(52, 163, 215, 0.1);
+  --card-bg: #ffffff;
+  --property-bg: #f7f7f9;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 70vw;
+  margin: 0 auto;
+  font-family: 'ABeZeh', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--light-color);
+  font-size: var(--font-size);
+}
+
+/* Ensure all buttons use ABeZeh font */
+button {
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+input, select, textarea {
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.viewer-container {
+  max-width: 100%;
+  padding: 15px;
+}
+
+/* Header Styles */
+header {
+  margin-bottom: 30px;
+ 
+  padding-bottom: 15px;
+}
+
+h1 {
+  color: var(--primary-color);
+  margin-bottom: 5px;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+  font-weight: bold;
+}
+
+h2 {
+  color: var(--secondary-color);
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.back-link {
+  display: inline-flex;
+  padding: 8px 16px;
+  background-color: var(--primary-blue);
+  color: white;
+  text-decoration: none;
+  border-radius: 2rem;
+  transition: background-color 0.2s;
+  height: 3.125rem;
+  align-items: center;
+  width: auto;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 163, 215, 0.3);
+}
+
+.header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.export-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.export-controls select {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 2rem;
+  background-color: white;
+  color: var(--text-color);
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+  font-size: 1rem;
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.export-controls select:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 2px rgba(52, 163, 215, 0.2);
+}
+
+/* Form Styles */
+.upload-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.file-input-container {
+  margin-bottom: 20px;
+}
+
+.file-input-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--light-color);
+}
+
+.upload-button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Instructions */
+.instructions {
+  background-color: white;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.instructions ul {
+  margin-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 5px;
+}
+
+/* Error Message */
+.error-message {
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: var(--error-color);
+  color: white;
+  border-radius: 4px;
+}
+
+/* Style Controls */
+.style-controls {
+  display: none;
+}
+
+/* Sheet Tabs */
+.sheet-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.8rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  width: 100%;
+  max-width: 100%;
+  /* Force horizontal scrolling */
+  white-space: nowrap;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #dee2e6 transparent;
+}
+
+.sheet-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.sheet-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sheet-tabs::-webkit-scrollbar-thumb {
+  background-color: #dee2e6;
+  border-radius: 3px;
+}
+
+.tab-button {
+  padding: 0.6rem 1.2rem;
+  background-color: #e9ecef;
+  border: 0;
+  border-radius: .4rem .4rem 0 0;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: fit-content;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-button.active {
+  background-color: white;
+}
+
+.tab-button:hover:not(.active) {
+  background-color: #dee2e6;
+}
+
+/* Excel Content */
+.sheet-content-container {
+
+  border-radius: 8px;
+  padding: 20px;
+
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.sheet-content {
+  display: none;
+}
+
+.sheet-content.active {
+  display: block;
+}
+
+.empty-sheet {
+  padding: 20px;
+  text-align: center;
+  color: var(--dark-color);
+  font-style: italic;
+}
+
+/* Excel Container Styles */
+.excel-container {
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+  will-change: transform;
+  contain: layout;
+  table-layout: fixed;
+}
+
+.excel-row {
+  display: flex;
+  min-width: max-content;
+  contain: content;
+  flex-wrap: nowrap;
+}
+
+.excel-cell {
+  padding: var(--cell-padding);
+  border: 1px solid var(--grid-color);
+  min-width: 100px;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-basis: 0;
+  flex-grow: 1;
+  white-space: nowrap;
+}
+
+/* Add this to fix alignment issues */
+.excel-row .excel-cell {
+  flex: 0 0 auto;
+}
+
+/* Make header cells sticky */
+.header-cell {
+  background-color: #f0f4f8;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Parent-Child Relationship Styling */
+.parent-cell {
+  font-weight: 600;
+  background-color: rgba(74, 111, 165, 0.1);
+  color: var(--primary-color);
+  border-top: 2px solid var(--primary-color);
+}
+
+.child-cell {
+  color: #555;
+  background-color: rgba(74, 111, 165, 0.03);
+}
+
+/* Alternating rows for better readability */
+.excel-row:nth-child(even):not(.header-row) {
+  background-color: rgba(249, 250, 251, 0.7);
+}
+
+/* Row hover effect */
+.excel-row:hover:not(.header-row) {
+  background-color: rgba(230, 236, 245, 0.5);
+}
+
+/* Themes */
+body.dark-theme {
+  --light-color: #1a1a1a;
+  --text-color: #f0f0f0;
+  --border-color: #444;
+  --grid-color: #444;
+  background-color: #2a2a2a;
+}
+
+body.dark-theme .excel-container,
+body.dark-theme .sheet-content-container,
+body.dark-theme .style-controls,
+body.dark-theme .upload-section,
+body.dark-theme .instructions {
+  background-color: #333;
+}
+
+body.dark-theme .header-cell {
+  background-color: #444;
+}
+
+body.dark-theme .tab-button {
+  background-color: #444;
+  color: #f0f0f0;
+}
+
+body.dark-theme .tab-button.active {
+  background-color: #333;
+}
+
+body.light-theme {
+  --light-color: #ffffff;
+  --text-color: #333333;
+  --border-color: #dddddd;
+  --grid-color: #eeeeee;
+}
+
+body.colorful-theme .excel-row:nth-child(odd) {
+  background-color: #f0f8ff;
+}
+
+body.colorful-theme .excel-node-children {
+  padding-left: 8px;
+}
+
+body.colorful-theme .excel-node.collapsed .excel-node-children {
+  display: none;
+}
+
+body.colorful-theme .excel-node:not(.collapsed) .excel-node-children {
+  display: flex;
+  padding: 0;
+}
+
+body.colorful-theme .level-0 {
+  box-shadow: 0 3px 7px rgba(51,51,51,0.2);
+}
+
+body.colorful-theme .level-0 > .excel-node-header {
+  background-color: white;
+  border: none;
+}
+
+body.colorful-theme .level-1 > .excel-node-header {
+  background-color: white;
+  box-shadow: 0 3px 7px rgba(51, 51, 51, .2);
+}
+
+.level-2 > .excel-node-header {
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+.excel-node.level-2 {
+  background-color: rgb(52 163 215 / 5%);
+}
+
+/* Footer Styles */
+footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: #666;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--secondary-color);
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.loading-indicator p {
+  display: inline-block;
+  position: relative;
+}
+
+.loading-indicator p::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  bottom: -10px;
+  left: 0;
+  background: linear-gradient(to right, var(--accent-color), var(--primary-color));
+  animation: loading 1.5s infinite ease-in-out;
+}
+
+@keyframes loading {
+  0% {
+    width: 0%;
+    left: 0;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+    left: 100%;
+  }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .back-link {
+    margin-top: 10px;
+  }
+  
+  .style-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .control-group {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  
+  .control-group select {
+    width: 100%;
+  }
+  
+  .excel-cell {
+    min-width: 80px;
+  }
+}
+
+/* Hierarchical Excel Structure */
+.excel-hierarchical-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.excel-hierarchical-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Node styles */
+.excel-node {
+  margin: 1rem 0;
+  border-radius: 4px;
+  min-height: fit-content;
+  height: auto;
+  background-color: rgb(52 163 215 / 5%);
+}
+
+.excel-node-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+  user-select: none;
+  border-radius: .5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Remove hover effect */
+/*
+.excel-node-header:hover {
+  background-color: var(--hover-color);
+}
+*/
+
+/* Node expand/collapse button */
+.node-expand-button {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  cursor: pointer;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.node-expand-button::before,
+.node-expand-button::after {
+  content: '';
+  position: absolute;
+  background-color: var(--text-color);
+  transition: transform 0.2s ease;
+}
+
+.node-expand-button::before {
+  width: 2px;
+  height: 12px;
+  top: 4px;
+  left: 9px;
+}
+
+.node-expand-button::after {
+  width: 12px;
+  height: 2px;
+  top: 9px;
+  left: 4px;
+}
+
+/* Show expand button only for level 0 and 1 nodes */
+.excel-node.level-0 .node-expand-button,
+.excel-node.level-1 .node-expand-button {
+  display: block;
+}
+
+/* Hide expand button for level 2 nodes */
+.excel-node.level-2 .node-expand-button {
+  display: none;
+}
+
+/* Parent node (level 0) states */
+.excel-node.level-0.collapsed .node-expand-button::before {
+  transform: rotate(0deg);
+}
+
+.excel-node.level-0.collapsed .node-expand-button::after {
+  transform: rotate(0deg);
+}
+
+.excel-node.level-0:not(.collapsed) .node-expand-button::before {
+  transform: rotate(90deg);
+}
+
+.excel-node.level-0:not(.collapsed) .node-expand-button::after {
+  transform: rotate(0deg);
+}
+
+/* Child node (level 1) states */
+.excel-node.level-1.collapsed .node-expand-button::before {
+  transform: rotate(0deg);
+}
+
+.excel-node.level-1.collapsed .node-expand-button::after {
+  transform: rotate(0deg);
+}
+
+.excel-node.level-1:not(.collapsed) .node-expand-button::before {
+  transform: rotate(90deg);
+}
+
+.excel-node.level-1:not(.collapsed) .node-expand-button::after {
+  transform: rotate(0deg);
+}
+
+/* Node children visibility */
+.excel-node-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+  margin-left: 1rem;
+  gap: 1rem;
+}
+
+.excel-node.collapsed .excel-node-children {
+  display: none;
+}
+
+.excel-node:not(.collapsed) .excel-node-children {
+  display: flex;
+}
+
+.excel-node-children > .excel-node {
+  flex: 1 1 200px;
+  margin: 0.5rem 0;
+}
+
+/* Level 1 children (weeks) always use column layout */
+.excel-node.level-1 > .excel-node-children {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  gap: 1rem;
+}
+
+/* Make level-2 (lessons) full width of parent */
+.excel-node.level-1 > .excel-node-children > .excel-node.level-2 {
+  width: 100%;
+  min-width: 100%;
+  flex: 1 1 100%;
+}
+
+/* Override for level-specific nodes */
+.excel-node.level-0 > .excel-node-children > .excel-node.level-1 {
+  width: 100%;
+  flex: 1 1 100%;
+}
+
+/* Level 2 nodes (Les) should be arranged horizontally when possible */
+.excel-node.level-1 > .excel-node-children > .excel-node.level-2 {
+  flex: 1 1 calc(50% - 1rem);
+  min-width: 200px;
+}
+
+/* Property row layout */
+.property-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+  background-color: rgba(52, 163, 215, 0.03);
+  padding: 0.5rem;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* Property styling - PDF Template Style */
+.excel-node-property {
+  flex: 1;
+  min-width: 200px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.excel-node-property:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* When there are few properties, make them share space equally */
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(2)),
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(3)),
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(4)) {
+  justify-content: space-between;
+}
+
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(2)) .excel-node-property {
+  flex-basis: calc(50% - 0.5rem);
+  max-width: calc(50% - 0.5rem);
+}
+
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(3)) .excel-node-property {
+  flex-basis: calc(33.33% - 0.67rem);
+  max-width: calc(33.33% - 0.67rem);
+}
+
+.property-row:has(.excel-node-property:nth-child(1):nth-last-child(4)) .excel-node-property {
+  flex-basis: calc(25% - 0.75rem);
+  max-width: calc(25% - 0.75rem);
+}
+
+/* Levels styling */
+.level-0 {
+  box-shadow: 0 3px 7px rgba(51,51,51,0.2);
+  margin: 1rem;
+}
+
+.level-0 > .excel-node-header {
+  /* background-color: rgb(52 163 215 / 10%); */
+  border: none;
+}
+
+/* Explicit overrides to ensure no background on level-1 */
+.excel-node.level-1 {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.2);
+  padding-bottom: 1rem;
+  margin-top: 0;
+}
+
+.level-1 > .excel-node-header {
+  /* background-color: transparent; */
+  /* box-shadow: 0 3px 7px rgba(51, 51, 51, .2); */
+  background-color: transparent !important;
+}
+
+.level-2 > .excel-node-header {
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+
+
+.blok-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #34a3d7;
+  text-align: left;
+  text-indent: 0.5rem;
+  margin: 0 0 1rem 0;
+  padding: 0.5rem;
+  background-color: transparent;
+  border-radius: 4px;
+  page-break-after: avoid;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: var(--bg-color);
+  border-radius: 4px;
+}
+
+/* Control Button Styles */
+.control-button {
+  padding: 0.5rem 1rem;
+  background-color: #ffffff;
+  color: #34a3d7;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0px 3px 7px rgba(51, 51, 51, .1);
+  height: 50px;
+  font-weight: bold;
+  font-size: 1rem;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+.control-button:hover {
+  background-color: #f8f9fa;
+}
+
+/* Toggle Button Styles */
+.toggle-buttons {
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid #34a3d7;
+}
+
+.toggle-btn {
+  background-color: white;
+  color: #34a3d7;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+  border-right: 1px solid #34a3d7;
+}
+
+.toggle-btn:last-child {
+  border-right: none;
+}
+
+.toggle-btn:hover {
+  background-color: rgba(52, 163, 215, 0.1);
+}
+
+.toggle-btn.active {
+  background-color: #34a3d7;
+  color: white;
+}
+
+.toggle-btn.active:hover {
+  background-color: #2a8bb8;
+}
+
+.search-group {
+  flex: 1;
+  max-width: 300px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+}
+
+/* Property styling for hierarchical view */
+.excel-node-properties {
+  margin-top: 0.5rem;
+  margin-left: 1rem;
+}
+
+.property-name {
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 4px;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+.property-value {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+  word-break: break-word;
+}
+
+/* Empty state */
+.empty-sheet {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-color-muted);
+}
+
+/* Loading state */
+.loading-indicator {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-color-muted);
+}
+
+.excel-node.active > .excel-node-header .node-title {
+  color: #34a3d7;
+}
+
+/* PDF export styling moved to pdfexport.css */
+
+.excel-node-children {
+  padding-left: 0;
+  border-left: none;
+}
+
+.excel-node-properties {
+  margin-bottom: 0;
+}
+
+
+
+/* Print styles */
+@media print {
+  @page {
+    size: A4;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    height: 297mm;
+  }
+
+  .pdf-container {
+    padding: 0;
+    margin: 0;
+    width: 210mm;
+    height: 297mm;
+  }
+
+  .pdf-content {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure pdf-title appears at the top of each page */
+  .pdf-title {
+    position: running(header);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1em;
+    text-align: left;
+    text-indent: 0.5rem;
+    break-after: avoid;
+    page-break-after: avoid;
+    background-color: transparent !important;
+  }
+
+  /* Add the header to each page */
+  @page {
+    @top-center {
+      content: element(header);
+    }
+  }
+
+  /* Ensure level-2 nodes stay together */
+  .excel-node.level-2 {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background-color: rgb(52 163 215 / 5%) !important;
+    border-radius: 4px;
+  }
+
+  /* Ensure level-2 headers have correct background */
+  .level-2 > .excel-node-header {
+    background-color: rgba(74, 111, 165, 0.05) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure property rows have the correct background color */
+  .property-row {
+    background-color: rgb(52 163 215 / 3%) !important;
+  }
+
+  /* Ensure excel node properties have white background in print */
+  .excel-node-property {
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure all backgrounds print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+
+}
+
+/* Disabled button styles */
+.control-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Push the last control-group (toggle buttons) to the right */
+.toolbar .control-group:last-child {
+  margin-left: auto;
+}
+
+.toolbar-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 4px;
+  
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+
+.toolbar-checkbox:hover {
+  background-color: #e9e9e9;
+}
+
+.toolbar-checkbox input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.toolbar-button {
+  padding: 8px 16px;
+  background-color: var(--light-blue-bg);
+  color: var(--primary-blue);
+  border: 1px solid var(--primary-blue);
+  border-radius: 2rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+.toolbar-button:hover {
+  background-color: var(--primary-blue);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 163, 215, 0.3);
+}
+
+#build-structure {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+}
+
+#build-structure:hover {
+  background-color: #45a049;
+}
+
+.node-title {
+  font-size: 1.2em;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.level-0 .node-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #34a3d7;
+}
+
+.level-1 .node-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* PDF Preview Modal */
+.pdf-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.pdf-preview-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  width: 90%;
+  max-width: 1200px;
+  height: 90vh;
+  overflow: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-preview-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+  line-height: 1;
+  z-index: 1;
+}
+
+.pdf-preview-close:hover {
+  color: #333;
+}
+
+.pdf-preview-content .pdf-container {
+  width: 100%;
+  min-height: 297mm;
+  margin: 0 auto;
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0;
+  box-sizing: border-box;
+  transform-origin: top center;
+}
+
+/* Adjust nodes inside flex layout - updated version */
+.excel-node-children > .excel-node {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+/* Layout classes for excel-node-children */
+.excel-node-children.vertical-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.excel-node-children.grid-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments based on child count */
+.excel-node-children.child-count-1 > .excel-node {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
+.excel-node-children.child-count-2 > .excel-node {
+  flex-basis: calc(50% - 0.5rem);
+  max-width: calc(50% - 0.5rem);
+}
+
+.excel-node-children.child-count-3 > .excel-node {
+  flex-basis: calc(33.33% - 0.67rem);
+  max-width: calc(33.33% - 0.67rem);
+}
+
+.excel-node-children.child-count-4 > .excel-node,
+.excel-node-children.many-children > .excel-node {
+  flex-basis: calc(25% - 0.75rem);
+}
+
+/* Media queries for responsive behavior */
+@media (max-width: 992px) {
+  .excel-node-children.child-count-3 > .excel-node,
+  .excel-node-children.child-count-4 > .excel-node,
+  .excel-node-children.many-children > .excel-node {
+    flex-basis: calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+  }
+}
+
+@media (max-width: 576px) {
+  .excel-node-children.grid-layout > .excel-node {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Column-specific styles - moved to level-based approach */
+
+/* Level-specific node styles */
+
+/* Level 0 node styles */
+.level-0-node {
+  /* background-color: #ffffff; */
+  border-radius: 8px;
+
+  margin: .5rem 0;
+  overflow: visible;
+}
+
+.level-0-header {
+  background-color: white;
+  border: none;
+  padding: 1rem;
+}
+
+.level-0-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #34a3d7;
+}
+
+/* Ensure level-0 titles in list template are blue */
+.sheet-container[data-is-list-template="true"] .level-0-title {
+  color: #34a3d7 !important;
+  padding: 0 20px;
+}
+
+.level-0-content {
+  padding: 1rem;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* Set padding to 0 when level-0-node is collapsed */
+.level-0-collapsed .level-0-content {
+  padding: 0;
+}
+
+.level-0-children {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  /* margin-left: 0.25rem; */
+  gap: 1rem;
+}
+
+/* Level 1 node styles */
+.level-1-node {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.2);
+  padding-bottom: 1rem;
+  margin-top: 0;
+  width: 100%;
+  overflow: visible;
+}
+
+.level-1-header {
+  background: var(--primary-blue);
+  border-radius: 2rem;
+  color: white;
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0 0 1rem 0;
+  width: fit-content;
+}
+
+.level-1-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+}
+
+.level-1-content {
+  padding: 0;
+  color: #333;
+}
+
+.level-1-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+  margin-left: 0;
+  gap: 0.5rem;
+}
+
+/* Level 1 children - automatic equal width distribution */
+.level-1-children > [class*="-node"] {
+  flex: 1;
+  
+}
+
+/* Ensure flex layout for level-1 */
+.level-1-flex-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.level-1-flex-layout > [class*="-node"] {
+  flex: 1;
+ 
+}
+
+/* Level 2 node styles */
+.level-2-node {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(52 163 215 / 5%);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  width: 100%;
+  overflow: visible;
+}
+
+.level-2-header {
+  background: var(--light-blue-bg);
+  color: var(--primary-blue);
+  padding: 12px 16px;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 0;
+  border-radius: .5rem;
+  margin: 20px 0 10px 0;
+}
+
+.level-2-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--primary-blue);
+}
+
+.level-2-content {
+  padding: 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.level-2-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* Level 2 children - automatic equal width distribution */
+.level-2-children > [class*="-node"] {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Level 3 node styles - Property Cards */
+.level-3-node {
+  flex: 1;
+  min-width: 200px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  overflow: visible;
+}
+
+.level-3-header {
+  background: transparent;
+  padding: 0;
+  margin: 0 0 8px 0;
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+}
+
+.level-3-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.level-3-content {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0;
+}
+
+/* Level 3+ children containers */
+.level-3-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* Level 3 children - automatic equal width distribution */
+.level-3-children > [class*="-node"] {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Level 4+ node and children styles */
+.level-4-node,
+.level-5-node,
+.level-6-node,
+.level-7-node,
+.level-8-node,
+.level-9-node,
+.level-10-node {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(52, 163, 215, 0.2);
+  border-radius: 4px;
+  margin: 0.25rem;
+  padding: 0.4rem;
+  /* min-width: 120px; */
+  flex: 1;
+  width: 100%;
+  overflow: visible;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+
+
+.level-4-header,
+.level-5-header,
+.level-6-header,
+.level-7-header,
+.level-8-header,
+.level-9-header,
+.level-10-header {
+  background-color: rgba(52, 163, 215, 0.05);
+  padding: 0.4rem;
+  border-bottom: 1px solid rgba(52, 163, 215, 0.1);
+  border-radius: 3px 3px 0 0;
+}
+
+.level-4-title,
+.level-5-title,
+.level-6-title,
+.level-7-title,
+.level-8-title,
+.level-9-title,
+.level-10-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #166d9e;
+}
+
+.level-4-content,
+.level-5-content,
+.level-6-content,
+.level-7-content,
+.level-8-content,
+.level-9-content,
+.level-10-content {
+  padding: 0.4rem;
+  color: #333;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.level-4-children,
+.level-5-children,
+.level-6-children,
+.level-7-children,
+.level-8-children,
+.level-9-children,
+.level-10-children {
+  display: flex;
+  flex-direction: row; /* default */
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+}
+
+/* Level 4+ children - automatic equal width distribution */
+.level-4-children > [class*="-node"],
+.level-5-children > [class*="-node"],
+.level-6-children > [class*="-node"],
+.level-7-children > [class*="-node"],
+.level-8-children > [class*="-node"],
+.level-9-children > [class*="-node"],
+.level-10-children > [class*="-node"] {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Properties styling */
+.level-0-properties,
+.level-1-properties,
+.level-2-properties {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Expand/collapse functionality - for ALL levels */
+.level-_1-expand-button,
+.level-0-expand-button,
+.level-1-expand-button,
+.level-2-expand-button,
+.level-3-expand-button,
+.level-4-expand-button,
+.level-5-expand-button,
+.level-6-expand-button,
+.level-7-expand-button,
+.level-8-expand-button,
+.level-9-expand-button,
+.level-10-expand-button {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  cursor: pointer;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.level-_1-expand-button::before,
+.level-_1-expand-button::after,
+.level-0-expand-button::before,
+.level-0-expand-button::after,
+.level-1-expand-button::before,
+.level-1-expand-button::after,
+.level-2-expand-button::before,
+.level-2-expand-button::after,
+.level-3-expand-button::before,
+.level-3-expand-button::after,
+.level-4-expand-button::before,
+.level-4-expand-button::after,
+.level-5-expand-button::before,
+.level-5-expand-button::after,
+.level-6-expand-button::before,
+.level-6-expand-button::after,
+.level-7-expand-button::before,
+.level-7-expand-button::after,
+.level-8-expand-button::before,
+.level-8-expand-button::after,
+.level-9-expand-button::before,
+.level-9-expand-button::after,
+.level-10-expand-button::before,
+.level-10-expand-button::after {
+  content: '';
+  position: absolute;
+  background-color: #333;
+  transition: transform 0.2s ease;
+}
+
+.level-_1-expand-button::before,
+.level-0-expand-button::before,
+.level-1-expand-button::before,
+.level-2-expand-button::before,
+.level-3-expand-button::before,
+.level-4-expand-button::before,
+.level-5-expand-button::before,
+.level-6-expand-button::before,
+.level-7-expand-button::before,
+.level-8-expand-button::before,
+.level-9-expand-button::before,
+.level-10-expand-button::before {
+  width: 2px;
+  height: 12px;
+  top: 4px;
+  left: 9px;
+}
+
+.level-_1-expand-button::after,
+.level-0-expand-button::after,
+.level-1-expand-button::after,
+.level-2-expand-button::after,
+.level-3-expand-button::after,
+.level-4-expand-button::after,
+.level-5-expand-button::after,
+.level-6-expand-button::after,
+.level-7-expand-button::after,
+.level-8-expand-button::after,
+.level-9-expand-button::after,
+.level-10-expand-button::after {
+  width: 12px;
+  height: 2px;
+  top: 9px;
+  left: 4px;
+}
+
+/* Hide children when collapsed - universeel voor alle levels */
+[class*="level-"][class*="-collapsed"] > [class*="level-"][class*="-children"] {
+  display: none !important;
+}
+
+/* (optioneel) Specifieke regels voor bestaande levels behouden voor fallback/overgang */
+.level-_1-collapsed .level-_1-children,
+.level-0-collapsed .level-0-children,
+.level-1-collapsed .level-1-children,
+.level-2-collapsed .level-2-children,
+.level-3-collapsed .level-3-children,
+.level-4-collapsed .level-4-children,
+.level-5-collapsed .level-5-children,
+.level-6-collapsed .level-6-children,
+.level-7-collapsed .level-7-children,
+.level-8-collapsed .level-8-children,
+.level-9-collapsed .level-9-children,
+.level-10-collapsed .level-10-children {
+  display: none !important;
+}
+
+/* Rotate expand button when expanded */
+.level-_1-node:not(.level-_1-collapsed) .level-_1-expand-button::before,
+.level-0-node:not(.level-0-collapsed) .level-0-expand-button::before,
+.level-1-node:not(.level-1-collapsed) .level-1-expand-button::before,
+.level-2-node:not(.level-2-collapsed) .level-2-expand-button::before,
+.level-3-node:not(.level-3-collapsed) .level-3-expand-button::before,
+.level-4-node:not(.level-4-collapsed) .level-4-expand-button::before,
+.level-5-node:not(.level-5-collapsed) .level-5-expand-button::before {
+  transform: rotate(90deg);
+}
+
+/* Empty node styling */
+.level-0-empty,
+.level-1-empty,
+.level-2-empty,
+.level-3-empty {
+  border: 1px dashed rgba(52, 163, 215, 0.3);
+  background-color: rgba(249, 249, 249, 0.7) !important;
+}
+
+.level-0-empty-header,
+.level-1-empty-header,
+.level-2-empty-header,
+.level-3-empty-header {
+  color: #999;
+  background-color: rgba(249, 249, 249, 0.9) !important;
+}
+
+.level-0-empty-content,
+.level-1-empty-content,
+.level-2-empty-content,
+.level-3-empty-content {
+  color: #999;
+  font-style: italic;
+}
+
+/* Common styles for all level nodes */
+[class*="level-"] {
+  box-sizing: border-box;
+}
+
+/* Level node base styles */
+[class*="-node"] {
+  display: flex;
+  flex-direction: column;
+  margin: 0.25rem 0;
+  border-radius: 4px;
+  overflow: visible;
+  width: 100%;
+}
+
+/* Level headers base styles */
+[class*="-header"] {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  background-color: rgba(52, 163, 215, 0.05);
+  width: 100%;
+  overflow: visible;
+  position: relative;
+}
+
+/* Level content base styles */
+[class*="-content"] {
+  padding: 0;
+  word-break: break-word;
+}
+
+/* Level titles base styles */
+[class*="-title"] {
+  font-weight: 500;
+  flex: 1;
+}
+
+/* Styles for column name and cell value spans in titles */
+.column-name {
+  font-weight: 600;
+  color: #166d9e;
+  margin-right: 0.25em;
+}
+
+.cell-value {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Live editing controls */
+.edit-controls {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.edit-controls button {
+  transition: all 0.2s;
+}
+
+.edit-controls button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.column-selector {
+  min-width: 120px;
+}
+
+/* Placeholder node styling */
+[data-node-id] .level-0-title:has-text("Start Building") {
+  color: #999;
+  font-style: italic;
+}
+
+/* New layout system - toggle between horizontal and vertical */
+
+/* Base layout classes */
+.layout-horizontal {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.layout-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* Horizontal layout variations */
+.layout-horizontal.layout-single-child > [class*="-node"] {
+  width: 100%;
+  flex: 1;
+}
+
+.layout-horizontal.layout-two-children > [class*="-node"] {
+  width: calc(50% - 5px);
+  flex: 1;
+}
+
+.layout-horizontal.layout-three-children > [class*="-node"] {
+  width: calc(33.333% - 7px);
+  flex: 1;
+}
+
+.layout-horizontal.layout-many-children > [class*="-node"] {
+  width: calc(25% - 8px);
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Override for level-3 nodes to always be full width in vertical layouts */
+.layout-vertical > .level-3-node {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: none !important;
+}
+
+/* Vertical layout - all children full width */
+.layout-vertical > [class*="-node"] {
+  width: 100%;
+  flex: none;
+}
+
+/* Layout toggle button styling */
+.layout-toggle-button {
+  transition: all 0.2s ease;
+}
+
+.layout-toggle-button:hover {
+  background: #ff9800 !important;
+  color: white !important;
+  transform: scale(1.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .layout-horizontal.layout-three-children,
+  .layout-horizontal.layout-many-children {
+    flex-direction: column;
+  }
+  
+  .layout-horizontal.layout-three-children > [class*="-node"],
+  .layout-horizontal.layout-many-children > [class*="-node"] {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-horizontal {
+    flex-direction: column;
+  }
+  
+  .layout-horizontal > [class*="-node"] {
+    width: 100% !important;
+  }
+}
+
+/* Starter container styling */
+.starter-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 2px dashed #34a3d7 !important;
+  transition: all 0.3s ease;
+}
+
+.starter-container:hover {
+  border-color: #2980b9 !important;
+  background: linear-gradient(135deg, #e8f4f8 0%, #b8d4e3 100%);
+}
+
+/* Kebab Menu Styles */
+.kebab-menu-button {
+  position: relative;
+  background: #f8f9fa !important;
+  
+  border-radius: 3px !important;
+  padding: 4px 8px !important;
+  font-size: 16px !important;
+  color: #666 !important;
+  cursor: pointer !important;
+  line-height: 1 !important;
+  transition: all 0.2s ease !important;
+  min-width: 28px;
+  text-align: center;
+}
+
+.kebab-menu-button:hover {
+  background: #e9ecef !important;
+  border-color: #adb5bd !important;
+  color: #495057 !important;
+}
+
+.kebab-menu-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.kebab-dropdown-menu {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  background: white !important;
+  
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  z-index: 9999 !important;
+  min-width: 180px !important;
+  margin-top: 2px !important;
+  overflow: visible;
+  animation: kebabDropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes kebabDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kebab-menu-item {
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  transition: background-color 0.2s ease !important;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.kebab-menu-item:last-child {
+  border-bottom: none;
+}
+
+.kebab-menu-item:hover {
+  background-color: #f8f9fa !important;
+}
+
+.kebab-menu-item:active {
+  background-color: #e9ecef !important;
+}
+
+/* Specific menu item colors */
+.kebab-menu-item[style*="color: #4caf50"]:hover {
+  background-color: #e8f5e9 !important;
+}
+
+.kebab-menu-item[style*="color: #2196f3"]:hover {
+  background-color: #e3f2fd !important;
+}
+
+.kebab-menu-item[style*="color: #ff9800"]:hover {
+  background-color: #fff3e0 !important;
+}
+
+.kebab-menu-item[style*="color: #9c27b0"]:hover {
+  background-color: #f3e5f5 !important;
+}
+
+.kebab-menu-item[style*="color: #f44336"]:hover {
+  background-color: #ffebee !important;
+}
+
+/* Ensure edit controls positioning */
+.edit-controls {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin-left: auto !important;
+  overflow: visible !important;
+  z-index: 1;
+}
+
+/* Column selector adjustments when used with kebab menu */
+.column-selector {
+  margin-right: 5px !important;
+  max-width: 150px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .kebab-dropdown-menu {
+    min-width: 160px !important;
+    right: -10px !important;
+  }
+  
+  .column-selector {
+    max-width: 120px;
+    font-size: 11px;
+  }
+}
+
+/* Multiselect Modal Styles */
+.multiselect-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 10000 !important;
+}
+
+.multiselect-content {
+  background-color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  max-width: 500px !important;
+  max-height: 80vh !important;
+  width: 90% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.multiselect-header {
+  padding: 20px 20px 10px 20px !important;
+  border-bottom: 1px solid #eee !important;
+  flex-shrink: 0 !important;
+}
+
+.multiselect-body {
+  padding: 20px !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+}
+
+.multiselect-checkbox-container {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+
+  border-radius: 4px !important;
+  padding: 0 !important;
+  margin-bottom: 20px !important;
+  background-color: #fafafa !important;
+}
+
+.multiselect-checkbox-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 15px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  background-color: white !important;
+}
+
+.multiselect-checkbox-wrapper:last-child {
+  border-bottom: none !important;
+}
+
+.multiselect-checkbox-wrapper:hover:not(.disabled) {
+  background-color: #f8f9fa !important;
+}
+
+.multiselect-checkbox-wrapper.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.multiselect-checkbox {
+  margin-right: 12px !important;
+  transform: scale(1.1) !important;
+}
+
+.multiselect-label {
+  cursor: pointer !important;
+  flex: 1 !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.multiselect-label.disabled {
+  color: #999 !important;
+  font-style: italic !important;
+}
+
+.multiselect-buttons {
+  display: flex !important;
+  gap: 10px !important;
+  margin-bottom: 20px !important;
+  flex-wrap: wrap !important;
+}
+
+.multiselect-select-btn {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  
+  border-radius: 4px !important;
+  background-color: #f8f9fa !important;
+  color: #333 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.multiselect-select-btn:hover {
+  background-color: #e9ecef !important;
+  border-color: #adb5bd !important;
+}
+
+.multiselect-actions {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 20px !important;
+  border-top: 1px solid #eee !important;
+  flex-shrink: 0 !important;
+}
+
+.multiselect-cancel-btn {
+  background-color: #6c757d !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.multiselect-cancel-btn:hover {
+  background-color: #5a6268 !important;
+}
+
+.multiselect-apply-btn {
+  background-color: #34a3d7 !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.multiselect-apply-btn:hover {
+  background-color: #45a049 !important;
+}
+
+.multiselect-apply-btn:disabled {
+  background-color: #cccccc !important;
+  cursor: not-allowed !important;
+}
+
+/* Scrollbar styling for multiselect */
+.multiselect-checkbox-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.multiselect-checkbox-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.multiselect-checkbox-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.multiselect-checkbox-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive adjustments for multiselect */
+@media (max-width: 768px) {
+  .multiselect-content {
+    width: 95% !important;
+    max-height: 90vh !important;
+  }
+  
+  .multiselect-checkbox-container {
+    max-height: 250px !important;
+  }
+  
+  .multiselect-actions {
+    flex-direction: column !important;
+  }
+  
+  .multiselect-cancel-btn,
+  .multiselect-apply-btn {
+    width: 100% !important;
+  }
+}
+
+/* Template system styling */
+/* [data-node-id][data-is-template="true"] {
+  border: 2px solid #34a3d7 !important;
+  box-shadow: 0 0 8px #4caf504d !important;
+} */
+
+[data-node-id][data-is-template="true"] .level-0-header,
+[data-node-id][data-is-template="true"] .level-1-header,
+[data-node-id][data-is-template="true"] .level-2-header {
+  background: linear-gradient(135deg, #34a3d720, #79bddd20) !important;
+}
+
+[data-node-id][data-is-duplicate="true"] {
+  border: 1px dashed rgba(156, 156, 156, 0.5) !important;
+  opacity: 0.8;
+}
+
+[data-node-id][data-is-duplicate="true"] .level-0-header,
+[data-node-id][data-is-duplicate="true"] .level-1-header,
+[data-node-id][data-is-duplicate="true"] .level-2-header {
+  background: rgba(224, 224, 224, 0.1) !important;
+}
+
+/* Template indicator in title */
+.cell-value {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Hidden title styles for container nodes */
+[class*="-title"][style*="display: none"] {
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Adjust header padding when title is hidden */
+[class*="-header"]:has([class*="-title"][style*="display: none"]) {
+  padding: 0 !important;
+  min-height: 0 !important;
+  background: transparent !important;
+}
+
+/* Multiselect Dropdown Styles */
+.multiselect-container {
+  position: relative !important;
+  display: inline-block !important;
+}
+
+.multiselect-button {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border: 1px solid #ccc !important;
+  border-radius: 3px !important;
+  background: white !important;
+  cursor: pointer !important;
+  min-width: 140px !important;
+  text-align: left !important;
+  transition: border-color 0.2s ease !important;
+}
+
+.multiselect-button:hover {
+  border-color: #34a3d7 !important;
+}
+
+.multiselect-button:focus {
+  outline: none !important;
+  border-color: #34a3d7 !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+.multiselect-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: white !important;
+  border: 1px solid #ccc !important;
+  border-top: none !important;
+  border-radius: 0 0 3px 3px !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+.multiselect-dropdown div {
+  padding: 6px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.multiselect-dropdown div:hover:not(.apply-button-container) {
+  background-color: #f8f9fa !important;
+}
+
+.multiselect-dropdown div:last-child {
+  border-bottom: none !important;
+}
+
+.multiselect-dropdown input[type="checkbox"] {
+  margin-right: 8px !important;
+  cursor: pointer !important;
+}
+
+.multiselect-dropdown label {
+  cursor: pointer !important;
+  flex: 1 !important;
+  font-size: 12px !important;
+  margin: 0 !important;
+}
+
+.apply-button-container {
+  padding: 8px !important;
+ ;
+  background: #f8f9fa !important;
+}
+
+.apply-button-container button {
+  width: 100% !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  border: 1px solid #4caf50 !important;
+  border-radius: 3px !important;
+  background: #4caf50 !important;
+  color: white !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.apply-button-container button:hover {
+  background: #45a049 !important;
+}
+
+.apply-button-container button:active {
+  background: #3d8b40 !important;
+}
+
+/* Ensure dropdowns don't get clipped */
+.edit-controls {
+  overflow: visible !important;
+}
+
+[class*="-node"] {
+  overflow: visible !important;
+}
+
+[class*="-header"] {
+  overflow: visible !important;
+}
+
+/* Responsive adjustments for multiselect */
+@media (max-width: 768px) {
+  .multiselect-button {
+    min-width: 120px !important;
+    font-size: 11px !important;
+  }
+  
+  .multiselect-dropdown {
+    max-height: 150px !important;
+  }
+  
+  .multiselect-dropdown div {
+    padding: 4px 6px !important;
+  }
+  
+  .multiselect-dropdown label {
+    font-size: 11px !important;
+  }
+} 
+
+/* Layout mode classes for dynamic switching */
+.layout-horizontal {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.layout-vertical {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* Hide empty cells when hide-empty-cells class is applied to body */
+.hide-empty-cells .level-0-empty,
+.hide-empty-cells .level-1-empty,
+.hide-empty-cells .level-2-empty,
+.hide-empty-cells .level-3-empty,
+.hide-empty-cells .level-4-empty,
+.hide-empty-cells .level-_1-empty,
+.hide-empty-cells .level-_2-empty {
+  display: none !important;
+}
+
+/* Also hide individual empty content and properties */
+.hide-empty-cells .level-0-empty-content,
+.hide-empty-cells .level-1-empty-content,
+.hide-empty-cells .level-2-empty-content,
+.hide-empty-cells .level-3-empty-content,
+.hide-empty-cells .level-4-empty-content,
+.hide-empty-cells .level-_1-empty-content,
+.hide-empty-cells .level-_2-empty-content {
+  display: none !important;
+}
+
+.hide-empty-cells .level-0-empty-header,
+.hide-empty-cells .level-1-empty-header,
+.hide-empty-cells .level-2-empty-header,
+.hide-empty-cells .level-3-empty-header,
+.hide-empty-cells .level-4-empty-header,
+.hide-empty-cells .level-_1-empty-header,
+.hide-empty-cells .level-_2-empty-header {
+  display: none !important;
+}
+
+/* Hide empty property containers entirely */
+.hide-empty-cells [class*="level-"][class*="-empty"] {
+  display: none !important;
+}
+
+/* Column Selection Area - Floating */
+.column-selection-area {
+  position: absolute;
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(52, 163, 215, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  /* Width will be set dynamically to match parent node */
+}
+
+/* Responsive column layout when parent is narrow */
+.column-selection-area .available-columns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.column-selection-area .column-button {
+  flex: 0 0 auto;
+  min-width: auto;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Add tooltip for full text */
+}
+
+.column-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Add Actions Area */
+.add-actions {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Toggle group styles removed - no longer needed */
+
+.available-columns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.column-button {
+  padding: 6px 12px;
+ 
+  background: white;
+  color: #333;
+  border-radius: 1rem;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+  position: relative;
+  max-width: 120px; /* Limit button width */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0; /* Prevent buttons from getting too small */
+}
+
+.column-button:hover {
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.column-button.selected {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+}
+
+.column-button.selected::after {
+  content: " ✓";
+  font-weight: bold;
+}
+
+.column-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f5f5f5;
+  color: #999;
+}
+
+.add-button {
+  padding: 8px 16px !important;
+  background: #4caf50 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 2rem !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease !important;
+  font-family: 'ABeZeh', 'Inter', sans-serif !important;
+}
+
+.add-button:hover {
+  background: #45a049 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+}
+
+.add-button:disabled {
+  background: #ccc !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Clear Content Actions */
+.clear-content-actions {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.clear-content-button {
+  padding: 8px 16px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+.clear-content-button:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+/* Selection Actions Area - removed (simplified interface) */ 
+
+/* Icon Button Base Styles - White "bolletjes" with colored icons */
+.icon-button {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: white !important;
+  border: 2px solid #ddd !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  transition: all 0.2s ease !important;
+  font-family: 'ABeZeh', 'Inter', sans-serif !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 2px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px) scale(1.1) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+  border-color: #ccc !important;
+}
+
+/* Add/Edit Content Button - Blue Icon */
+.add-edit-button {
+  color: #34a3d7 !important;
+}
+
+.add-edit-button:hover {
+  background: #f0f8ff !important;
+  border-color: #34a3d7 !important;
+  box-shadow: 0 3px 8px rgba(52, 163, 215, 0.3) !important;
+}
+
+/* Layout Toggle Button - Orange Icon */
+.layout-toggle-button {
+  color: #ff9800 !important;
+}
+
+.layout-toggle-button:hover {
+  background: #fff8f0 !important;
+  border-color: #ff9800 !important;
+  box-shadow: 0 3px 8px rgba(255, 152, 0, 0.3) !important;
+}
+
+/* Delete Button - Red Icon */
+.delete-button {
+  color: #c71717 !important;
+}
+
+.delete-button:hover {
+  background: #fff0f0 !important;
+  border-color: #c71717 !important;
+  box-shadow: 0 3px 8px rgba(199, 23, 23, 0.3) !important;
+}
+
+/* HIDE edit controls ONLY for list template nodes */
+.sheet-container[data-is-list-template="true"] [data-node-id] .edit-controls {
+  display: none !important;
+}
+
+/* Hide icon buttons ONLY for list template nodes */
+.sheet-container[data-is-list-template="true"] [data-node-id] .edit-controls .icon-button {
+  display: none !important;
+}
+
+/* Hide expand buttons in list template view */
+.sheet-container[data-is-list-template="true"] .level-0-expand-button {
+  display: none !important;
+} 
+
+/* LIST TEMPLATE: A4 pages stacked vertically */
+.sheet-container[data-is-list-template="true"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: auto !important; /* Auto height for full content */
+  position: relative !important; /* For absolute positioning of pill */
+}
+
+/* A4 page styling for list templates */
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto 20px auto;
+  background: white;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 15mm;
+  box-sizing: border-box;
+  page-break-after: always;
+  border: 1px solid #ddd;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  gap: 0;
+}
+
+/* PDF Export Mode - Target specific grey backgrounds only */
+.pdf-export-mode .level-1-content {
+  background: white !important;
+  background-color: white !important;
+}
+
+.pdf-export-mode .level-1-node:nth-child(even) .level-1-content {
+  background: white !important;
+  background-color: white !important;
+}
+
+.pdf-export-mode [style*="#f7f7f9"],
+.pdf-export-mode [style*="#f8f9fa"],
+.pdf-export-mode [style*="#e9ecef"],
+.pdf-export-mode [style*="#f5f5f5"] {
+  background: white !important;
+  background-color: white !important;
+}
+
+/* Remove shadows in PDF */
+.pdf-export-mode {
+  box-shadow: none !important;
+}
+
+.pdf-export-mode * {
+  box-shadow: none !important;
+}
+
+/* Non-course variant: 3 kolommen naast elkaar */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page {
+  flex-direction: column;
+}
+
+/* Course variant: courses onder elkaar */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page {
+  flex-direction: column;
+}
+
+/* MULTI-COURSE: Vertical layout for course containers */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] {
+  flex-direction: column !important;
+  gap: 2rem !important;
+  height: auto !important; /* Allow dynamic height for multiple courses */
+}
+
+/* Single course: level-0 nodes within A4 pages */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node {
+  margin: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+/* Single course: kolom verhoudingen 1 1 3 */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node:first-child,
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > div > .level-0-node:first-child {
+  flex: 1 !important;
+}
+
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node:nth-child(2),
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > div > .level-0-node:nth-child(2) {
+  flex: 1 !important;
+}
+
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node:last-child,
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > div > .level-0-node:last-child {
+  flex: 3 !important;
+}
+
+/* Fallback: direct level-0 nodes (for backward compatibility) */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) > .level-0-node {
+  margin: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+
+/* Multi-course: course containers (level -1) */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] > .level-_1-node {
+  width: 100% !important;
+  margin: 0 0 2rem 0 !important;
+  /* padding: 1.5rem !important;
+  border: 2px solid #34a3d7 !important; */
+  border-radius: 12px !important;
+
+}
+
+/* Multi-course: course container header */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-header {
+  background: #34a3d7 !important;
+  color: white !important;
+  padding: 12px 20px !important;
+  /* margin: -1.5rem -1.5rem 1.5rem -1.5rem !important; */
+  border-radius: 50px;
+  font-size: 1.25rem !important;
+  font-weight: bold !important;
+  width: fit-content;
+  margin-bottom: 1rem;
+}
+
+/* Multi-course: course container content with 3 columns */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-content {
+  padding: 0 !important;
+}
+
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children {
+  display: flex !important;
+  flex-direction: row !important;
+
+  width: 100% !important;
+}
+
+/* Multi-course: columns within course containers - base styling */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node,
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node {
+  margin: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+/* Multi-course: kolom verhoudingen 40% - 20% - 40% */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node:first-child,
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node:first-child {
+  flex: 1 !important; /* 40% */
+}
+
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node:nth-child(2),
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node:nth-child(2) {
+  flex: 1 !important; /* 20% */
+}
+
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node:last-child,
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node:last-child {
+  flex: 3 !important; /* 40% */
+}
+
+/* Column header styling - unified for all list templates */
+.sheet-container[data-is-list-template="true"] .level-0-node > .level-0-header {
+  flex-shrink: 0 !important;
+  background-color: rgba(52, 163, 215, 0.05) !important; /* Lichtblauwe achtergrond zoals gewenst */
+  border-radius: 8px 8px 0 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 11 !important;
+}
+
+/* Border-radius voor kolom headers - veel slimmer geschreven */
+.sheet-container[data-is-list-template="true"] :is(.a4-page, .sheet-container) .level-0-node:first-child > .level-0-header,
+.sheet-container[data-is-list-template="true"] > .level-0-node:first-child > .level-0-header {
+  border-radius: 30px 0 0 30px !important;
+}
+
+.sheet-container[data-is-list-template="true"] :is(.a4-page, .sheet-container) .level-0-node:last-child > .level-0-header,
+.sheet-container[data-is-list-template="true"] > .level-0-node:last-child > .level-0-header {
+  border-radius: 0 30px 30px 0 !important;
+}
+
+/* Column content area - NO scroll limits - Single course */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) > .level-0-node > .level-0-content {
+  flex: 1 !important;
+  overflow-y: visible !important;
+  padding: 0 !important; /* Remove padding for zebra-stripe */
+  height: auto !important; /* Auto height for full content */
+}
+
+/* Column content area - NO scroll limits - Multi course */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-0-node > .level-0-content {
+  flex: 1 !important;
+  overflow-y: visible !important;
+  padding: 0 !important; /* Remove padding for zebra-stripe */
+  height: auto !important; /* Auto height for full content */
+}
+
+/* ZEBRA-STRIPE LIST: Hide level-1 headers and style content */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-header {
+  display: none !important; /* Hide level-1 headers completely */
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  padding: 10px 15px !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-size: 14px !important;
+}
+
+/* Zebra-stripe: alternating background colors */
+.sheet-container[data-is-list-template="true"] .level-1-node:nth-child(odd) .level-1-content {
+  background-color: white !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node:nth-child(even) .level-1-content {
+  background-color: #f7f7f9 !important;
+}
+
+/* Zebra-stripe afgeronde hoeken - veel slimmer geschreven */
+.sheet-container[data-is-list-template="true"] .level-0-node:first-child .level-1-node:nth-child(even) .level-1-content {
+  border-radius: 20px 0 0 20px !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-0-node:last-child .level-1-node:nth-child(even) .level-1-content {
+  border-radius: 0 20px 20px 0 !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-0-node:nth-child(2) .level-1-node:nth-child(even) .level-1-content {
+  border-radius: 0 !important;
+}
+
+/* Hover effect for zebra-stripe items */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content:hover {
+  background-color: #e3f2fd !important;
+  cursor: default;
+}
+
+/* LIST TEMPLATE: Remove gaps and padding for compact zebra-stripe */
+.sheet-container[data-is-list-template="true"] .level-0-children {
+  gap: 0 !important; /* Remove gap between items */
+}
+
+/* LIST TEMPLATE: Row height synchronization setup */
+.sheet-container[data-is-list-template="true"] .a4-page {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.sheet-container[data-is-list-template="true"] .a4-page > .level-0-node {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-container[data-is-list-template="true"] .a4-page .level-0-children {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.sheet-container[data-is-list-template="true"] .a4-page .level-1-node {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 100%;
+}
+
+/* Prevent week numbers from splitting across lines (keep "week 4" together) */
+.sheet-container[data-is-list-template="true"] .level-0-node:last-child .level-1-content {
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+/* Hide bullet points (•) in first column (materials) - both variants consistent */
+.sheet-container[data-is-list-template="true"] .level-0-node:first-child .level-1-content[data-is-bullet="true"] {
+  color: transparent !important;
+}
+
+
+
+/* Pill styling around all 3 level-0 headers together - REMOVED */
+/* .sheet-container[data-is-list-template="true"]:not([data-has-courses="true"])::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55px;
+  background-color: rgba(52, 163, 215, 0.1);
+  border-radius: 25px;
+  z-index: 1;
+  pointer-events: none;
+} */
+
+/* Ensure headers are above the pill background */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) > .level-0-node > .level-0-header {
+  position: relative;
+  z-index: 11 !important;
+}
+
+/* For multi-course layouts, create pill per course - REMOVED */
+/* .sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55px;
+  background-color: rgba(52, 163, 215, 0.1);
+  border-radius: 25px;
+  z-index: 1;
+  pointer-events: none;
+} */
+
+/* Ensure multi-course container has relative positioning */
+.sheet-container[data-is-list-template="true"] .level-_1-children {
+  position: relative !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node {
+  padding-bottom: 0 !important; /* Remove bottom padding */
+}
+
+/* Ensure all rows have proper height and styling */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  min-height: 1.5em !important;
+  line-height: 1.5em;
+  padding: 0.25rem 20px !important;
+}
+
+/* Normal styling for all list template content */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  color: inherit;
+}
+
+/* Responsive design for list template */
+@media (max-width: 768px) {
+  .sheet-container[data-is-list-template="true"] {
+    flex-direction: column !important;
+  }
+  
+  .sheet-container[data-is-list-template="true"] > .level-0-node {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0.5rem 0 !important;
+  }
+}
+
+/* Parse Options Popup */
+.parse-options-popup {
+  font-family: 'ABeZeh', sans-serif;
+}
+
+.parse-options-popup .popup-header {
+  font-weight: bold;
+  color: #2c5aa0;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+ 
+}
+
+.parse-options-popup .parse-option {
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: background-color 0.2s;
+}
+
+.parse-options-popup .parse-option:hover {
+  background-color: #f0f8ff;
+  border-radius: 4px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.parse-options-popup .parse-option input[type="radio"] {
+  margin-right: 8px;
+}
+
+
+
+

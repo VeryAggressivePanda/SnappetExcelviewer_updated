@@ -30,7 +30,13 @@
           Show Empty Cells
         </label>
         
-
+        <div class="control-group">
+         
+          <div class="toggle-buttons" id="template-mode-toggle">
+            <button type="button" class="toggle-btn" data-value="hierarchy">Nested View</button>
+            <button type="button" class="toggle-btn active" data-value="list">List View</button>
+          </div>
+        </div>
         
         <!-- The Add Parent Level button will be added here by JavaScript -->
       </div>
@@ -115,6 +121,9 @@
       sheetsLoaded: {} // All sheets will be loaded via JS
     };
   </script>
+  <!-- Load PDF generation libraries -->
+  <script src="/modules/html2canvas.min.js"></script>
+  <script src="/modules/jspdf.umd.min.js"></script>
   <!-- Load modular viewer components -->
   <script src="/modules/viewer/core.js"></script>
   <script src="/modules/viewer/export.js"></script>

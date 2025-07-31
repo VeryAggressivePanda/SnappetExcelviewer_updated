@@ -16,6 +16,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
+    // ALWAYS create new file with timestamp - no more reusing existing files
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
@@ -256,19 +257,21 @@ router.get('/api/sheet/:fileId/:sheetId', (req, res) => {
     
     console.log(`Extracted ${rawData.length} rows of raw data`);
     
-    // Build hierarchy from the raw data
+    // ONLY return raw data for manual hierarchy building
+    // Do NOT build automatic hierarchy that interferes with template system
     const headers = rawData.length > 0 ? rawData[0] : [];
-    const dataRows = rawData.slice(1); // Skip header row
-    const hierarchy = buildHierarchy(dataRows, headers);
     
-    // Return both raw data AND hierarchy, and set root for frontend compatibility
+    // Return ONLY raw data for manual structure building
     const response = {
       headers: headers,
       data: rawData, // Raw data for manual structure building
       isRawData: true, // Flag indicating this needs manual configuration
       needsConfiguration: true, // Flag for manual setup
-      hierarchy: hierarchy, // Built hierarchy structure
-      root: hierarchy      // For legacy frontend compatibility
+      root: { 
+        type: 'root', 
+        children: [], 
+        level: -1 
+      } // Empty root structure for manual building
     };
     
     // Store in cache (without processing)

@@ -1,6 +1,51 @@
 /* Import Google Fonts properly */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
 
+/* ABeZeh Font Family - Complete Set */
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../assets/fonts/WEB/ABeZeh-Regular.eot');
+    src: url('../assets/fonts/WEB/ABeZeh-Regular.eot?#iefix') format('embedded-opentype'),
+         url('../assets/fonts/WEB/ABeZeh-Regular.woff2') format('woff2'),
+         url('../assets/fonts/WEB/ABeZeh-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../assets/fonts/WEB/ABeZeh-Bold.eot');
+    src: url('../assets/fonts/WEB/ABeZeh-Bold.eot?#iefix') format('embedded-opentype'),
+         url('../assets/fonts/WEB/ABeZeh-Bold.woff2') format('woff2'),
+         url('../assets/fonts/WEB/ABeZeh-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../assets/fonts/WEB/ABeZeh-Medium.eot');
+    src: url('../assets/fonts/WEB/ABeZeh-Medium.eot?#iefix') format('embedded-opentype'),
+         url('../assets/fonts/WEB/ABeZeh-Medium.woff2') format('woff2'),
+         url('../assets/fonts/WEB/ABeZeh-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ABeZeh';
+    src: url('../assets/fonts/WEB/ABeZeh-Thin.eot');
+    src: url('../assets/fonts/WEB/ABeZeh-Thin.eot?#iefix') format('embedded-opentype'),
+         url('../assets/fonts/WEB/ABeZeh-Thin.woff2') format('woff2'),
+         url('../assets/fonts/WEB/ABeZeh-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Base Styles */
 :root {
   /* Updated to match PDF template */
@@ -37,11 +82,20 @@
 body {
   width: 70vw;
   margin: 0 auto;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'ABeZeh', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.6;
   color: var(--text-color);
   background-color: var(--light-color);
   font-size: var(--font-size);
+}
+
+/* Ensure all buttons use ABeZeh font */
+button {
+  font-family: 'ABeZeh', 'Inter', sans-serif;
+}
+
+input, select, textarea {
+  font-family: 'ABeZeh', 'Inter', sans-serif;
 }
 
 .container {
@@ -58,14 +112,14 @@ body {
 /* Header Styles */
 header {
   margin-bottom: 30px;
-  border-bottom: 1px solid var(--border-color);
+ 
   padding-bottom: 15px;
 }
 
 h1 {
   color: var(--primary-color);
   margin-bottom: 5px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
   font-weight: bold;
 }
 
@@ -73,7 +127,7 @@ h2 {
   color: var(--secondary-color);
   font-size: 1.4rem;
   margin-bottom: 15px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
   font-weight: 500;
 }
 
@@ -116,7 +170,7 @@ h2 {
   border-radius: 2rem;
   background-color: white;
   color: var(--text-color);
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
   font-size: 1rem;
   min-width: 200px;
   transition: all 0.2s ease;
@@ -207,19 +261,51 @@ input[type="file"] {
 /* Sheet Tabs */
 .sheet-tabs {
   display: flex;
-  gap: 0.6rem;
+  flex-wrap: nowrap;
+  gap: 0.8rem;
   overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  width: 100%;
+  max-width: 100%;
+  /* Force horizontal scrolling */
+  white-space: nowrap;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #dee2e6 transparent;
+}
+
+.sheet-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.sheet-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sheet-tabs::-webkit-scrollbar-thumb {
+  background-color: #dee2e6;
+  border-radius: 3px;
 }
 
 .tab-button {
-  padding: 1rem 2rem;
+  padding: 0.6rem 1.2rem;
   background-color: #e9ecef;
   border: 0;
-  border-radius: .5rem .5rem 0 0;
+  border-radius: .4rem .4rem 0 0;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 0.85rem;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
   transition: background-color 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
+  min-width: fit-content;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab-button.active {
@@ -232,10 +318,10 @@ input[type="file"] {
 
 /* Excel Content */
 .sheet-content-container {
-  background-color: white;
+
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
   overflow-x: auto;
   overflow-y: visible;
 }
@@ -767,11 +853,48 @@ footer {
   height: 50px;
   font-weight: bold;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
 }
 
 .control-button:hover {
   background-color: #f8f9fa;
+}
+
+/* Toggle Button Styles */
+.toggle-buttons {
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid #34a3d7;
+}
+
+.toggle-btn {
+  background-color: white;
+  color: #34a3d7;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+  border-right: 1px solid #34a3d7;
+}
+
+.toggle-btn:last-child {
+  border-right: none;
+}
+
+.toggle-btn:hover {
+  background-color: rgba(52, 163, 215, 0.1);
+}
+
+.toggle-btn.active {
+  background-color: #34a3d7;
+  color: white;
+}
+
+.toggle-btn.active:hover {
+  background-color: #2a8bb8;
 }
 
 .search-group {
@@ -805,14 +928,14 @@ footer {
   color: #333;
   font-size: 13px;
   margin-bottom: 4px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
 }
 
 .property-value {
   color: #666;
   font-size: 12px;
   line-height: 1.4;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
   word-break: break-word;
 }
 
@@ -944,6 +1067,11 @@ footer {
   align-items: center;
 }
 
+/* Push the last control-group (toggle buttons) to the right */
+.toolbar .control-group:last-child {
+  margin-left: auto;
+}
+
 .toolbar-checkbox {
   display: flex;
   align-items: center;
@@ -951,7 +1079,7 @@ footer {
   background-color: #f5f5f5;
   padding: 8px 12px;
   border-radius: 4px;
-  border: 1px solid #ddd;
+  
   cursor: pointer;
   font-size: 14px;
   user-select: none;
@@ -975,7 +1103,7 @@ footer {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
 }
 
 .toolbar-button:hover {
@@ -1139,9 +1267,9 @@ footer {
 
 /* Level 0 node styles */
 .level-0-node {
-  background-color: #ffffff;
+  /* background-color: #ffffff; */
   border-radius: 8px;
-  box-shadow: 0 3px 7px rgba(51, 51, 51, 0.2);
+
   margin: .5rem 0;
   overflow: visible;
 }
@@ -1156,6 +1284,12 @@ footer {
   font-size: 1.2rem;
   font-weight: bold;
   color: #34a3d7;
+}
+
+/* Ensure level-0 titles in list template are blue */
+.sheet-container[data-is-list-template="true"] .level-0-title {
+  color: #34a3d7 !important;
+  padding: 0 20px;
 }
 
 .level-0-content {
@@ -1610,7 +1744,7 @@ footer {
 [class*="-header"] {
   display: flex;
   align-items: center;
-  padding: 0.5rem;
+  padding: 10px 0;
   background-color: rgba(52, 163, 215, 0.05);
   width: 100%;
   overflow: visible;
@@ -1619,7 +1753,7 @@ footer {
 
 /* Level content base styles */
 [class*="-content"] {
-  padding: 0.5rem !important;
+  padding: 0;
   word-break: break-word;
 }
 
@@ -1771,7 +1905,7 @@ footer {
 .kebab-menu-button {
   position: relative;
   background: #f8f9fa !important;
-  border: 1px solid #ddd !important;
+  
   border-radius: 3px !important;
   padding: 4px 8px !important;
   font-size: 16px !important;
@@ -1799,7 +1933,7 @@ footer {
   top: 100% !important;
   right: 0 !important;
   background: white !important;
-  border: 1px solid #ddd !important;
+  
   border-radius: 4px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
   z-index: 9999 !important;
@@ -1936,7 +2070,7 @@ footer {
 .multiselect-checkbox-container {
   max-height: 300px !important;
   overflow-y: auto !important;
-  border: 1px solid #ddd !important;
+
   border-radius: 4px !important;
   padding: 0 !important;
   margin-bottom: 20px !important;
@@ -1993,7 +2127,7 @@ footer {
 .multiselect-select-btn {
   padding: 6px 12px !important;
   font-size: 12px !important;
-  border: 1px solid #ddd !important;
+  
   border-radius: 4px !important;
   background-color: #f8f9fa !important;
   color: #333 !important;
@@ -2092,10 +2226,10 @@ footer {
 }
 
 /* Template system styling */
-[data-node-id][data-is-template="true"] {
+/* [data-node-id][data-is-template="true"] {
   border: 2px solid #34a3d7 !important;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3) !important;
-}
+  box-shadow: 0 0 8px #4caf504d !important;
+} */
 
 [data-node-id][data-is-template="true"] .level-0-header,
 [data-node-id][data-is-template="true"] .level-1-header,
@@ -2209,7 +2343,7 @@ footer {
 
 .apply-button-container {
   padding: 8px !important;
-  border-top: 1px solid #ddd !important;
+ ;
   background: #f8f9fa !important;
 }
 
@@ -2375,7 +2509,7 @@ footer {
 
 .column-button {
   padding: 6px 12px;
-  border: 1px solid #ddd;
+ 
   background: white;
   color: #333;
   border-radius: 1rem;
@@ -2383,7 +2517,7 @@ footer {
   font-size: 12px;
   font-weight: 500;
   transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
   position: relative;
   max-width: 120px; /* Limit button width */
   overflow: hidden;
@@ -2425,7 +2559,7 @@ footer {
   font-weight: 500 !important;
   font-size: 13px !important;
   transition: all 0.2s ease !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'ABeZeh', 'Inter', sans-serif !important;
 }
 
 .add-button:hover {
@@ -2458,7 +2592,7 @@ footer {
   font-weight: 500;
   font-size: 13px;
   transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  font-family: 'ABeZeh', 'Inter', sans-serif;
 }
 
 .clear-content-button:hover {
@@ -2480,7 +2614,7 @@ footer {
   font-size: 14px !important;
   font-weight: bold !important;
   transition: all 0.2s ease !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'ABeZeh', 'Inter', sans-serif !important;
   opacity: 1 !important;
   visibility: visible !important;
   display: inline-flex !important;
@@ -2530,13 +2664,428 @@ footer {
   box-shadow: 0 3px 8px rgba(199, 23, 23, 0.3) !important;
 }
 
-/* Ensure edit controls are ALWAYS visible for ALL nodes */
-[data-node-id] .edit-controls {
-  opacity: 1 !important;
-  visibility: visible !important;
+/* HIDE edit controls ONLY for list template nodes */
+.sheet-container[data-is-list-template="true"] [data-node-id] .edit-controls {
+  display: none !important;
 }
 
-/* Make sure icon buttons show for ALL nodes */
-[data-node-id] .edit-controls .icon-button {
-  display: inline-flex !important;
+/* Hide icon buttons ONLY for list template nodes */
+.sheet-container[data-is-list-template="true"] [data-node-id] .edit-controls .icon-button {
+  display: none !important;
+}
+
+/* Hide expand buttons in list template view */
+.sheet-container[data-is-list-template="true"] .level-0-expand-button {
+  display: none !important;
 } 
+
+/* LIST TEMPLATE: A4 pages stacked vertically */
+.sheet-container[data-is-list-template="true"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: auto !important; /* Auto height for full content */
+  position: relative !important; /* For absolute positioning of pill */
+}
+
+/* A4 page styling for list templates */
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto 20px auto;
+  background: white;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 15mm;
+  box-sizing: border-box;
+  page-break-after: always;
+  border: 1px solid #ddd;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  gap: 0;
+}
+
+/* PDF Export Mode - Target specific grey backgrounds only */
+.pdf-export-mode .level-1-content {
+  background: white !important;
+  background-color: white !important;
+}
+
+.pdf-export-mode .level-1-node:nth-child(even) .level-1-content {
+  background: white !important;
+  background-color: white !important;
+}
+
+.pdf-export-mode [style*="#f7f7f9"],
+.pdf-export-mode [style*="#f8f9fa"],
+.pdf-export-mode [style*="#e9ecef"],
+.pdf-export-mode [style*="#f5f5f5"] {
+  background: white !important;
+  background-color: white !important;
+}
+
+/* Remove shadows in PDF */
+.pdf-export-mode {
+  box-shadow: none !important;
+}
+
+.pdf-export-mode * {
+  box-shadow: none !important;
+}
+
+/* Non-course variant: 3 kolommen naast elkaar */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page {
+  flex-direction: column;
+}
+
+/* Course variant: courses onder elkaar */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page {
+  flex-direction: column;
+}
+
+/* MULTI-COURSE: Vertical layout for course containers */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] {
+  flex-direction: column !important;
+  gap: 2rem !important;
+  height: auto !important; /* Allow dynamic height for multiple courses */
+}
+
+/* Single course: level-0 nodes within A4 pages */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node {
+  margin: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+/* Single course: kolom verhoudingen 1 1 3 */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node:first-child,
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > div > .level-0-node:first-child {
+  flex: 1 !important;
+}
+
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node:nth-child(2),
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > div > .level-0-node:nth-child(2) {
+  flex: 1 !important;
+}
+
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > .level-0-node:last-child,
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) .a4-page > div > .level-0-node:last-child {
+  flex: 3 !important;
+}
+
+/* Fallback: direct level-0 nodes (for backward compatibility) */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) > .level-0-node {
+  margin: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+
+/* Multi-course: course containers (level -1) */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] > .level-_1-node {
+  width: 100% !important;
+  margin: 0 0 2rem 0 !important;
+  /* padding: 1.5rem !important;
+  border: 2px solid #34a3d7 !important; */
+  border-radius: 12px !important;
+
+}
+
+/* Multi-course: course container header */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-header {
+  background: #34a3d7 !important;
+  color: white !important;
+  padding: 12px 20px !important;
+  /* margin: -1.5rem -1.5rem 1.5rem -1.5rem !important; */
+  border-radius: 50px;
+  font-size: 1.25rem !important;
+  font-weight: bold !important;
+  width: fit-content;
+  margin-bottom: 1rem;
+}
+
+/* Multi-course: course container content with 3 columns */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-content {
+  padding: 0 !important;
+}
+
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children {
+  display: flex !important;
+  flex-direction: row !important;
+
+  width: 100% !important;
+}
+
+/* Multi-course: columns within course containers - base styling */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node,
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node {
+  margin: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+/* Multi-course: kolom verhoudingen 40% - 20% - 40% */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node:first-child,
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node:first-child {
+  flex: 1 !important; /* 40% */
+}
+
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node:nth-child(2),
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node:nth-child(2) {
+  flex: 1 !important; /* 20% */
+}
+
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children > .level-0-node:last-child,
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .a4-page .level-0-node:last-child {
+  flex: 3 !important; /* 40% */
+}
+
+/* Column header styling - unified for all list templates */
+.sheet-container[data-is-list-template="true"] .level-0-node > .level-0-header {
+  flex-shrink: 0 !important;
+  background-color: rgba(52, 163, 215, 0.05) !important; /* Lichtblauwe achtergrond zoals gewenst */
+  border-radius: 8px 8px 0 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 11 !important;
+}
+
+/* Border-radius voor kolom headers - veel slimmer geschreven */
+.sheet-container[data-is-list-template="true"] :is(.a4-page, .sheet-container) .level-0-node:first-child > .level-0-header,
+.sheet-container[data-is-list-template="true"] > .level-0-node:first-child > .level-0-header {
+  border-radius: 30px 0 0 30px !important;
+}
+
+.sheet-container[data-is-list-template="true"] :is(.a4-page, .sheet-container) .level-0-node:last-child > .level-0-header,
+.sheet-container[data-is-list-template="true"] > .level-0-node:last-child > .level-0-header {
+  border-radius: 0 30px 30px 0 !important;
+}
+
+/* Column content area - NO scroll limits - Single course */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) > .level-0-node > .level-0-content {
+  flex: 1 !important;
+  overflow-y: visible !important;
+  padding: 0 !important; /* Remove padding for zebra-stripe */
+  height: auto !important; /* Auto height for full content */
+}
+
+/* Column content area - NO scroll limits - Multi course */
+.sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-0-node > .level-0-content {
+  flex: 1 !important;
+  overflow-y: visible !important;
+  padding: 0 !important; /* Remove padding for zebra-stripe */
+  height: auto !important; /* Auto height for full content */
+}
+
+/* ZEBRA-STRIPE LIST: Hide level-1 headers and style content */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-header {
+  display: none !important; /* Hide level-1 headers completely */
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  padding: 10px 15px !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-size: 14px !important;
+}
+
+/* Zebra-stripe: alternating background colors */
+.sheet-container[data-is-list-template="true"] .level-1-node:nth-child(odd) .level-1-content {
+  background-color: white !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node:nth-child(even) .level-1-content {
+  background-color: #f7f7f9 !important;
+}
+
+/* Zebra-stripe afgeronde hoeken - veel slimmer geschreven */
+.sheet-container[data-is-list-template="true"] .level-0-node:first-child .level-1-node:nth-child(even) .level-1-content {
+  border-radius: 20px 0 0 20px !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-0-node:last-child .level-1-node:nth-child(even) .level-1-content {
+  border-radius: 0 20px 20px 0 !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-0-node:nth-child(2) .level-1-node:nth-child(even) .level-1-content {
+  border-radius: 0 !important;
+}
+
+/* Hover effect for zebra-stripe items */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content:hover {
+  background-color: #e3f2fd !important;
+  cursor: default;
+}
+
+/* LIST TEMPLATE: Remove gaps and padding for compact zebra-stripe */
+.sheet-container[data-is-list-template="true"] .level-0-children {
+  gap: 0 !important; /* Remove gap between items */
+}
+
+/* LIST TEMPLATE: Row height synchronization setup */
+.sheet-container[data-is-list-template="true"] .a4-page {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.sheet-container[data-is-list-template="true"] .a4-page > .level-0-node {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-container[data-is-list-template="true"] .a4-page .level-0-children {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.sheet-container[data-is-list-template="true"] .a4-page .level-1-node {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 100%;
+}
+
+/* Prevent week numbers from splitting across lines (keep "week 4" together) */
+.sheet-container[data-is-list-template="true"] .level-0-node:last-child .level-1-content {
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+/* Hide bullet points (•) in first column (materials) - both variants consistent */
+.sheet-container[data-is-list-template="true"] .level-0-node:first-child .level-1-content[data-is-bullet="true"] {
+  color: transparent !important;
+}
+
+
+
+/* Pill styling around all 3 level-0 headers together - REMOVED */
+/* .sheet-container[data-is-list-template="true"]:not([data-has-courses="true"])::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55px;
+  background-color: rgba(52, 163, 215, 0.1);
+  border-radius: 25px;
+  z-index: 1;
+  pointer-events: none;
+} */
+
+/* Ensure headers are above the pill background */
+.sheet-container[data-is-list-template="true"]:not([data-has-courses="true"]) > .level-0-node > .level-0-header {
+  position: relative;
+  z-index: 11 !important;
+}
+
+/* For multi-course layouts, create pill per course - REMOVED */
+/* .sheet-container[data-is-list-template="true"][data-has-courses="true"] .level-_1-children::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55px;
+  background-color: rgba(52, 163, 215, 0.1);
+  border-radius: 25px;
+  z-index: 1;
+  pointer-events: none;
+} */
+
+/* Ensure multi-course container has relative positioning */
+.sheet-container[data-is-list-template="true"] .level-_1-children {
+  position: relative !important;
+}
+
+.sheet-container[data-is-list-template="true"] .level-1-node {
+  padding-bottom: 0 !important; /* Remove bottom padding */
+}
+
+/* Ensure all rows have proper height and styling */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  min-height: 1.5em !important;
+  line-height: 1.5em;
+  padding: 0.25rem 20px !important;
+}
+
+/* Normal styling for all list template content */
+.sheet-container[data-is-list-template="true"] .level-1-node .level-1-content {
+  color: inherit;
+}
+
+/* Responsive design for list template */
+@media (max-width: 768px) {
+  .sheet-container[data-is-list-template="true"] {
+    flex-direction: column !important;
+  }
+  
+  .sheet-container[data-is-list-template="true"] > .level-0-node {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0.5rem 0 !important;
+  }
+}
+
+/* Parse Options Popup */
+.parse-options-popup {
+  font-family: 'ABeZeh', sans-serif;
+}
+
+.parse-options-popup .popup-header {
+  font-weight: bold;
+  color: #2c5aa0;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+ 
+}
+
+.parse-options-popup .parse-option {
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: background-color 0.2s;
+}
+
+.parse-options-popup .parse-option:hover {
+  background-color: #f0f8ff;
+  border-radius: 4px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.parse-options-popup .parse-option input[type="radio"] {
+  margin-right: 8px;
+}
+
+
+
+
